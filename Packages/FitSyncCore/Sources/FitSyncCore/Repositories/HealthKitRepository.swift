@@ -61,12 +61,27 @@ public final class HealthKitRepository: ObservableObject {
             HKSeriesType.workoutRoute()
         ]
 
+        let shareTypes: Set<HKSampleType> = [
+            HKQuantityType(.dietaryWater)
+        ]
+
         do {
-            try await store.requestAuthorization(toShare: [], read: readTypes)
+            try await store.requestAuthorization(toShare: shareTypes, read: readTypes)
             isAuthorized = true
         } catch {
             authError = error
         }
+    }
+
+    // MARK: - Water Logging
+
+    public func writeWater(ml: Double) async throws {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        let type = HKQuantityType(.dietaryWater)
+        let quantity = HKQuantity(unit: .literUnit(with: .milli), doubleValue: ml)
+        let sample = HKQuantitySample(type: type, quantity: quantity,
+                                      start: Date(), end: Date())
+        try await store.save(sample)
     }
 
     // MARK: - Attività Giornaliera

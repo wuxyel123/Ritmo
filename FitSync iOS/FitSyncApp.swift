@@ -5,17 +5,25 @@ import FitSyncCore
 // MARK: - iOS App Entry Point
 @main
 struct FitSyncApp: App {
+    @StateObject private var langManager = LanguageManager()
+    @StateObject private var healthRepo = HealthKitRepository()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .modelContainer(FitSyncStore.container)
+                .id(langManager.viewID)
+                .environment(\.locale, langManager.locale)
+                .environmentObject(langManager)
+                .environmentObject(healthRepo)
+                .task { await healthRepo.requestAuthorization() }
         }
     }
 }
 
 // MARK: - ContentView
 struct ContentView: View {
-    @StateObject private var healthRepo = HealthKitRepository()
+    @EnvironmentObject private var healthRepo: HealthKitRepository
     @State private var selectedTab = 0
 
     var body: some View {
@@ -39,8 +47,6 @@ struct ContentView: View {
                 .tabItem { Label("Obiettivi", systemImage: "slider.horizontal.3") }.tag(5)
         }
         .tint(FitSyncTheme.accent)
-        .environmentObject(healthRepo)
-        .task { await healthRepo.requestAuthorization() }
         .onOpenURL { url in
             switch url.host {
             case "nutrition": selectedTab = 2
@@ -207,6 +213,7 @@ enum AutoMacro: String, CaseIterable {
 
 struct SettingsTabView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
+    @EnvironmentObject private var langManager: LanguageManager
     @Environment(\.modelContext) private var modelContext
     @Query private var storedGoals: [UserGoals]
 
@@ -258,6 +265,20 @@ struct SettingsTabView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: Language
+                Section {
+                    Picker(selection: Binding(
+                        get: { langManager.language },
+                        set: { langManager.set($0) }
+                    )) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text("\(lang.flagEmoji) \(lang.displayName)").tag(lang)
+                        }
+                    } label: {
+                        Label("Lingua", systemImage: "globe")
+                    }
+                }
+
                 // MARK: Body weight info
                 Section {
                     HStack {
@@ -378,7 +399,7 @@ struct SettingsTabView: View {
                     Text("Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg.")
                 }
             }
-            .navigationTitle("Obiettivi")
+            .navigationTitle(Text("Obiettivi"))
             .overlay(alignment: .bottom) {
                 if showToast {
                     HStack(spacing: 6) {
@@ -570,7 +591,7 @@ private struct MacroModeSelector: View {
                     VStack(spacing: 4) {
                         Image(systemName: mode == .perKg ? "scalemass.fill" : "textformat.123")
                             .font(.headline)
-                        Text(mode == .perKg ? "g / kg" : "Grammi totali")
+                        Text(LocalizedStringKey(mode == .perKg ? "g / kg" : "Grammi totali"))
                             .font(.caption.bold())
                     }
                     .frame(maxWidth: .infinity)
@@ -621,7 +642,7 @@ private struct AutoMacroSelector: View {
                 Button { selection = macro.rawValue; onChange() } label: {
                     VStack(spacing: 4) {
                         Text(emoji(for: macro)).font(.title3)
-                        Text(macro.rawValue).font(.caption.bold())
+                        Text(LocalizedStringKey(macro.rawValue)).font(.caption.bold())
                         Text("automatico")
                             .font(.caption2)
                             .foregroundStyle(selected ? color.opacity(0.85) : .clear)
