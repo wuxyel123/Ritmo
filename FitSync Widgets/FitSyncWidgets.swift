@@ -71,48 +71,62 @@ struct DailyScoreWidgetView: View {
     @Environment(\.widgetFamily) var family
     var body: some View {
         switch family {
-        case .accessoryCircular: ScoreGaugeView(s: entry.snapshot)
+        case .accessoryCircular:  ScoreGaugeView(s: entry.snapshot)
         case .accessoryRectangular: ScoreRectangularView(s: entry.snapshot)
         default: ScoreSmallView(s: entry.snapshot)
         }
     }
 }
-// widgetURL is set per-family via Link or at view level; for simplicity set on the containing view in the Widget config
 
-
+// Small home screen — text only, no ring
 struct ScoreSmallView: View {
     let s: DailySnapshot
-    var color: Color { s.dayScore >= 80 ? .green : s.dayScore >= 60 ? .yellow : .orange }
+    var scoreColor: Color { s.dayScore >= 80 ? .green : s.dayScore >= 60 ? .yellow : .orange }
+
     var body: some View {
-        VStack(spacing: 6) {
-            Text("FitSync")
-                .font(.caption2.bold())
-                .foregroundStyle(.secondary)
-            ZStack {
-                Circle().stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                Circle()
-                    .trim(from: 0, to: CGFloat(s.dayScore) / 100)
-                    .stroke(color, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                VStack(spacing: 0) {
-                    Text("\(s.dayScore)")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(color)
-                    Text("/ 100")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(s.dayScore)")
+                    .font(.system(size: 42, weight: .black, design: .rounded))
+                    .foregroundStyle(scoreColor)
+                Text("/ 100")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
-            .padding(4)
-            Label(s.hasWorkedOutToday ? "Allenato" : "Riposo",
-                  systemImage: s.hasWorkedOutToday ? "dumbbell.fill" : "moon.fill")
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(.secondary)
+
+            Spacer(minLength: 6)
+
+            VStack(alignment: .leading, spacing: 5) {
+                ScorePillarRow(icon: "figure.walk", color: .cyan,
+                               label: "Mov.", value: s.movementScore, maxScore: 40)
+                ScorePillarRow(icon: "moon.fill", color: .indigo,
+                               label: "Rec.", value: s.recoveryScore, maxScore: 30)
+                ScorePillarRow(icon: "fork.knife", color: .orange,
+                               label: "Nut.", value: s.nutritionScore, maxScore: 20)
+                ScorePillarRow(icon: "dumbbell.fill", color: .purple,
+                               label: "All.", value: s.workoutBonus, maxScore: 10)
+            }
         }
-        .padding(10)
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
+private struct ScorePillarRow: View {
+    let icon: String; let color: Color; let label: String
+    let value: Double; let maxScore: Double
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon).font(.system(size: 9)).foregroundStyle(color).frame(width: 12)
+            Text(label).font(.system(size: 9)).foregroundStyle(.secondary).frame(width: 26, alignment: .leading)
+            WProgressBar(value: value / Swift.max(maxScore, 1), color: color, height: 4)
+            Text("\(Int(value))").font(.system(size: 9, weight: .semibold, design: .rounded))
+                .foregroundStyle(color).frame(width: 18, alignment: .trailing)
+        }
+    }
+}
+
+// Lock screen circular — gauge
 struct ScoreGaugeView: View {
     let s: DailySnapshot
     var body: some View {
@@ -125,21 +139,29 @@ struct ScoreGaugeView: View {
     }
 }
 
+// Lock screen rectangular — no app name
 struct ScoreRectangularView: View {
     let s: DailySnapshot
+    var scoreColor: Color { s.dayScore >= 80 ? .green : s.dayScore >= 60 ? .yellow : .orange }
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack {
-                Image(systemName: "star.fill").foregroundStyle(.yellow)
-                Text("FitSync  Score \(s.dayScore)/100").font(.headline)
+            HStack(spacing: 6) {
+                Text("\(s.dayScore)").font(.headline.bold()).foregroundStyle(scoreColor)
+                Text("/ 100").font(.caption2).foregroundStyle(.secondary)
+                Spacer()
+                Label(s.hasWorkedOutToday ? "Allenato" : "Riposo",
+                      systemImage: s.hasWorkedOutToday ? "dumbbell.fill" : "moon.fill")
+                    .font(.caption2)
+                    .foregroundStyle(s.hasWorkedOutToday ? .purple : .secondary)
             }
             HStack(spacing: 10) {
-                Label("\(Int(s.calories))kcal", systemImage: "fork.knife")
                 Label("\(Int(s.activeCalories))kcal", systemImage: "bolt.fill").foregroundStyle(.red)
-                Label(s.steps.formatted(), systemImage: "figure.walk").foregroundStyle(.cyan)
+                Label(s.steps >= 1000
+                      ? String(format: "%.1fk", Double(s.steps) / 1000)
+                      : "\(s.steps)", systemImage: "figure.walk").foregroundStyle(.cyan)
+                Label("\(Int(s.calories))kcal", systemImage: "fork.knife").foregroundStyle(.orange)
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
         }
     }
 }
@@ -228,8 +250,7 @@ struct MacroCell: View {
                 Text(label).font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 if progress >= 1 {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2).foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle.fill").font(.caption2).foregroundStyle(.green)
                 }
             }
             Text("\(Int(current))\(unit)")
@@ -243,21 +264,7 @@ struct MacroCell: View {
     }
 }
 
-struct WProgressBar: View {
-    let value: Double; let color: Color; let height: CGFloat
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.2)).frame(height: height)
-                RoundedRectangle(cornerRadius: 4).fill(color)
-                    .frame(width: geo.size.width * min(value, 1), height: height)
-            }
-        }
-        .frame(height: height)
-    }
-}
-
-// MARK: - 3. Activity Widget (rimpiazza NutritionRingWidget)
+// MARK: - 3. Activity Widget
 
 struct ActivityWidget: Widget {
     let kind = "ActivityWidget"
@@ -268,7 +275,7 @@ struct ActivityWidget: Widget {
                 .widgetURL(URL(string: "fitsync://dashboard")!)
         }
         .configurationDisplayName("Attività")
-        .description("Calorie attive, passi e calorie mangiate — i 3 anelli del tuo stile di vita.")
+        .description("Calorie attive, passi, calorie mangiate e macro.")
         .supportedFamilies(activityWidgetFamilies())
     }
 }
@@ -286,113 +293,154 @@ struct ActivityWidgetView: View {
     @Environment(\.widgetFamily) var family
     var body: some View {
         switch family {
-        case .systemMedium: ActivityMediumView(s: entry.snapshot)
-        case .accessoryCircular: ActivityCircularView(s: entry.snapshot)
-        case .accessoryRectangular: ActivityRectangularView(s: entry.snapshot)
-        default: ActivitySmallView(s: entry.snapshot)
+        case .systemMedium:          ActivityMediumView(s: entry.snapshot)
+        case .accessoryCircular:     ActivityCircularView(s: entry.snapshot)
+        case .accessoryRectangular:  ActivityRectangularView(s: entry.snapshot)
+        default:                     ActivitySmallView(s: entry.snapshot)
         }
     }
 }
 
-// Small: 3 rings + bottom stats
+// Small — text only: active cal (big), steps + eaten below, protein/carbs/fat row
 struct ActivitySmallView: View {
     let s: DailySnapshot
-    var stepsP: Double { min(Double(s.steps) / Double(max(s.stepGoal, 1)), 1) }
-    var calP: Double { min(s.calories / max(s.calorieGoal, 1), 1) }
-    var activeP: Double { min(s.activeCalories / max(s.activeCalorieGoal, 1), 1) }
 
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                // Outer ring — passi (cyan)
-                ActivityRing(progress: stepsP, color: .cyan, lineWidth: 9, padding: 0)
-                // Middle ring — calorie mangiate (orange)
-                ActivityRing(progress: calP, color: .orange, lineWidth: 7, padding: 11)
-                // Inner ring — calorie attive (red, come Move ring)
-                ActivityRing(progress: activeP, color: .red, lineWidth: 5, padding: 21)
-                // Centre shows active cal burned
-                VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Active calories — hero number
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .lastTextBaseline, spacing: 3) {
                     Text("\(Int(s.activeCalories))")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                    Text("attivi")
-                        .font(.system(size: 8))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 34, weight: .black, design: .rounded))
+                        .foregroundStyle(.red)
+                    Text("kcal").font(.caption2).foregroundStyle(.secondary)
                 }
+                Text("attivi").font(.caption2).foregroundStyle(.secondary)
             }
-            .frame(width: 88, height: 88)
 
-            HStack(spacing: 10) {
-                VStack(spacing: 1) {
+            Spacer(minLength: 6)
+
+            // Steps + eaten
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "figure.walk").font(.caption2).foregroundStyle(.cyan)
                     Text(s.steps >= 1000
                          ? String(format: "%.1fk", Double(s.steps) / 1000)
                          : "\(s.steps)")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(.cyan)
-                    Text("passi").font(.system(size: 8)).foregroundStyle(.secondary)
+                    Text("passi").font(.caption2).foregroundStyle(.secondary)
                 }
-                Divider().frame(height: 18)
-                VStack(spacing: 1) {
+                HStack(spacing: 4) {
+                    Image(systemName: "fork.knife").font(.caption2).foregroundStyle(.orange)
                     Text("\(Int(s.calories))")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(.orange)
-                    Text("kcal man.").font(.system(size: 8)).foregroundStyle(.secondary)
+                    Text("kcal man.").font(.caption2).foregroundStyle(.secondary)
                 }
             }
+
+            Spacer(minLength: 6)
+
+            // Macros row
+            HStack(spacing: 0) {
+                MiniMacroLabel(emoji: "🥩", value: Int(s.protein), unit: "g")
+                Spacer()
+                MiniMacroLabel(emoji: "🍞", value: Int(s.carbs), unit: "g")
+                Spacer()
+                MiniMacroLabel(emoji: "🥑", value: Int(s.fat), unit: "g")
+            }
         }
-        .padding(10)
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
-// Medium: rings on left, metrics on right
+private struct MiniMacroLabel: View {
+    let emoji: String; let value: Int; let unit: String
+    var body: some View {
+        VStack(spacing: 1) {
+            Text(emoji).font(.system(size: 11))
+            Text("\(value)\(unit)").font(.system(size: 9, weight: .semibold, design: .rounded))
+        }
+    }
+}
+
+// Medium — full text layout: 3 main stats + macro bar
 struct ActivityMediumView: View {
     let s: DailySnapshot
-    var stepsP: Double { min(Double(s.steps) / Double(max(s.stepGoal, 1)), 1) }
-    var calP: Double { min(s.calories / max(s.calorieGoal, 1), 1) }
-    var activeP: Double { min(s.activeCalories / max(s.activeCalorieGoal, 1), 1) }
 
     var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                ActivityRing(progress: stepsP, color: .cyan, lineWidth: 10, padding: 0)
-                ActivityRing(progress: calP, color: .orange, lineWidth: 8, padding: 13)
-                ActivityRing(progress: activeP, color: .red, lineWidth: 6, padding: 24)
-                VStack(spacing: 0) {
-                    Image(systemName: "bolt.fill")
-                        .font(.system(size: 10)).foregroundStyle(.red)
-                    Text("\(Int(s.activeCalories))")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            // Top: 3 key stats
+            HStack(spacing: 0) {
+                ActivityStatBlock(icon: "bolt.fill", color: .red,
+                                  value: "\(Int(s.activeCalories))", unit: "kcal", label: "Attivi")
+                Spacer()
+                Rectangle().fill(.quaternary).frame(width: 1, height: 36)
+                Spacer()
+                ActivityStatBlock(icon: "figure.walk", color: .cyan,
+                                  value: s.steps >= 1000
+                                      ? String(format: "%.1fk", Double(s.steps) / 1000)
+                                      : "\(s.steps)",
+                                  unit: "", label: "Passi")
+                Spacer()
+                Rectangle().fill(.quaternary).frame(width: 1, height: 36)
+                Spacer()
+                ActivityStatBlock(icon: "fork.knife", color: .orange,
+                                  value: "\(Int(s.calories))", unit: "kcal", label: "Mangiati")
             }
-            .frame(width: 100, height: 100)
 
-            VStack(alignment: .leading, spacing: 10) {
-                ActivityMetricRow(icon: "bolt.fill", color: .red,
-                                  value: "\(Int(s.activeCalories)) kcal", label: "Calorie attive")
-                ActivityMetricRow(icon: "fork.knife", color: .orange,
-                                  value: "\(Int(s.calories)) kcal", label: "Calorie mangiate")
-                ActivityMetricRow(icon: "figure.walk", color: .cyan,
-                                  value: s.steps.formatted(), label: "Passi")
+            Divider()
+
+            // Bottom: macros
+            HStack(spacing: 0) {
+                MacroStatBlock(emoji: "🥩", value: s.protein, goal: s.proteinGoal,
+                               label: "Proteine", color: .red)
+                Spacer()
+                MacroStatBlock(emoji: "🍞", value: s.carbs, goal: s.carbsGoal,
+                               label: "Carbs", color: .yellow)
+                Spacer()
+                MacroStatBlock(emoji: "🥑", value: s.fat, goal: s.fatGoal,
+                               label: "Grassi", color: .green)
             }
-            Spacer(minLength: 0)
         }
         .padding(14)
     }
 }
 
-struct ActivityMetricRow: View {
-    let icon: String; let color: Color; let value: String; let label: String
+private struct ActivityStatBlock: View {
+    let icon: String; let color: Color
+    let value: String; let unit: String; let label: String
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.caption.bold()).foregroundStyle(color).frame(width: 16)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(value).font(.subheadline.bold())
-                Text(label).font(.caption2).foregroundStyle(.secondary)
+        VStack(alignment: .center, spacing: 2) {
+            Image(systemName: icon).font(.caption).foregroundStyle(color)
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value).font(.system(.title3, design: .rounded, weight: .bold)).foregroundStyle(color)
+                if !unit.isEmpty { Text(unit).font(.system(size: 9)).foregroundStyle(.secondary) }
             }
+            Text(label).font(.system(size: 9)).foregroundStyle(.secondary)
         }
     }
 }
 
+private struct MacroStatBlock: View {
+    let emoji: String; let value: Double; let goal: Double; let label: String; let color: Color
+    var progress: Double { min(value / max(goal, 1), 1) }
+    var body: some View {
+        VStack(alignment: .center, spacing: 3) {
+            Text(emoji).font(.caption)
+            Text("\(Int(value))g")
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(color)
+            WProgressBar(value: progress, color: progress >= 1 ? .green : color, height: 3)
+                .frame(width: 44)
+            Text("/ \(Int(goal))g").font(.system(size: 8)).foregroundStyle(.secondary)
+        }
+    }
+}
+
+// Lock screen circular — steps gauge
 struct ActivityCircularView: View {
     let s: DailySnapshot
     var body: some View {
@@ -405,43 +453,42 @@ struct ActivityCircularView: View {
     }
 }
 
+// Lock screen rectangular — no app name, two info rows
 struct ActivityRectangularView: View {
     let s: DailySnapshot
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 12) {
-                Label("\(Int(s.activeCalories)) kcal", systemImage: "bolt.fill")
-                    .foregroundStyle(.red)
-                Label(s.steps.formatted(), systemImage: "figure.walk")
-                    .foregroundStyle(.cyan)
+            HStack(spacing: 10) {
+                Label("\(Int(s.activeCalories)) kcal", systemImage: "bolt.fill").foregroundStyle(.red)
+                Label(s.steps >= 1000
+                      ? String(format: "%.1fk", Double(s.steps) / 1000)
+                      : "\(s.steps)", systemImage: "figure.walk").foregroundStyle(.cyan)
+                Label("\(Int(s.calories)) kcal", systemImage: "fork.knife").foregroundStyle(.orange)
             }
-            .font(.headline)
-            Label("\(Int(s.calories)) / \(Int(s.calorieGoal)) kcal mangiati",
-                  systemImage: "fork.knife")
-                .font(.caption)
-                .foregroundStyle(.orange)
+            .font(.caption.bold())
+            HStack(spacing: 10) {
+                Label("\(Int(s.protein))g", systemImage: "p.circle.fill").foregroundStyle(.red)
+                Label("\(Int(s.carbs))g", systemImage: "c.circle.fill").foregroundStyle(.yellow)
+                Label("\(Int(s.fat))g", systemImage: "f.circle.fill").foregroundStyle(.green)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 }
 
-// MARK: - Shared: activity ring shape
+// MARK: - Shared helpers
 
-struct ActivityRing: View {
-    let progress: Double
-    let color: Color
-    let lineWidth: CGFloat
-    let padding: CGFloat
-
+struct WProgressBar: View {
+    let value: Double; let color: Color; let height: CGFloat
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(color.opacity(0.2), lineWidth: lineWidth)
-                .padding(padding)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .padding(padding)
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.2)).frame(height: height)
+                RoundedRectangle(cornerRadius: 4).fill(color)
+                    .frame(width: geo.size.width * min(value, 1), height: height)
+            }
         }
+        .frame(height: height)
     }
 }

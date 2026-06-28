@@ -160,8 +160,15 @@ struct MacroRow: View {
     let goal: Double
     let unit: String
     let color: Color
+    var fractionDigits: Int = 0
 
     var progress: Double { min(current / max(goal, 1), 1.0) }
+
+    private var formattedGoal: String {
+        fractionDigits > 0
+            ? String(format: "%.\(fractionDigits)f\(unit)", goal)
+            : "\(Int(goal))\(unit)"
+    }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -172,10 +179,10 @@ struct MacroRow: View {
                     .foregroundStyle(FitSyncTheme.textSecondary)
                 Spacer()
                 HStack(spacing: 3) {
-                    Text(current, format: .number.precision(.fractionLength(0)))
+                    Text(current, format: .number.precision(.fractionLength(fractionDigits)))
                         .fontWeight(.semibold)
                         .foregroundStyle(progress >= 1 ? FitSyncTheme.positive : FitSyncTheme.textPrimary)
-                    Text("/ \(Int(goal))\(unit)")
+                    Text("/ \(formattedGoal)")
                         .font(.subheadline)
                         .foregroundStyle(FitSyncTheme.textSecondary)
                 }
@@ -192,6 +199,12 @@ enum MacroInputMode: String, CaseIterable {
     case total  = "grammi totali"
 }
 
+enum AutoMacro: String, CaseIterable {
+    case protein = "Proteine"
+    case carbs   = "Carboidrati"
+    case fat     = "Grassi"
+}
+
 struct SettingsTabView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Environment(\.modelContext) private var modelContext
@@ -202,9 +215,11 @@ struct SettingsTabView: View {
     // per-kg mode
     @State private var proteinPerKg: Double = 2.0
     @State private var fatPerKg: Double = 0.8
+    @State private var carbsPerKg: Double = 3.0
     // total-gram mode
     @State private var proteinTotalG: Double = 160.0
     @State private var fatTotalG: Double = 64.0
+    @State private var carbsTotalG: Double = 220.0
 
     @State private var fiber: Double = 25
     @State private var waterL: Double = 2.5
@@ -213,22 +228,32 @@ struct SettingsTabView: View {
 
     @State private var inputMode: MacroInputMode = .perKg
     @State private var bodyWeightKg: Double = 80
-    @State private var carbsAutoMsg: String = ""
     @State private var toastMsg: String = ""
     @State private var showToast = false
 
+    @AppStorage("autoMacro") private var autoMacroRaw: String = AutoMacro.carbs.rawValue
+
     // --- derived ---
+    var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
+
+    var proteinRawG: Double { inputMode == .perKg ? proteinPerKg * bodyWeightKg : proteinTotalG }
+    var fatRawG:     Double { inputMode == .perKg ? fatPerKg * bodyWeightKg : fatTotalG }
+    var carbsRawG:   Double { inputMode == .perKg ? carbsPerKg * bodyWeightKg : carbsTotalG }
+
     var proteinG: Double {
-        inputMode == .perKg ? proteinPerKg * bodyWeightKg : proteinTotalG
+        guard autoMacro == .protein else { return proteinRawG }
+        return max(0, (calories - carbsRawG * 4 - fatRawG * 9) / 4)
     }
     var fatG: Double {
-        inputMode == .perKg ? fatPerKg * bodyWeightKg : fatTotalG
+        guard autoMacro == .fat else { return fatRawG }
+        return max(0, (calories - proteinRawG * 4 - carbsRawG * 4) / 9)
     }
     var carbsG: Double {
-        max(0, (calories - proteinG * 4 - fatG * 9) / 4)
+        guard autoMacro == .carbs else { return carbsRawG }
+        return max(0, (calories - proteinRawG * 4 - fatRawG * 9) / 4)
     }
+    var macrosOk: Bool { proteinG >= 0 && carbsG >= 0 && fatG >= 0 }
     var totalMacroKcal: Double { proteinG * 4 + carbsG * 4 + fatG * 9 }
-    var carbsOk: Bool { (calories - proteinG * 4 - fatG * 9) >= 0 }
 
     var body: some View {
         NavigationStack {
@@ -254,82 +279,78 @@ struct SettingsTabView: View {
                         HStack(spacing: 4) {
                             Text("Macro attivi:").font(.caption2).foregroundStyle(.secondary)
                             Text(String(format: "%.0f kcal", totalMacroKcal))
-                                .font(.caption2.bold()).foregroundStyle(carbsOk ? .green : .red)
+                                .font(.caption2.bold()).foregroundStyle(macrosOk ? .green : .red)
                         }
                     }
                 } header: { Text("Calorie giornaliere") }
 
-                // MARK: Macro input mode
+                // MARK: Macro mode + auto selection
                 Section {
-                    Picker("Modalità inserimento", selection: $inputMode) {
-                        ForEach(MacroInputMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: inputMode) { recalc() }
-                } header: { Text("Modalità macro") }
-
-                // MARK: Protein & Fat (user-controlled)
-                Section {
-                    if inputMode == .perKg {
-                        SmartStepper(
-                            label: "Proteine",
-                            value: $proteinPerKg,
-                            step: 0.1,
-                            format: "%.1f g/kg  (→ %.0f g)",
-                            formatArgs: [proteinPerKg, proteinG],
-                            color: FitSyncTheme.protein,
-                            onChange: recalc
-                        )
-                        SmartStepper(
-                            label: "Grassi",
-                            value: $fatPerKg,
-                            step: 0.05,
-                            format: "%.2f g/kg  (→ %.0f g)",
-                            formatArgs: [fatPerKg, fatG],
-                            color: FitSyncTheme.fat,
-                            onChange: recalc
-                        )
-                    } else {
-                        SmartStepper(
-                            label: "Proteine",
-                            value: $proteinTotalG,
-                            step: 1,
-                            format: "%.0f g",
-                            color: FitSyncTheme.protein,
-                            onChange: recalc,
-                            allowsDirectInput: true
-                        )
-                        SmartStepper(
-                            label: "Grassi",
-                            value: $fatTotalG,
-                            step: 1,
-                            format: "%.0f g",
-                            color: FitSyncTheme.fat,
-                            onChange: recalc,
-                            allowsDirectInput: true
-                        )
-                    }
-                } header: { Text("Proteine & Grassi") } footer: {
-                    Text("Cambia proteine o grassi → i carboidrati vengono calcolati automaticamente per raggiungere l'obiettivo calorico.")
-                }
-
-                // MARK: Carbs (auto-calculated)
-                Section {
-                    HStack {
-                        Label("Carboidrati (auto)", systemImage: "function")
-                            .foregroundStyle(carbsOk ? FitSyncTheme.carbs : .red)
-                        Spacer()
-                        if carbsOk {
-                            Text(String(format: "%.0f g", carbsG))
-                                .font(.subheadline.bold()).foregroundStyle(FitSyncTheme.carbs)
-                        } else {
-                            Text("Proteine+Grassi superano le kcal").font(.caption).foregroundStyle(.red)
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Modalità inserimento", systemImage: "slider.horizontal.3")
+                                .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                            MacroModeSelector(selection: $inputMode, onChange: recalc)
+                        }
+                        Divider()
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Macro calcolato automaticamente", systemImage: "function")
+                                .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                            AutoMacroSelector(selection: $autoMacroRaw, onChange: recalc)
                         }
                     }
-                    if !carbsAutoMsg.isEmpty {
-                        Text(carbsAutoMsg).font(.caption2).foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
+                } header: { Text("Macro") } footer: {
+                    Text("Il macro automatico viene calcolato dalle calorie e dagli altri due.")
+                }
+
+                // MARK: Proteine
+                Section {
+                    if autoMacro == .protein {
+                        autoMacroDisplay(value: proteinG, color: FitSyncTheme.protein)
+                    } else if inputMode == .perKg {
+                        SmartStepper(label: "Proteine", value: $proteinPerKg, step: 0.1,
+                                     format: "%.1f g/kg  (→ %.0f g)",
+                                     formatArgs: [proteinPerKg, proteinRawG],
+                                     color: FitSyncTheme.protein, onChange: recalc)
+                    } else {
+                        SmartStepper(label: "Proteine", value: $proteinTotalG, step: 1,
+                                     format: "%.0f g", color: FitSyncTheme.protein,
+                                     onChange: recalc, allowsDirectInput: true)
+                    }
+                } header: { Text("Proteine") }
+
+                // MARK: Carboidrati
+                Section {
+                    if autoMacro == .carbs {
+                        autoMacroDisplay(value: carbsG, color: FitSyncTheme.carbs)
+                    } else if inputMode == .perKg {
+                        SmartStepper(label: "Carboidrati", value: $carbsPerKg, step: 0.5,
+                                     format: "%.1f g/kg  (→ %.0f g)",
+                                     formatArgs: [carbsPerKg, carbsRawG],
+                                     color: FitSyncTheme.carbs, onChange: recalc)
+                    } else {
+                        SmartStepper(label: "Carboidrati", value: $carbsTotalG, step: 5,
+                                     format: "%.0f g", color: FitSyncTheme.carbs,
+                                     onChange: recalc, allowsDirectInput: true)
                     }
                 } header: { Text("Carboidrati") }
+
+                // MARK: Grassi
+                Section {
+                    if autoMacro == .fat {
+                        autoMacroDisplay(value: fatG, color: FitSyncTheme.fat)
+                    } else if inputMode == .perKg {
+                        SmartStepper(label: "Grassi", value: $fatPerKg, step: 0.05,
+                                     format: "%.2f g/kg  (→ %.0f g)",
+                                     formatArgs: [fatPerKg, fatRawG],
+                                     color: FitSyncTheme.fat, onChange: recalc)
+                    } else {
+                        SmartStepper(label: "Grassi", value: $fatTotalG, step: 1,
+                                     format: "%.0f g", color: FitSyncTheme.fat,
+                                     onChange: recalc, allowsDirectInput: true)
+                    }
+                } header: { Text("Grassi") }
 
                 // MARK: Fiber & Water
                 Section {
@@ -354,7 +375,7 @@ struct SettingsTabView: View {
                     }
                     .foregroundStyle(FitSyncTheme.accent)
                 } footer: {
-                    Text("Default: 2g proteine/kg · 0.8g grassi/kg · carboidrati per raggiungere l'obiettivo calorico.")
+                    Text("Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg.")
                 }
             }
             .navigationTitle("Obiettivi")
@@ -380,19 +401,31 @@ struct SettingsTabView: View {
         }
     }
 
-    private func recalc() {
-        let prevCarbs = carbsG
-        saveGoals()
-        if carbsOk && abs(carbsG - prevCarbs) > 1 {
-            carbsAutoMsg = "Carboidrati ricalcolati: \(Int(carbsG))g"
-            flash("Carboidrati aggiornati a \(Int(carbsG))g")
+    @ViewBuilder
+    private func autoMacroDisplay(value: Double, color: Color) -> some View {
+        HStack {
+            Label("calcolato automaticamente", systemImage: "function")
+                .font(.caption).foregroundStyle(.secondary)
+            Spacer()
+            if value >= 0 {
+                Text(String(format: "%.0f g", value))
+                    .font(.subheadline.bold()).foregroundStyle(color)
+            } else {
+                Text("Calorie insufficienti").font(.caption).foregroundStyle(.red)
+            }
         }
+    }
+
+    private func recalc() {
+        saveGoals()
     }
 
     private func applyDefaults() {
         inputMode    = .perKg
+        autoMacroRaw = AutoMacro.carbs.rawValue
         proteinPerKg = 2.0
         fatPerKg     = 0.8
+        carbsPerKg   = 3.0
         recalc()
         flash("Default applicati per \(String(format: "%.0f", bodyWeightKg))kg")
     }
@@ -405,19 +438,20 @@ struct SettingsTabView: View {
         steps      = Double(g.dailySteps)
         activeKcal = g.dailyActiveCalories
 
-        // Always populate both sets of vars
         let pw = bodyWeightKg > 0 ? bodyWeightKg : 80
         proteinTotalG = g.dailyProteinG
         fatTotalG     = g.dailyFatG
+        carbsTotalG   = g.dailyCarbsG
         let ppkg = g.dailyProteinG / pw
         let fpkg = g.dailyFatG / pw
+        let cpkg = g.dailyCarbsG / pw
         if ppkg >= 1.0 && ppkg <= 4.0 && fpkg >= 0.3 && fpkg <= 3.0 {
             inputMode    = .perKg
             proteinPerKg = ppkg
             fatPerKg     = fpkg
+            carbsPerKg   = max(1.0, cpkg)
         } else {
             inputMode = .total
-            // perKg defaults remain at 2.0 / 0.8
         }
     }
 
@@ -517,6 +551,95 @@ private struct SmartStepper: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        }
+    }
+}
+
+// MARK: - MacroModeSelector
+
+private struct MacroModeSelector: View {
+    @Binding var selection: MacroInputMode
+    var onChange: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(MacroInputMode.allCases, id: \.self) { mode in
+                let selected = selection == mode
+                Button { selection = mode; onChange() } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: mode == .perKg ? "scalemass.fill" : "textformat.123")
+                            .font(.headline)
+                        Text(mode == .perKg ? "g / kg" : "Grammi totali")
+                            .font(.caption.bold())
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        selected ? FitSyncTheme.accent.opacity(0.12) : Color(.systemGray6),
+                        in: RoundedRectangle(cornerRadius: 10)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(selected ? FitSyncTheme.accent : .clear, lineWidth: 1.5)
+                    )
+                    .foregroundStyle(selected ? FitSyncTheme.accent : FitSyncTheme.textSecondary)
+                }
+                .buttonStyle(.plain)
+                .animation(.spring(response: 0.2), value: selected)
+            }
+        }
+    }
+}
+
+// MARK: - AutoMacroSelector
+
+private struct AutoMacroSelector: View {
+    @Binding var selection: String
+    var onChange: () -> Void
+
+    private func color(for macro: AutoMacro) -> Color {
+        switch macro {
+        case .protein: return FitSyncTheme.protein
+        case .carbs:   return FitSyncTheme.carbs
+        case .fat:     return FitSyncTheme.fat
+        }
+    }
+    private func emoji(for macro: AutoMacro) -> String {
+        switch macro {
+        case .protein: return "🥩"
+        case .carbs:   return "🍞"
+        case .fat:     return "🥑"
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(AutoMacro.allCases, id: \.rawValue) { macro in
+                let selected = selection == macro.rawValue
+                let color = color(for: macro)
+                Button { selection = macro.rawValue; onChange() } label: {
+                    VStack(spacing: 4) {
+                        Text(emoji(for: macro)).font(.title3)
+                        Text(macro.rawValue).font(.caption.bold())
+                        Text("automatico")
+                            .font(.caption2)
+                            .foregroundStyle(selected ? color.opacity(0.85) : .clear)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        selected ? color.opacity(0.12) : Color(.systemGray6),
+                        in: RoundedRectangle(cornerRadius: 10)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(selected ? color : .clear, lineWidth: 1.5)
+                    )
+                    .foregroundStyle(selected ? color : FitSyncTheme.textSecondary)
+                }
+                .buttonStyle(.plain)
+                .animation(.spring(response: 0.2), value: selected)
             }
         }
     }

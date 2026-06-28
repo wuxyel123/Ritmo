@@ -72,7 +72,8 @@ struct NutritionView: View {
                             MacroRow(emoji: "💧", label: "Acqua",
                                      current: n.waterMl / 1000,
                                      goal: goals.dailyWaterMl / 1000,
-                                     unit: "L", color: FitSyncTheme.water)
+                                     unit: "L", color: FitSyncTheme.water,
+                                     fractionDigits: 1)
                         }
                     }
 

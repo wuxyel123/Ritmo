@@ -197,6 +197,58 @@ struct EmptyWorkoutView: View {
     }
 }
 
+// MARK: - Route Zone Segment
+
+struct RouteSegment: Identifiable {
+    let id = UUID()
+    let coordinates: [CLLocationCoordinate2D]
+    let zone: Int  // 0 = no HR data, 1–5 = HR zones
+
+    var color: Color {
+        switch zone {
+        case 1: return .blue
+        case 2: return .green
+        case 3: return .yellow
+        case 4: return .orange
+        case 5: return .red
+        default: return .gray
+        }
+    }
+    var label: String { zone > 0 ? "Z\(zone)" : "--" }
+}
+
+private func buildRouteSegments(locations: [CLLocation], hrSamples: [HRSample], maxHR: Double) -> [RouteSegment] {
+    guard !locations.isEmpty else { return [] }
+
+    // Assign a zone index (1-5) to each GPS point by finding the nearest HR sample
+    let zones: [Int] = locations.map { loc in
+        guard !hrSamples.isEmpty else { return 0 }
+        let t = loc.timestamp
+        let closest = hrSamples.min { abs($0.date.timeIntervalSince(t)) < abs($1.date.timeIntervalSince(t)) }!
+        let pct = closest.bpm / maxHR
+        if pct < 0.60 { return 1 }
+        if pct < 0.70 { return 2 }
+        if pct < 0.80 { return 3 }
+        if pct < 0.90 { return 4 }
+        return 5
+    }
+
+    // Group consecutive same-zone points; include the transition point in both
+    // adjacent segments so there are no visual gaps between polylines.
+    var segments: [RouteSegment] = []
+    var i = 0
+    while i < locations.count {
+        let zone = zones[i]
+        var coords = [locations[i].coordinate]
+        var j = i + 1
+        while j < locations.count && zones[j] == zone { coords.append(locations[j].coordinate); j += 1 }
+        if j < locations.count { coords.append(locations[j].coordinate) }
+        segments.append(RouteSegment(coordinates: coords, zone: zone))
+        i = j
+    }
+    return segments
+}
+
 // MARK: - Workout Detail
 
 struct WorkoutDetailView: View {
@@ -204,7 +256,8 @@ struct WorkoutDetailView: View {
     let session: WorkoutSession
 
     @State private var hrData: WorkoutHeartRateData?
-    @State private var routeCoords: [CLLocationCoordinate2D] = []
+    @State private var routeLocations: [CLLocation] = []
+    @State private var routeSegments: [RouteSegment] = []
     @State private var isLoadingHR = false
 
     var setsByExercise: [(String, [WorkoutSet])] {
@@ -315,22 +368,24 @@ struct WorkoutDetailView: View {
                         }
                     }
 
-                    // MARK: Map (GPS workouts)
-                    if !routeCoords.isEmpty {
+                    // MARK: Map (GPS workouts — colored by HR zone)
+                    if !routeSegments.isEmpty {
                         FitCard {
                             VStack(alignment: .leading, spacing: 8) {
                                 SectionHeader(title: "Percorso")
                                 Map {
-                                    MapPolyline(coordinates: routeCoords)
-                                        .stroke(.red, lineWidth: 3)
-                                    if let first = routeCoords.first {
-                                        Annotation("Start", coordinate: first) {
+                                    ForEach(routeSegments) { seg in
+                                        MapPolyline(coordinates: seg.coordinates)
+                                            .stroke(seg.color, lineWidth: 4)
+                                    }
+                                    if let first = routeSegments.first?.coordinates.first {
+                                        Annotation("", coordinate: first) {
                                             Image(systemName: "circle.fill")
                                                 .foregroundStyle(.green).font(.caption)
                                         }
                                     }
-                                    if let last = routeCoords.last {
-                                        Annotation("Fine", coordinate: last) {
+                                    if let last = routeSegments.last?.coordinates.last {
+                                        Annotation("", coordinate: last) {
                                             Image(systemName: "flag.fill")
                                                 .foregroundStyle(.red).font(.caption)
                                         }
@@ -338,8 +393,27 @@ struct WorkoutDetailView: View {
                                 }
                                 .frame(height: 220)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                                // Zone legend (only when HR data is available)
+                                let hasZones = routeSegments.contains { $0.zone > 0 }
+                                if hasZones {
+                                    HStack(spacing: 14) {
+                                        ForEach([1,2,3,4,5], id: \.self) { z in
+                                            if routeSegments.contains(where: { $0.zone == z }) {
+                                                HStack(spacing: 4) {
+                                                    RoundedRectangle(cornerRadius: 2)
+                                                        .fill(RouteSegment(coordinates: [], zone: z).color)
+                                                        .frame(width: 16, height: 4)
+                                                    Text("Z\(z)").font(.caption2).foregroundStyle(.secondary)
+                                                }
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                }
+
                                 Text(String(format: "%.2f km · %d punti GPS",
-                                     session.distanceMeters / 1000, routeCoords.count))
+                                     session.distanceMeters / 1000, routeLocations.count))
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                         }
@@ -401,14 +475,15 @@ struct WorkoutDetailView: View {
             guard session.source == .healthKit else { return }
             isLoadingHR = true
             async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime, end: session.endTime)
-            let rawRoute: [(Double, Double)]
-            if let uuid = session.hkWorkoutUUID {
-                rawRoute = await healthRepo.fetchWorkoutRoute(workoutUUID: uuid)
-            } else {
-                rawRoute = []
+            async let locs = healthRepo.fetchWorkoutRoute(start: session.startTime, end: session.endTime)
+            let (fetchedHR, fetchedLocs) = await (hr, locs)
+            hrData = fetchedHR
+            routeLocations = fetchedLocs
+            if let hr = fetchedHR, !fetchedLocs.isEmpty {
+                routeSegments = buildRouteSegments(locations: fetchedLocs, hrSamples: hr.samples, maxHR: 190)
+            } else if !fetchedLocs.isEmpty {
+                routeSegments = [RouteSegment(coordinates: fetchedLocs.map(\.coordinate), zone: 0)]
             }
-            hrData = await hr
-            routeCoords = rawRoute.map { CLLocationCoordinate2D(latitude: $0.0, longitude: $0.1) }
             isLoadingHR = false
         }
     }
