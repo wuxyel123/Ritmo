@@ -1,0 +1,50 @@
+# Xcode
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# Xcode Previews
+PreviewAssets.xcassets/
+
+# Swift Package Manager — fetched dependencies and build artifacts only
+.build/
+.swiftpm/xcode/
+Packages/**/.build/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Accio
+Dependencies/
+.accio/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# OS
+.DS_Store
+.Trashes
+.Spotlight-V100
+
+# Sensitive / local config
+*.env
+*.pem
+secrets.plist
