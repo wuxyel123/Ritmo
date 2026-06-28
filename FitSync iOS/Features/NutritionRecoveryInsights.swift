@@ -172,23 +172,11 @@ struct RecoveryView: View {
 
                     // MARK: Sonno
                     if let sleep = vm.lastSleep {
-                        let isLastNight: Bool = {
-                            let cal = Calendar.current
-                            return cal.isDateInToday(sleep.endTime) || cal.isDateInYesterday(sleep.endTime)
-                        }()
-
                         Button { showingSleepDetail = true } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(isLastNight ? "Sonno stanotte" : "Ultimo sonno registrato")
-                                                .font(.headline)
-                                            if !isLastNight {
-                                                Text(sleep.startTime, format: .dateTime.weekday(.wide).day().month())
-                                                    .font(.caption).foregroundStyle(.orange)
-                                            }
-                                        }
+                                        Text("Sonno stanotte").font(.headline)
                                         Spacer()
                                         Image(systemName: "chevron.right")
                                             .font(.caption).foregroundStyle(.secondary)
@@ -778,15 +766,13 @@ final class RecoveryViewModel: ObservableObject {
         }
         sleepHistory = sleepArr
 
-        // Most-recent sleep: direct HealthKit query sorted by endDate so sync
-        // delays never cause the wrong night to show up
-        async let latest = healthRepo.fetchLatestSleep(withinDays: 14)
+        async let todaySleep = healthRepo.fetchSleep(for: .now)
         async let hrv = healthRepo.fetchHRVHistory(days: days)
         async let rhr = healthRepo.fetchRHRHistory(days: days)
         async let wt  = healthRepo.fetchBodyWeightHistoryPoints(days: days)
-        lastSleep     = await latest
-        hrvHistory    = await hrv
-        rhrHistory    = await rhr
+        lastSleep  = await todaySleep
+        hrvHistory = await hrv
+        rhrHistory = await rhr
         weightHistory = await wt
     }
 }
