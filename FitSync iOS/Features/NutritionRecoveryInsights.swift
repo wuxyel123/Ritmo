@@ -491,15 +491,13 @@ struct HeartMetric: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 2) {
+            ZStack(alignment: .topTrailing) {
                 Image(systemName: icon).foregroundStyle(color).font(.caption)
+                    .frame(maxWidth: .infinity)
                 if info != nil {
-                    Button { showingInfo = true } label: {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary.opacity(0.6))
                 }
             }
             Text(value).font(.title3.bold())
@@ -508,6 +506,9 @@ struct HeartMetric: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture { if info != nil { showingInfo = true } }
         .sheet(isPresented: $showingInfo) {
             if let info { MetricInfoSheet(info: info) }
         }
