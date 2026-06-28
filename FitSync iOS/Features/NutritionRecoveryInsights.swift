@@ -161,6 +161,7 @@ struct RecoveryView: View {
     @Query private var storedGoals: [UserGoals]
     @StateObject private var vm = RecoveryViewModel()
     @State private var period: HistoryPeriod = .week
+    @State private var showingSleepDetail = false
 
     var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
@@ -169,28 +170,55 @@ struct RecoveryView: View {
             ScrollView {
                 VStack(spacing: FitSyncTheme.gap) {
 
-                    // MARK: Sonno stanotte
-                    FitCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            SectionHeader(title: "Sonno stanotte")
-                            if let sleep = vm.lastSleep {
-                                HStack(spacing: 0) {
-                                    SleepMetric(value: String(format: "%.1fh", sleep.totalHours),
-                                                label: "totale", color: FitSyncTheme.sleep)
-                                    SleepMetric(value: String(format: "%.1fh", sleep.deepSleepHours),
-                                                label: "profondo", color: .indigo)
-                                    SleepMetric(value: String(format: "%.1fh", sleep.remSleepHours),
-                                                label: "REM", color: .purple)
-                                    SleepMetric(value: "\(sleep.qualityScore)",
-                                                label: "score /100",
-                                                color: sleep.qualityScore > 70 ? .green : .orange)
+                    // MARK: Sonno
+                    if let sleep = vm.lastSleep {
+                        let isLastNight: Bool = {
+                            let cal = Calendar.current
+                            return cal.isDateInToday(sleep.endTime) || cal.isDateInYesterday(sleep.endTime)
+                        }()
+
+                        Button { showingSleepDetail = true } label: {
+                            FitCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(isLastNight ? "Sonno stanotte" : "Ultimo sonno registrato")
+                                                .font(.headline)
+                                            if !isLastNight {
+                                                Text(sleep.startTime, format: .dateTime.weekday(.wide).day().month())
+                                                    .font(.caption).foregroundStyle(.orange)
+                                            }
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    HStack(spacing: 0) {
+                                        SleepMetric(value: String(format: "%.1fh", sleep.totalHours),
+                                                    label: "totale", color: FitSyncTheme.sleep)
+                                        SleepMetric(value: String(format: "%.1fh", sleep.deepSleepHours),
+                                                    label: "profondo", color: .indigo)
+                                        SleepMetric(value: String(format: "%.1fh", sleep.remSleepHours),
+                                                    label: "REM", color: .purple)
+                                        SleepMetric(value: "\(sleep.qualityScore)",
+                                                    label: "score /100",
+                                                    color: sleep.qualityScore > 70 ? .green : .orange)
+                                    }
+                                    FitProgressBar(value: sleep.totalHours / 8.0, color: FitSyncTheme.sleep)
+                                    if !sleep.stages.isEmpty {
+                                        SleepStageBar(session: sleep)
+                                    }
                                 }
-                                FitProgressBar(value: sleep.totalHours / 8.0, color: FitSyncTheme.sleep)
-                                // Sleep stage breakdown donut
-                                if !sleep.stages.isEmpty {
-                                    SleepStageBar(session: sleep)
-                                }
-                            } else {
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .sheet(isPresented: $showingSleepDetail) {
+                            SleepDetailSheet(session: sleep)
+                        }
+                    } else {
+                        FitCard {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Sonno stanotte").font(.headline)
                                 EmptyDataView(
                                     message: "Nessun dato sonno. Assicurati che iPhone o Apple Watch registri il sonno. Puoi anche inserirlo manualmente in Apple Salute."
                                 )
@@ -208,9 +236,31 @@ struct RecoveryView: View {
                                 HeartMetric(value: vm.activity.heartRateAvg.map { "\(Int($0))" } ?? "--",
                                             label: "FC media", unit: "bpm", color: .pink, icon: "heart")
                                 HeartMetric(value: vm.activity.hrv.map { "\(Int($0))" } ?? "--",
-                                            label: "HRV", unit: "ms", color: .green, icon: "waveform.path.ecg")
+                                            label: "HRV", unit: "ms", color: .green, icon: "waveform.path.ecg",
+                                            info: MetricInfo(
+                                                title: "HRV — Variabilità Cardiaca",
+                                                whatItIs: "La HRV (Heart Rate Variability) misura la variazione del tempo tra un battito cardiaco e il successivo. Valori alti indicano che il sistema nervoso autonomo è ben bilanciato: il corpo è pronto per lo sforzo fisico e il recupero è ottimale. Valori bassi segnalano stress, fatica o malattia.\n\nApple Watch la misura automaticamente durante il sonno.",
+                                                goodValues: [
+                                                    ("> 60 ms", "Eccellente — atletici o molto riposati", .green),
+                                                    ("40–60 ms", "Buono — nella media degli adulti attivi", .blue),
+                                                    ("20–40 ms", "Nella norma", .yellow),
+                                                    ("< 20 ms", "Sotto la media — corpo sotto stress", .orange)
+                                                ],
+                                                tip: "La HRV varia molto da persona a persona. Monitora il TUO trend nel tempo: se la tua HRV è stabile o in aumento, stai recuperando bene. Un calo improvviso può indicare overtraining o malattia in arrivo."
+                                            ))
                                 HeartMetric(value: vm.activity.vo2Max.map { String(format: "%.0f", $0) } ?? "--",
-                                            label: "VO₂ Max", unit: "ml/kg", color: .blue, icon: "lungs.fill")
+                                            label: "VO₂ Max", unit: "ml/kg/min", color: .blue, icon: "lungs.fill",
+                                            info: MetricInfo(
+                                                title: "VO₂ Max",
+                                                whatItIs: "Il VO₂ Max è la quantità massima di ossigeno che i tuoi muscoli riescono a utilizzare durante uno sforzo intenso. È il principale indicatore di fitness cardiovascolare e predice la salute a lungo termine.\n\nApple Watch lo stima durante camminate e corse all'aperto con GPS.",
+                                                goodValues: [
+                                                    ("> 55 ml/kg/min", "Eccellente (uomini) / > 48 (donne)", .green),
+                                                    ("45–55", "Buono — sopra la media", .blue),
+                                                    ("35–45", "Nella media", .yellow),
+                                                    ("< 35", "Sotto la media — da migliorare", .orange)
+                                                ],
+                                                tip: "Il VO₂ Max migliora con l'allenamento aerobico regolare: corsa, ciclismo, nuoto. Anche 20-30 minuti di cardio moderato 3 volte a settimana producono benefici misurabili in poche settimane."
+                                            ))
                             }
                         }
                     }
@@ -219,9 +269,31 @@ struct RecoveryView: View {
                     FitCard {
                         HStack(spacing: 0) {
                             HeartMetric(value: vm.activity.spO2.map { String(format: "%.0f%%", $0) } ?? "--",
-                                        label: "Ossigeno", unit: "SpO₂", color: .cyan, icon: "drop.fill")
+                                        label: "Ossigeno", unit: "SpO₂", color: .cyan, icon: "drop.fill",
+                                        info: MetricInfo(
+                                            title: "SpO₂ — Saturazione Ossigeno",
+                                            whatItIs: "La SpO₂ misura la percentuale di emoglobina nel sangue che trasporta ossigeno. Un valore normale indica che i polmoni stanno ossigenando correttamente il sangue.\n\nApple Watch la misura con il sensore di ossigeno nel sangue sul retro. La misurazione avviene principalmente durante il sonno.",
+                                            goodValues: [
+                                                ("95–100%", "Normale — nessuna preoccupazione", .green),
+                                                ("90–94%", "Lieve ipossia — monitora", .yellow),
+                                                ("85–89%", "Ipossia moderata — consulta un medico", .orange),
+                                                ("< 85%", "Ipossia grave — urgente", .red)
+                                            ],
+                                            tip: "Valori occasionalmente bassi durante il sonno possono indicare apnea notturna. Se la SpO₂ scende spesso sotto il 90% durante la notte, parla con il tuo medico."
+                                        ))
                             HeartMetric(value: vm.activity.respiratoryRate.map { String(format: "%.0f", $0) } ?? "--",
-                                        label: "Respiro", unit: "atti/min", color: .teal, icon: "wind")
+                                        label: "Respiro", unit: "atti/min", color: .teal, icon: "wind",
+                                        info: MetricInfo(
+                                            title: "Frequenza Respiratoria",
+                                            whatItIs: "La frequenza respiratoria è il numero di atti respiratori (inspirazione + espirazione) al minuto durante il riposo. È un indicatore sensibile dello stato di salute: si alza in caso di stress, malattia o recupero insufficiente.\n\nApple Watch la misura durante il sonno tramite l'accelerometro.",
+                                            goodValues: [
+                                                ("12–16 atti/min", "Ottimale a riposo", .green),
+                                                ("16–20 atti/min", "Normale", .blue),
+                                                ("20–25 atti/min", "Elevata — possibile stress", .yellow),
+                                                ("> 25 atti/min", "Alta — consulta un medico", .orange)
+                                            ],
+                                            tip: "Un aumento della frequenza respiratoria notturna rispetto al tuo solito può essere uno dei primi segnali di un'infezione in arrivo, anche prima che compaiano altri sintomi."
+                                        ))
                             HeartMetric(value: "\(vm.activity.flightsClimbed)",
                                         label: "Scale", unit: "piani", color: .orange, icon: "figure.stairs")
                             HeartMetric(value: "\(vm.activity.mindfulMinutes)",
@@ -403,18 +475,103 @@ struct SleepStageBar: View {
 
 // TrendChartCard replaced by InteractiveDateChart (defined in FitSyncApp.swift)
 
+struct MetricInfo {
+    let title: String
+    let whatItIs: String
+    let goodValues: [(range: String, label: String, color: Color)]
+    let tip: String
+}
+
 struct HeartMetric: View {
     let value: String; let label: String; let unit: String
     let color: Color; let icon: String
+    var info: MetricInfo? = nil
+
+    @State private var showingInfo = false
+
     var body: some View {
         VStack(spacing: 4) {
-            Image(systemName: icon).foregroundStyle(color).font(.caption)
+            HStack(spacing: 2) {
+                Image(systemName: icon).foregroundStyle(color).font(.caption)
+                if info != nil {
+                    Button { showingInfo = true } label: {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             Text(value).font(.title3.bold())
             Text(unit).font(.system(size: 9)).foregroundStyle(FitSyncTheme.textSecondary)
             Text(label).font(.system(size: 9)).foregroundStyle(FitSyncTheme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+        .sheet(isPresented: $showingInfo) {
+            if let info { MetricInfoSheet(info: info) }
+        }
+    }
+}
+
+struct MetricInfoSheet: View {
+    let info: MetricInfo
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+
+                    // What it is
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Cos'è", systemImage: "questionmark.circle")
+                            .font(.subheadline.bold()).foregroundStyle(FitSyncTheme.accent)
+                        Text(info.whatItIs)
+                            .font(.body).foregroundStyle(.primary)
+                    }
+                    .padding()
+                    .background(FitSyncTheme.cardBG, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))
+
+                    // Good values
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("Valori di riferimento", systemImage: "chart.bar")
+                            .font(.subheadline.bold()).foregroundStyle(FitSyncTheme.accent)
+                        ForEach(info.goodValues, id: \.range) { entry in
+                            HStack(spacing: 12) {
+                                Circle().fill(entry.color).frame(width: 10, height: 10)
+                                Text(entry.range).font(.subheadline.bold()).frame(width: 90, alignment: .leading)
+                                Text(entry.label).font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(FitSyncTheme.cardBG, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))
+
+                    // Tip
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Consiglio", systemImage: "lightbulb")
+                            .font(.subheadline.bold()).foregroundStyle(.yellow)
+                        Text(info.tip)
+                            .font(.body).foregroundStyle(.primary)
+                    }
+                    .padding()
+                    .background(FitSyncTheme.cardBG, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))
+                }
+                .padding(FitSyncTheme.pagePadding)
+            }
+            .navigationTitle(info.title)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 
@@ -424,6 +581,177 @@ struct EmptyDataView: View {
         Text(message)
             .font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
             .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding()
+    }
+}
+
+struct SleepDetailSheet: View {
+    let session: SleepSession
+    @Environment(\.dismiss) private var dismiss
+
+    var coreHours: Double {
+        session.stages.filter { $0.type == .core }.reduce(0) { $0 + $1.durationHours }
+    }
+    var awakeHours: Double {
+        session.stages.filter { $0.type == .awake }.reduce(0) { $0 + $1.durationHours }
+    }
+    var qualityColor: Color {
+        session.qualityScore >= 75 ? .green : session.qualityScore >= 50 ? .orange : .red
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: FitSyncTheme.gap) {
+
+                    // Score ring + key times
+                    HStack(spacing: 24) {
+                        ZStack {
+                            Circle().stroke(Color.gray.opacity(0.2), lineWidth: 10)
+                            Circle()
+                                .trim(from: 0, to: CGFloat(session.qualityScore) / 100)
+                                .stroke(qualityColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
+                            VStack(spacing: 0) {
+                                Text("\(session.qualityScore)")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundStyle(qualityColor)
+                                Text("/ 100")
+                                    .font(.caption2).foregroundStyle(FitSyncTheme.textSecondary)
+                            }
+                        }
+                        .frame(width: 90, height: 90)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            sleepTimeRow("Addormentamento", session.startTime, "moon.zzz.fill", .indigo)
+                            sleepTimeRow("Sveglia", session.endTime, "sun.horizon.fill", .orange)
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock").foregroundStyle(FitSyncTheme.sleep).font(.caption)
+                                Text(String(format: "%.1f ore totali", session.totalHours))
+                                    .font(.subheadline.bold())
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding()
+                    .background(FitSyncTheme.cardBG, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))
+
+                    // Stage breakdown numbers
+                    FitCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Fasi del sonno").font(.headline)
+                            HStack(spacing: 0) {
+                                stageMetric(String(format: "%.1fh", session.deepSleepHours),
+                                            "Profondo", .indigo, "Restaurativo")
+                                stageMetric(String(format: "%.1fh", session.remSleepHours),
+                                            "REM", .purple, "Sogni / memoria")
+                                stageMetric(String(format: "%.1fh", coreHours),
+                                            "Core", FitSyncTheme.sleep, "Sonno leggero")
+                                if awakeHours > 0 {
+                                    stageMetric(String(format: "%.1fh", awakeHours),
+                                                "Sveglio", .orange, "Svegliate")
+                                }
+                            }
+                            if !session.stages.isEmpty {
+                                SleepStageBar(session: session)
+                            }
+                        }
+                    }
+
+                    // Stage timeline
+                    if !session.stages.isEmpty {
+                        FitCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Timeline").font(.headline)
+                                ForEach(session.stages.sorted { $0.startTime < $1.startTime }) { stage in
+                                    HStack(spacing: 10) {
+                                        Circle().fill(stageColor(stage.type)).frame(width: 8, height: 8)
+                                        Text(stage.startTime, format: .dateTime.hour().minute())
+                                            .font(.caption).frame(width: 44, alignment: .leading)
+                                        Text(stage.type.rawValue).font(.caption.bold())
+                                        Spacer()
+                                        Text(String(format: "%.0f min", stage.durationHours * 60))
+                                            .font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Score explanation
+                    FitCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Come si calcola il punteggio", systemImage: "info.circle")
+                                .font(.subheadline.bold()).foregroundStyle(FitSyncTheme.accent)
+                            scoreRow("Durata (max 50 pt)",
+                                     Int(min(session.totalHours / 8.0, 1.0) * 50),
+                                     "Obiettivo: 8 ore di sonno")
+                            scoreRow("Sonno profondo (max 30 pt)",
+                                     Int(min(session.deepSleepHours / 1.5, 1.0) * 30),
+                                     "Obiettivo: 1.5 ore di sonno profondo")
+                            scoreRow("Sonno REM (max 20 pt)",
+                                     Int(min(session.remSleepHours / 1.5, 1.0) * 20),
+                                     "Obiettivo: 1.5 ore di REM")
+                        }
+                    }
+                }
+                .padding(FitSyncTheme.pagePadding)
+            }
+            .navigationTitle("Dettaglio sonno")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func stageColor(_ type: SleepStageType) -> Color {
+        switch type {
+        case .deep: return .indigo
+        case .rem: return .purple
+        case .core: return FitSyncTheme.sleep
+        case .awake: return .orange
+        case .unspecified: return .gray
+        }
+    }
+
+    @ViewBuilder
+    private func sleepTimeRow(_ label: String, _ date: Date, _ icon: String, _ color: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon).foregroundStyle(color).font(.caption)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(label).font(.caption2).foregroundStyle(FitSyncTheme.textSecondary)
+                Text(date, format: .dateTime.hour().minute()).font(.subheadline.bold())
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func stageMetric(_ value: String, _ label: String, _ color: Color, _ sub: String) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(.title3.bold()).foregroundStyle(color)
+            Text(label).font(.caption2.bold())
+            Text(sub).font(.system(size: 8)).foregroundStyle(FitSyncTheme.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func scoreRow(_ label: String, _ pts: Int, _ description: String) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.caption.bold())
+                Text(description).font(.caption2).foregroundStyle(FitSyncTheme.textSecondary)
+            }
+            Spacer()
+            Text("\(pts) pt").font(.caption.bold()).foregroundStyle(FitSyncTheme.accent)
+        }
     }
 }
 
@@ -438,16 +766,20 @@ final class RecoveryViewModel: ObservableObject {
     @Published var weightHistory: [DateValuePoint] = []
 
     func loadHistory(healthRepo: HealthKitRepository, days: Int) async {
-        // Sleep
+        let chartDays = min(days, 30)
+        let searchDays = max(chartDays, 14)   // always look back at least 14 nights for lastSleep
         var sleepArr: [SleepSession] = []
-        for i in 0..<min(days, 30) {
+        var foundLast: SleepSession?
+
+        for i in 0..<searchDays {
             if let d = Calendar.current.date(byAdding: .day, value: -i, to: .now),
                let s = await healthRepo.fetchSleep(for: d) {
-                sleepArr.append(s)
+                if i < chartDays { sleepArr.append(s) }
+                if foundLast == nil { foundLast = s }
             }
         }
         sleepHistory = sleepArr
-        lastSleep = sleepArr.first
+        lastSleep = foundLast
 
         async let hrv = healthRepo.fetchHRVHistory(days: days)
         async let rhr = healthRepo.fetchRHRHistory(days: days)
