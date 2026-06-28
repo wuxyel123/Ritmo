@@ -1,0 +1,90 @@
+// Navigation tabs
+"Oggi" = "Aujourd'hui";
+"Allenamenti" = "Séances";
+"Nutrizione" = "Nutrition";
+"Recupero" = "Récupération";
+"Obiettivi" = "Objectifs";
+
+// Settings sections
+"Corpo" = "Corps";
+"Calorie giornaliere" = "Calories journalières";
+"Macro" = "Macros";
+"Proteine" = "Protéines";
+"Carboidrati" = "Glucides";
+"Grassi" = "Lipides";
+"Fibre & Acqua" = "Fibres & Eau";
+"Fibre" = "Fibres";
+"Acqua" = "Eau";
+"Movimento" = "Mouvement";
+"Passi" = "Pas";
+"Lingua" = "Langue";
+
+// Settings labels
+"Peso corporeo (da Apple Salute)" = "Poids corporel (depuis Apple Santé)";
+"Usato per calcolare i macro in modalità 'g per kg corporeo'." = "Utilisé pour calculer les macros en mode 'g par kg corporel'.";
+"Calorie totali" = "Calories totales";
+"Macro attivi:" = "Macros actifs:";
+"Modalità inserimento" = "Mode de saisie";
+"Macro calcolato automaticamente" = "Macro calculé automatiquement";
+"Il macro automatico viene calcolato dalle calorie e dagli altri due." = "Le macro automatique est calculé à partir des calories et des deux autres.";
+"Calorie attive" = "Calories actives";
+"Ripristina default per il tuo peso" = "Réinitialiser les valeurs par défaut";
+"Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg." = "Par défaut: glucides automatiques · 2g protéines/kg · 0.8g lipides/kg.";
+"calcolato automaticamente" = "calculé automatiquement";
+"Calorie insufficienti" = "Calories insuffisantes";
+"g per kg corporeo" = "g par kg corporel";
+"grammi totali" = "grammes totaux";
+"Grammi totali" = "Grammes totaux";
+"automatico" = "automatique";
+
+// Macro modes
+"g / kg" = "g / kg";
+
+// Dashboard
+"Score Giornaliero" = "Score journalier";
+"Punteggio del giorno" = "Score du jour";
+"Movimento" = "Mouvement";
+
+// Charts
+"Media: " = "Moyenne: ";
+"Obiettivo: " = "Objectif: ";
+"Media" = "Moyenne";
+"Obiettivo" = "Objectif";
+"Periodo" = "Période";
+
+// Common
+"Chiudi" = "Fermer";
+"Vai a oggi" = "Aller à aujourd'hui";
+"Automatico (Sistema)" = "Automatique (Système)";
+
+// Nutrition
+"Calorie" = "Calories";
+"Come tracciare la nutrizione" = "Comment suivre la nutrition";
+"Dati via Yazio → Apple Health" = "Données via Yazio → Apple Santé";
+"FitSync legge automaticamente i dati nutrizionali da Apple Salute. Se usi **Yazio**, attiva la sincronizzazione in: Yazio → Profilo → Connessioni → Apple Salute. I dati appariranno qui automaticamente." = "FitSync lit automatiquement les données nutritionnelles depuis Apple Santé. Si vous utilisez **Yazio**, activez la synchronisation dans: Yazio → Profil → Connexions → Apple Santé. Les données apparaîtront ici automatiquement.";
+
+// Recovery
+"Sonno" = "Sommeil";
+"Frequenza cardiaca" = "Fréquence cardiaque";
+"Variabilità" = "Variabilité";
+
+// Workouts
+"Nessun allenamento" = "Aucune séance";
+"Nessun allenamento trovato." = "Aucune séance trouvée.";
+
+// Water logging
+"Aggiungi acqua" = "Ajouter de l'eau";
+"Personalizzato" = "Personnalisé";
+"Aggiungi" = "Ajouter";
+"Annulla" = "Annuler";
+"ml aggiunti" = "ml ajoutés";
+"Quantità (ml)" = "Quantité (ml)";
+"Inserisci quantità" = "Entrez la quantité";
+
+// Score
+"Pieno punteggio con un allenamento, o se raggiungi l'obiettivo passi (riposo attivo intenzionale). Parziale in proporzione ai passi se nessuno dei due." = "Score complet avec un entraînement, ou si vous atteignez votre objectif de pas (repos actif intentionnel). Partiel en proportion des pas si ni l'un ni l'autre.";
+"Passi raggiunti — riposo attivo" = "Pas atteints — repos actif";
+"Nessun allenamento oggi" = "Pas d'entraînement aujourd'hui";
+
+// Settings footer
+"Default applicati per" = "Valeurs par défaut appliquées pour";

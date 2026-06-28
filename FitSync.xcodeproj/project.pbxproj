@@ -21,7 +21,8 @@
 		DD00000000000000000CAAAA /* Assets.xcassets (Widgets) in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */; };
 		DD00000000000000000DAAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000004AAAA /* FitSyncCore */; };
 		DD00000000000000000EAAAA /* FitSync Widgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC000000000000000003AAAA /* FitSync Widgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		DD00000000000000000FAAAA /* FitSync watchOS.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CC000000000000000002AAAA /* FitSync watchOS.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DD000000000001000001AAAA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000001000001AAAA /* Localizable.strings */; };
+		DD000000000001000002AAAA /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000011AAAA /* AppLanguage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,13 +32,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = EE000000000000000003AAAA;
 			remoteInfo = "FitSync Widgets";
-		};
-		JJ000000000000000004AAAA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = AA000000000000000000AAAA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = EE000000000000000002AAAA;
-			remoteInfo = "FitSync watchOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -51,17 +45,6 @@
 				DD00000000000000000EAAAA /* FitSync Widgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FF000000000000000005AAAA /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				DD00000000000000000FAAAA /* FitSync watchOS.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -86,6 +69,12 @@
 		CC000000000000000001AAAA /* FitSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC000000000000000002AAAA /* FitSync watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FitSync watchOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC000000000000000003AAAA /* FitSync Widgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "FitSync Widgets.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		LL000000000001000001AAAA /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		LL000000000001000002AAAA /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		LL000000000001000003AAAA /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
+		LL000000000001000004AAAA /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		LL000000000001000005AAAA /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		BB000000000000000011AAAA /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,7 +120,9 @@
 			isa = PBXGroup;
 			children = (
 				BB000000000000000001AAAA /* FitSyncApp.swift */,
+				BB000000000000000011AAAA /* AppLanguage.swift */,
 				AA000000000000000003AAAA /* Features */,
+				VV000000000001000001AAAA /* Localizable.strings */,
 				BB000000000000000007AAAA /* Assets.xcassets */,
 				BB000000000000000006AAAA /* Info.plist (iOS) */,
 				BB000000000000000008AAAA /* FitSync.entitlements */,
@@ -299,6 +290,10 @@
 				it,
 				en,
 				Base,
+				fr,
+				pt,
+				de,
+				es,
 			);
 			mainGroup = AA000000000000000001AAAA;
 			packageReferences = (
@@ -321,6 +316,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD000000000000000006AAAA /* Assets.xcassets in Resources */,
+				DD000000000001000001AAAA /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -352,6 +348,7 @@
 				DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */,
 				DD000000000000000004AAAA /* WorkoutListView.swift in Sources */,
 				DD000000000000000005AAAA /* NutritionRecoveryInsights.swift in Sources */,
+				DD000000000001000002AAAA /* AppLanguage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,12 +376,22 @@
 			target = EE000000000000000003AAAA /* FitSync Widgets */;
 			targetProxy = JJ000000000000000002AAAA /* PBXContainerItemProxy */;
 		};
-		JJ000000000000000003AAAA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = EE000000000000000002AAAA /* FitSync watchOS */;
-			targetProxy = JJ000000000000000004AAAA /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		VV000000000001000001AAAA /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				LL000000000001000001AAAA /* en */,
+				LL000000000001000002AAAA /* fr */,
+				LL000000000001000003AAAA /* pt */,
+				LL000000000001000004AAAA /* de */,
+				LL000000000001000005AAAA /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		HH000000000000000001AAAA /* Debug */ = {
@@ -478,8 +485,6 @@
 			buildSettings = {
 				ASPECT_RATIO_ACTION_ICON_SIZE_REQUIREMENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = "FitSync iOS/FitSync.entitlements";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -493,6 +498,8 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -506,8 +513,6 @@
 			buildSettings = {
 				ASPECT_RATIO_ACTION_ICON_SIZE_REQUIREMENTS = NO;
 				CODE_SIGN_ENTITLEMENTS = "FitSync iOS/FitSync.entitlements";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -521,6 +526,8 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -533,8 +540,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "FitSync watchOS/FitSync watchOS.entitlements";
-				SDKROOT = watchos;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -547,7 +552,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.9;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
@@ -558,8 +565,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "FitSync watchOS/FitSync watchOS.entitlements";
-				SDKROOT = watchos;
-				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -572,7 +577,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.9;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
@@ -583,8 +590,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "FitSync Widgets/FitSync Widgets.entitlements";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -599,7 +604,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -610,8 +617,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "FitSync Widgets/FitSync Widgets.entitlements";
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = NLJBBH7U2K;
@@ -626,7 +631,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
