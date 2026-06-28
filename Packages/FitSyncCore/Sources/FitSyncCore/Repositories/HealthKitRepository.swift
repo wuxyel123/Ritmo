@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import CoreLocation
 import SwiftData
 
 // MARK: - HealthKitRepository
@@ -288,8 +289,8 @@ public final class HealthKitRepository: ObservableObject {
             nutritionScore = 10
         }
         //
-        // ALLENAMENTO (0-10): bonus per chi si allena
-        let workoutBonus: Double = hasWorkout ? 10 : 0
+        // ALLENAMENTO (0-10): bonus per chi si allena, o per chi raggiunge i passi (rest day intenzionale)
+        let workoutBonus: Double = (hasWorkout || stepProgress >= 1.0) ? 10 : stepProgress * 10
         //
         let dayScore = min(Int(movementScore + recoveryScore + nutritionScore + workoutBonus), 100)
 
@@ -457,41 +458,35 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Workout GPS route (returns lat/lon pairs)
 
-    public func fetchWorkoutRoute(workoutUUID: String) async -> [(Double, Double)] {
-        guard let uuid = UUID(uuidString: workoutUUID),
-              HKHealthStore.isHealthDataAvailable() else { return [] }
-        let pred = HKQuery.predicateForObjects(with: [uuid])
-        let workoutDescriptor = HKSampleQueryDescriptor(
-            predicates: [HKSamplePredicate<HKWorkout>.workout(pred)],
-            sortDescriptors: [],
-            limit: 1
-        )
-        guard let workouts = try? await workoutDescriptor.result(for: store),
-              let workout = workouts.first else { return [] }
+    /// Queries by time window — avoids the fragile predicateForObjects(from: workout) approach
+    /// which doesn't reliably match HKWorkoutRoute on newer iOS versions.
+    /// Returns full CLLocation objects (with timestamps) so callers can correlate with HR zones.
+    public func fetchWorkoutRoute(start: Date, end: Date) async -> [CLLocation] {
+        guard HKHealthStore.isHealthDataAvailable() else { return [] }
 
-        let routeType = HKSeriesType.workoutRoute()
-        let routePred = HKQuery.predicateForObjects(from: workout)
+        let timePred = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
         let localStore = store
 
-        return await withCheckedContinuation { cont in
-            let anchorQuery = HKAnchoredObjectQuery(
-                type: routeType,
-                predicate: routePred,
-                anchor: nil,
-                limit: HKObjectQueryNoLimit
-            ) { _, samples, _, _, _ in
-                guard let routes = samples as? [HKWorkoutRoute], let route = routes.first else {
-                    cont.resume(returning: [])
-                    return
-                }
-                var coords: [(Double, Double)] = []
-                let routeQuery = HKWorkoutRouteQuery(route: route) { _, locs, done, _ in
-                    if let locs { coords.append(contentsOf: locs.map { ($0.coordinate.latitude, $0.coordinate.longitude) }) }
-                    if done { cont.resume(returning: coords) }
-                }
-                localStore.execute(routeQuery)
+        let route: HKWorkoutRoute? = await withCheckedContinuation { cont in
+            let q = HKSampleQuery(
+                sampleType: HKSeriesType.workoutRoute(),
+                predicate: timePred,
+                limit: 1,
+                sortDescriptors: nil
+            ) { _, samples, _ in
+                cont.resume(returning: samples?.first as? HKWorkoutRoute)
             }
-            localStore.execute(anchorQuery)
+            localStore.execute(q)
+        }
+        guard let route else { return [] }
+
+        return await withCheckedContinuation { cont in
+            var locations: [CLLocation] = []
+            let routeQuery = HKWorkoutRouteQuery(route: route) { _, locs, done, _ in
+                if let locs { locations.append(contentsOf: locs) }
+                if done { cont.resume(returning: locations) }
+            }
+            localStore.execute(routeQuery)
         }
     }
 

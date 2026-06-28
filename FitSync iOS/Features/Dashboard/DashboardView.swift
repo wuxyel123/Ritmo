@@ -56,7 +56,8 @@ struct DashboardView: View {
                                          unit: "g", color: FitSyncTheme.fat)
                                 MacroRow(emoji: "💧", label: "Acqua",
                                          current: vm.snapshot.waterMl / 1000, goal: vm.snapshot.waterGoal / 1000,
-                                         unit: "L", color: FitSyncTheme.water)
+                                         unit: "L", color: FitSyncTheme.water,
+                                         fractionDigits: 1)
                             }
                         }
                     }
@@ -420,7 +421,11 @@ struct DayScoreDetailSheet: View {
                             Divider()
                             ScoreComponentRow(
                                 icon: "dumbbell.fill", label: "Allenamento",
-                                description: snapshot.hasWorkedOutToday ? "Allenamento completato oggi" : "Nessun allenamento oggi",
+                                description: snapshot.hasWorkedOutToday
+                                    ? "Allenamento completato oggi"
+                                    : snapshot.workoutBonus >= 10
+                                        ? "Passi raggiunti — riposo attivo"
+                                        : "Nessun allenamento oggi",
                                 score: snapshot.workoutBonus, maxScore: 10, color: FitSyncTheme.workout
                             )
                         }
@@ -436,7 +441,7 @@ struct DayScoreDetailSheet: View {
                                 explanationRow("Movimento (max 40 pt)", "Media pesata di passi e calorie attive rispetto agli obiettivi. Richiede solo iPhone o Apple Watch.")
                                 explanationRow("Recupero (max 30 pt)", "Basato sulla qualità del sonno. Se mancano i dati sonno viene assegnato un punteggio neutro di 15 pt.")
                                 explanationRow("Nutrizione (max 20 pt)", "Progressione verso obiettivo calorie (40%) e proteine (60%). Se non tracciata → 10 pt neutri.")
-                                explanationRow("Allenamento (max 10 pt)", "Bonus piatto per ogni giorno con almeno un allenamento registrato.")
+                                explanationRow("Allenamento (max 10 pt)", "Pieno punteggio con un allenamento, o se raggiungi l'obiettivo passi (riposo attivo intenzionale). Parziale in proporzione ai passi se nessuno dei due.")
                             }
                         }
                     }
