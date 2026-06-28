@@ -8,6 +8,7 @@ final class DashboardViewModel: ObservableObject {
     @Published var lastSession: WorkoutSession?
     @Published var topInsight: FitInsight?
     @Published var isLoading = false
+    @Published var showingLastWorkoutDetail = false
 
     private let insightsService = InsightsService()
 

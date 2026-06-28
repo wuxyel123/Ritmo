@@ -323,6 +323,11 @@ public struct DailySnapshot: Codable {
     public let sleepScore: Int
     public let dayScore: Int          // Score composito 0-100
     public let hasWorkedOutToday: Bool
+    // Score breakdown (max values in parentheses)
+    public let movementScore: Double  // 0-40
+    public let recoveryScore: Double  // 0-30
+    public let nutritionScore: Double // 0-20
+    public let workoutBonus: Double   // 0-10
 
     public init(
         date: Date = .now,
@@ -345,7 +350,11 @@ public struct DailySnapshot: Codable {
         sleepHours: Double = 0,
         sleepScore: Int = 0,
         dayScore: Int = 0,
-        hasWorkedOutToday: Bool = false
+        hasWorkedOutToday: Bool = false,
+        movementScore: Double = 0,
+        recoveryScore: Double = 15,
+        nutritionScore: Double = 10,
+        workoutBonus: Double = 0
     ) {
         self.date = date
         self.calories = calories
@@ -368,6 +377,10 @@ public struct DailySnapshot: Codable {
         self.sleepScore = sleepScore
         self.dayScore = dayScore
         self.hasWorkedOutToday = hasWorkedOutToday
+        self.movementScore = movementScore
+        self.recoveryScore = recoveryScore
+        self.nutritionScore = nutritionScore
+        self.workoutBonus = workoutBonus
     }
 
     public static var placeholder: DailySnapshot {
@@ -382,7 +395,8 @@ public struct DailySnapshot: Codable {
             activeCalories: 420,
             sleepHours: 7.2, sleepScore: 74,
             dayScore: 78,
-            hasWorkedOutToday: true
+            hasWorkedOutToday: true,
+            movementScore: 28, recoveryScore: 22, nutritionScore: 18, workoutBonus: 10
         )
     }
 }
