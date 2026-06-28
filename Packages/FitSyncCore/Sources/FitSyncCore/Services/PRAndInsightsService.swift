@@ -208,7 +208,7 @@ public final class InsightsService {
         goals: UserGoals
     ) -> [FitInsight] {
         var insights: [FitInsight] = []
-        let last7 = Array(nutritionHistory.prefix(7))
+        let last7 = Array(nutritionHistory.prefix(7)).filter { $0.calories > 50 }
         guard !last7.isEmpty else { return [] }
 
         let avgProtein = last7.map { $0.protein }.reduce(0, +) / Double(last7.count)
@@ -216,7 +216,7 @@ public final class InsightsService {
             insights.append(FitInsight(
                 id: UUID(),
                 title: "Proteine insufficienti",
-                message: "Media settimanale: \(Int(avgProtein))g su \(Int(goals.dailyProteinG))g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento.",
+                message: "Media settimanale (\(last7.count) giorni tracciati): \(Int(avgProtein))g su \(Int(goals.dailyProteinG))g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento.",
                 type: .warning,
                 priority: .high,
                 category: .nutrition,
@@ -252,7 +252,7 @@ public final class InsightsService {
             $0.startTime >= calendar.date(byAdding: .day, value: -14, to: .now)!
         }
 
-        for day in nutritionHistory.prefix(14) {
+        for day in nutritionHistory.prefix(14) where day.calories > 50 {
             let isWorkoutDay = last14Sessions.contains {
                 calendar.isDate($0.startTime, inSameDayAs: day.date)
             }

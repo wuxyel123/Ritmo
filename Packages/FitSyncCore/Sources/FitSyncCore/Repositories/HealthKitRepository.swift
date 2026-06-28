@@ -281,7 +281,11 @@ public final class HealthKitRepository: ObservableObject {
             sleepHours: sleepHours,
             sleepScore: sleepScore,
             dayScore: dayScore,
-            hasWorkedOutToday: hasWorkout
+            hasWorkedOutToday: hasWorkout,
+            movementScore: movementScore,
+            recoveryScore: recoveryScore,
+            nutritionScore: nutritionScore,
+            workoutBonus: workoutBonus
         )
     }
 
