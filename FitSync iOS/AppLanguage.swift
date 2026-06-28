@@ -37,17 +37,17 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         }
     }
 
-    var locale: Locale {
-        if self == .system { return .autoupdatingCurrent }
-        return Locale(identifier: rawValue)
-    }
+    private static let supportedCodes: Set<String> = Set(
+        AppLanguage.allCases.compactMap { $0 == .system ? nil : $0.rawValue }
+    )
 
-    // The locale code to use for bundle lookups
-    var resolvedCode: String {
+    var locale: Locale {
         if self == .system {
-            return Locale.current.language.languageCode?.identifier ?? "it"
+            let systemCode = Locale.current.language.languageCode?.identifier ?? ""
+            let resolved = Self.supportedCodes.contains(systemCode) ? systemCode : "en"
+            return Locale(identifier: resolved)
         }
-        return rawValue
+        return Locale(identifier: rawValue)
     }
 }
 
