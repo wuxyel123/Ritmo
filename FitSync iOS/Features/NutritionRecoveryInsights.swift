@@ -767,24 +767,24 @@ final class RecoveryViewModel: ObservableObject {
     @Published var weightHistory: [DateValuePoint] = []
 
     func loadHistory(healthRepo: HealthKitRepository, days: Int) async {
+        // Sleep history for charts (day-by-day, limited to period)
         let chartDays = min(days, 30)
-        let searchDays = max(chartDays, 14)   // always look back at least 14 nights for lastSleep
         var sleepArr: [SleepSession] = []
-        var foundLast: SleepSession?
-
-        for i in 0..<searchDays {
+        for i in 0..<chartDays {
             if let d = Calendar.current.date(byAdding: .day, value: -i, to: .now),
                let s = await healthRepo.fetchSleep(for: d) {
-                if i < chartDays { sleepArr.append(s) }
-                if foundLast == nil { foundLast = s }
+                sleepArr.append(s)
             }
         }
         sleepHistory = sleepArr
-        lastSleep = foundLast
 
+        // Most-recent sleep: direct HealthKit query sorted by endDate so sync
+        // delays never cause the wrong night to show up
+        async let latest = healthRepo.fetchLatestSleep(withinDays: 14)
         async let hrv = healthRepo.fetchHRVHistory(days: days)
         async let rhr = healthRepo.fetchRHRHistory(days: days)
         async let wt  = healthRepo.fetchBodyWeightHistoryPoints(days: days)
+        lastSleep     = await latest
         hrvHistory    = await hrv
         rhrHistory    = await rhr
         weightHistory = await wt

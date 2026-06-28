@@ -204,6 +204,39 @@ public final class HealthKitRepository: ObservableObject {
         return SleepSession(startTime: start, endTime: end, stages: stages)
     }
 
+    /// Most-recent sleep session within the last `withinDays` days.
+    /// Queries samples sorted by endDate desc and groups the latest cluster
+    /// into a single night — avoids day-window mismatches when HealthKit
+    /// sync is delayed.
+    public func fetchLatestSleep(withinDays days: Int = 14) async -> SleepSession? {
+        guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: .now)!
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.categorySample(type: type, predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)],
+            limit: 400
+        )
+        guard let samples = try? await descriptor.result(for: store), !samples.isEmpty else { return nil }
+
+        // Latest wake time is the most recent sample's endDate
+        let wakeTime = samples[0].endDate
+        // Collect everything from the same night: up to 18 h before wake
+        let nightStart = wakeTime.addingTimeInterval(-18 * 3600)
+        let nightSamples = samples
+            .filter { $0.endDate <= wakeTime && $0.startDate >= nightStart }
+            .sorted { $0.startDate < $1.startDate }
+
+        guard !nightSamples.isEmpty else { return nil }
+        let stages = nightSamples.compactMap { s -> SleepStage? in
+            guard let t = sleepStageType(from: s.value) else { return nil }
+            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t)
+        }
+        return SleepSession(startTime: nightSamples.first!.startDate,
+                            endTime: nightSamples.last!.endDate,
+                            stages: stages)
+    }
+
     // MARK: - Allenamenti da HealthKit
 
     public func fetchWorkouts(days: Int) async -> [HKWorkout] {
