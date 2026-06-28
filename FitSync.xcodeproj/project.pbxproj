@@ -1,0 +1,703 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DD000000000000000001AAAA /* FitSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000001AAAA /* FitSyncApp.swift */; };
+		DD000000000000000002AAAA /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000002AAAA /* DashboardView.swift */; };
+		DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000003AAAA /* DashboardViewModel.swift */; };
+		DD000000000000000004AAAA /* WorkoutListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000004AAAA /* WorkoutListView.swift */; };
+		DD000000000000000005AAAA /* NutritionRecoveryInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */; };
+		DD000000000000000006AAAA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000007AAAA /* Assets.xcassets */; };
+		DD000000000000000007AAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000002AAAA /* FitSyncCore */; };
+		DD000000000000000008AAAA /* FitSyncWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000009AAAA /* FitSyncWatchApp.swift */; };
+		DD000000000000000009AAAA /* Assets.xcassets (Watch) in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000BAAAA /* Assets.xcassets (Watch) */; };
+		DD00000000000000000AAAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000003AAAA /* FitSyncCore */; };
+		DD00000000000000000BAAAA /* FitSyncWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000DAAAA /* FitSyncWidgets.swift */; };
+		DD00000000000000000CAAAA /* Assets.xcassets (Widgets) in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */; };
+		DD00000000000000000DAAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000004AAAA /* FitSyncCore */; };
+		DD00000000000000000EAAAA /* FitSync Widgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC000000000000000003AAAA /* FitSync Widgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DD00000000000000000FAAAA /* FitSync watchOS.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CC000000000000000002AAAA /* FitSync watchOS.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		JJ000000000000000002AAAA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000AAAA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE000000000000000003AAAA;
+			remoteInfo = "FitSync Widgets";
+		};
+		JJ000000000000000004AAAA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000AAAA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE000000000000000002AAAA;
+			remoteInfo = "FitSync watchOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FF000000000000000004AAAA /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DD00000000000000000EAAAA /* FitSync Widgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000005AAAA /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				DD00000000000000000FAAAA /* FitSync watchOS.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		BB000000000000000001AAAA /* FitSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitSyncApp.swift; sourceTree = "<group>"; };
+		BB000000000000000002AAAA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		BB000000000000000003AAAA /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		BB000000000000000004AAAA /* WorkoutListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutListView.swift; sourceTree = "<group>"; };
+		BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionRecoveryInsights.swift; sourceTree = "<group>"; };
+		BB000000000000000006AAAA /* Info.plist (iOS) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist (iOS)"; path = Info.plist; sourceTree = "<group>"; };
+		BB000000000000000007AAAA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB000000000000000008AAAA /* FitSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitSync.entitlements; sourceTree = "<group>"; };
+		BB000000000000000009AAAA /* FitSyncWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitSyncWatchApp.swift; sourceTree = "<group>"; };
+		BB00000000000000000AAAAA /* Info.plist (watchOS) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist (watchOS)"; path = Info.plist; sourceTree = "<group>"; };
+		BB00000000000000000BAAAA /* Assets.xcassets (Watch) */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets (Watch)"; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB00000000000000000CAAAA /* FitSync watchOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FitSync watchOS.entitlements"; sourceTree = "<group>"; };
+		BB00000000000000000DAAAA /* FitSyncWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitSyncWidgets.swift; sourceTree = "<group>"; };
+		BB00000000000000000EAAAA /* Info.plist (Widgets) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist (Widgets)"; path = Info.plist; sourceTree = "<group>"; };
+		BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets (Widgets)"; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB000000000000000010AAAA /* FitSync Widgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FitSync Widgets.entitlements"; sourceTree = "<group>"; };
+		CC000000000000000001AAAA /* FitSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC000000000000000002AAAA /* FitSync watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FitSync watchOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC000000000000000003AAAA /* FitSync Widgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "FitSync Widgets.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FF000000000000000002AAAA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD000000000000000007AAAA /* FitSyncCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000007AAAA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD00000000000000000AAAAA /* FitSyncCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF00000000000000000AAAAA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD00000000000000000DAAAA /* FitSyncCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA000000000000000001AAAA = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000002AAAA /* FitSync iOS */,
+				AA000000000000000006AAAA /* FitSync watchOS */,
+				AA000000000000000007AAAA /* FitSync Widgets */,
+				AA000000000000000008AAAA /* Packages */,
+				AA000000000000000009AAAA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA000000000000000002AAAA /* FitSync iOS */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000001AAAA /* FitSyncApp.swift */,
+				AA000000000000000003AAAA /* Features */,
+				BB000000000000000007AAAA /* Assets.xcassets */,
+				BB000000000000000006AAAA /* Info.plist (iOS) */,
+				BB000000000000000008AAAA /* FitSync.entitlements */,
+			);
+			path = "FitSync iOS";
+			sourceTree = "<group>";
+		};
+		AA000000000000000003AAAA /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000004AAAA /* Dashboard */,
+				AA000000000000000005AAAA /* Workout */,
+				BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		AA000000000000000004AAAA /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000002AAAA /* DashboardView.swift */,
+				BB000000000000000003AAAA /* DashboardViewModel.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		AA000000000000000005AAAA /* Workout */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000004AAAA /* WorkoutListView.swift */,
+			);
+			path = Workout;
+			sourceTree = "<group>";
+		};
+		AA000000000000000006AAAA /* FitSync watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000009AAAA /* FitSyncWatchApp.swift */,
+				BB00000000000000000BAAAA /* Assets.xcassets (Watch) */,
+				BB00000000000000000AAAAA /* Info.plist (watchOS) */,
+				BB00000000000000000CAAAA /* FitSync watchOS.entitlements */,
+			);
+			path = "FitSync watchOS";
+			sourceTree = "<group>";
+		};
+		AA000000000000000007AAAA /* FitSync Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				BB00000000000000000DAAAA /* FitSyncWidgets.swift */,
+				BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */,
+				BB00000000000000000EAAAA /* Info.plist (Widgets) */,
+				BB000000000000000010AAAA /* FitSync Widgets.entitlements */,
+			);
+			path = "FitSync Widgets";
+			sourceTree = "<group>";
+		};
+		AA000000000000000008AAAA /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		AA000000000000000009AAAA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CC000000000000000001AAAA /* FitSync.app */,
+				CC000000000000000002AAAA /* FitSync watchOS.app */,
+				CC000000000000000003AAAA /* FitSync Widgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EE000000000000000001AAAA /* FitSync */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = GG000000000000000002AAAA /* Build configuration list for PBXNativeTarget "FitSync" */;
+			buildPhases = (
+				FF000000000000000001AAAA /* Sources */,
+				FF000000000000000002AAAA /* Frameworks */,
+				FF000000000000000003AAAA /* Resources */,
+				FF000000000000000004AAAA /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				JJ000000000000000001AAAA /* PBXTargetDependency */,
+			);
+			name = FitSync;
+			packageProductDependencies = (
+				II000000000000000002AAAA /* FitSyncCore */,
+			);
+			productName = FitSync;
+			productReference = CC000000000000000001AAAA /* FitSync.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EE000000000000000002AAAA /* FitSync watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = GG000000000000000003AAAA /* Build configuration list for PBXNativeTarget "FitSync watchOS" */;
+			buildPhases = (
+				FF000000000000000006AAAA /* Sources */,
+				FF000000000000000007AAAA /* Frameworks */,
+				FF000000000000000008AAAA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FitSync watchOS";
+			packageProductDependencies = (
+				II000000000000000003AAAA /* FitSyncCore */,
+			);
+			productName = "FitSync watchOS";
+			productReference = CC000000000000000002AAAA /* FitSync watchOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EE000000000000000003AAAA /* FitSync Widgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = GG000000000000000004AAAA /* Build configuration list for PBXNativeTarget "FitSync Widgets" */;
+			buildPhases = (
+				FF000000000000000009AAAA /* Sources */,
+				FF00000000000000000AAAAA /* Frameworks */,
+				FF00000000000000000BAAAA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FitSync Widgets";
+			packageProductDependencies = (
+				II000000000000000004AAAA /* FitSyncCore */,
+			);
+			productName = "FitSync Widgets";
+			productReference = CC000000000000000003AAAA /* FitSync Widgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000000000000000AAAA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					EE000000000000000001AAAA = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					EE000000000000000002AAAA = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					EE000000000000000003AAAA = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = GG000000000000000001AAAA /* Build configuration list for PBXProject "FitSync" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = it;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				it,
+				en,
+				Base,
+			);
+			mainGroup = AA000000000000000001AAAA;
+			packageReferences = (
+				II000000000000000001AAAA /* XCLocalSwiftPackageReference "Packages/FitSyncCore" */,
+			);
+			productRefGroup = AA000000000000000009AAAA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EE000000000000000001AAAA /* FitSync */,
+				EE000000000000000002AAAA /* FitSync watchOS */,
+				EE000000000000000003AAAA /* FitSync Widgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FF000000000000000003AAAA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD000000000000000006AAAA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000008AAAA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD000000000000000009AAAA /* Assets.xcassets (Watch) in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF00000000000000000BAAAA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD00000000000000000CAAAA /* Assets.xcassets (Widgets) in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FF000000000000000001AAAA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD000000000000000001AAAA /* FitSyncApp.swift in Sources */,
+				DD000000000000000002AAAA /* DashboardView.swift in Sources */,
+				DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */,
+				DD000000000000000004AAAA /* WorkoutListView.swift in Sources */,
+				DD000000000000000005AAAA /* NutritionRecoveryInsights.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000006AAAA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD000000000000000008AAAA /* FitSyncWatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000009AAAA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD00000000000000000BAAAA /* FitSyncWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		JJ000000000000000001AAAA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE000000000000000003AAAA /* FitSync Widgets */;
+			targetProxy = JJ000000000000000002AAAA /* PBXContainerItemProxy */;
+		};
+		JJ000000000000000003AAAA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE000000000000000002AAAA /* FitSync watchOS */;
+			targetProxy = JJ000000000000000004AAAA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		HH000000000000000001AAAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		HH000000000000000002AAAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		HH000000000000000003AAAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASPECT_RATIO_ACTION_ICON_SIZE_REQUIREMENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = "FitSync iOS/FitSync.entitlements";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		HH000000000000000004AAAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASPECT_RATIO_ACTION_ICON_SIZE_REQUIREMENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = "FitSync iOS/FitSync.entitlements";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		HH000000000000000005AAAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FitSync watchOS/FitSync watchOS.entitlements";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync watchOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		HH000000000000000006AAAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FitSync watchOS/FitSync watchOS.entitlements";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync watchOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		HH000000000000000007AAAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FitSync Widgets/FitSync Widgets.entitlements";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync Widgets/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		HH000000000000000008AAAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "FitSync Widgets/FitSync Widgets.entitlements";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NLJBBH7U2K;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "FitSync Widgets/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alessandrodiscalzi.fitsync.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		GG000000000000000001AAAA /* Build configuration list for PBXProject "FitSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				HH000000000000000001AAAA /* Debug */,
+				HH000000000000000002AAAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		GG000000000000000002AAAA /* Build configuration list for PBXNativeTarget "FitSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				HH000000000000000003AAAA /* Debug */,
+				HH000000000000000004AAAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		GG000000000000000003AAAA /* Build configuration list for PBXNativeTarget "FitSync watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				HH000000000000000005AAAA /* Debug */,
+				HH000000000000000006AAAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		GG000000000000000004AAAA /* Build configuration list for PBXNativeTarget "FitSync Widgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				HH000000000000000007AAAA /* Debug */,
+				HH000000000000000008AAAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		II000000000000000001AAAA /* XCLocalSwiftPackageReference "Packages/FitSyncCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FitSyncCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		II000000000000000002AAAA /* FitSyncCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = II000000000000000001AAAA /* XCLocalSwiftPackageReference "Packages/FitSyncCore" */;
+			productName = FitSyncCore;
+		};
+		II000000000000000003AAAA /* FitSyncCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = II000000000000000001AAAA /* XCLocalSwiftPackageReference "Packages/FitSyncCore" */;
+			productName = FitSyncCore;
+		};
+		II000000000000000004AAAA /* FitSyncCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = II000000000000000001AAAA /* XCLocalSwiftPackageReference "Packages/FitSyncCore" */;
+			productName = FitSyncCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AA000000000000000000AAAA /* Project object */;
+}
