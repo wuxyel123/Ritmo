@@ -11,7 +11,29 @@
 		DD000000000000000002AAAA /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000002AAAA /* DashboardView.swift */; };
 		DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000003AAAA /* DashboardViewModel.swift */; };
 		DD000000000000000004AAAA /* WorkoutListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000004AAAA /* WorkoutListView.swift */; };
-		DD000000000000000005AAAA /* NutritionRecoveryInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */; };
+		DD000000000000000100AAAA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000100AAAA /* Theme.swift */; };
+		DD000000000000000101AAAA /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000101AAAA /* Components.swift */; };
+		DD000000000000000102AAAA /* HistoryPeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000102AAAA /* HistoryPeriod.swift */; };
+		DD000000000000000103AAAA /* InteractiveDateChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000103AAAA /* InteractiveDateChart.swift */; };
+		DD000000000000000104AAAA /* FitCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000104AAAA /* FitCalendarView.swift */; };
+		DD000000000000000105AAAA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000105AAAA /* SettingsView.swift */; };
+		DD000000000000000106AAAA /* DateNavigationBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000106AAAA /* DateNavigationBar.swift */; };
+		DD000000000000000107AAAA /* DayScoreCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000107AAAA /* DayScoreCard.swift */; };
+		DD000000000000000108AAAA /* InsightBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000108AAAA /* InsightBanner.swift */; };
+		DD000000000000000109AAAA /* ActivityMetricDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000109AAAA /* ActivityMetricDetail.swift */; };
+		DD000000000000000110AAAA /* NutritionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000110AAAA /* NutritionView.swift */; };
+		DD000000000000000111AAAA /* WaterLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000111AAAA /* WaterLogSheet.swift */; };
+		DD000000000000000112AAAA /* RecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000112AAAA /* RecoveryView.swift */; };
+		DD000000000000000113AAAA /* HeartMetricComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000113AAAA /* HeartMetricComponents.swift */; };
+		DD000000000000000114AAAA /* SleepComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000114AAAA /* SleepComponents.swift */; };
+		DD000000000000000115AAAA /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000115AAAA /* InsightsView.swift */; };
+		DD000000000000000116AAAA /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000116AAAA /* InsightCard.swift */; };
+		DD000000000000000117AAAA /* WorkoutRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000117AAAA /* WorkoutRow.swift */; };
+		DD000000000000000118AAAA /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000118AAAA /* WorkoutDetailView.swift */; };
+		DD000000000000000119AAAA /* WorkoutCharts.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000119AAAA /* WorkoutCharts.swift */; };
+		DD000000000000000120AAAA /* DailyScoreWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000120AAAA /* DailyScoreWidget.swift */; };
+		DD000000000000000121AAAA /* MacroGoalsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000121AAAA /* MacroGoalsWidget.swift */; };
+		DD000000000000000122AAAA /* ActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000122AAAA /* ActivityWidget.swift */; };
 		DD000000000000000006AAAA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000007AAAA /* Assets.xcassets */; };
 		DD000000000000000007AAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000002AAAA /* FitSyncCore */; };
 		DD000000000000000008AAAA /* FitSyncWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000009AAAA /* FitSyncWatchApp.swift */; };
@@ -55,7 +77,29 @@
 		BB000000000000000002AAAA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		BB000000000000000003AAAA /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		BB000000000000000004AAAA /* WorkoutListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutListView.swift; sourceTree = "<group>"; };
-		BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionRecoveryInsights.swift; sourceTree = "<group>"; };
+		BB000000000000000100AAAA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		BB000000000000000101AAAA /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		BB000000000000000102AAAA /* HistoryPeriod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPeriod.swift; sourceTree = "<group>"; };
+		BB000000000000000103AAAA /* InteractiveDateChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveDateChart.swift; sourceTree = "<group>"; };
+		BB000000000000000104AAAA /* FitCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitCalendarView.swift; sourceTree = "<group>"; };
+		BB000000000000000105AAAA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		BB000000000000000106AAAA /* DateNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateNavigationBar.swift; sourceTree = "<group>"; };
+		BB000000000000000107AAAA /* DayScoreCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayScoreCard.swift; sourceTree = "<group>"; };
+		BB000000000000000108AAAA /* InsightBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightBanner.swift; sourceTree = "<group>"; };
+		BB000000000000000109AAAA /* ActivityMetricDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityMetricDetail.swift; sourceTree = "<group>"; };
+		BB000000000000000110AAAA /* NutritionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionView.swift; sourceTree = "<group>"; };
+		BB000000000000000111AAAA /* WaterLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterLogSheet.swift; sourceTree = "<group>"; };
+		BB000000000000000112AAAA /* RecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryView.swift; sourceTree = "<group>"; };
+		BB000000000000000113AAAA /* HeartMetricComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartMetricComponents.swift; sourceTree = "<group>"; };
+		BB000000000000000114AAAA /* SleepComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepComponents.swift; sourceTree = "<group>"; };
+		BB000000000000000115AAAA /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		BB000000000000000116AAAA /* InsightCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightCard.swift; sourceTree = "<group>"; };
+		BB000000000000000117AAAA /* WorkoutRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRow.swift; sourceTree = "<group>"; };
+		BB000000000000000118AAAA /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
+		BB000000000000000119AAAA /* WorkoutCharts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCharts.swift; sourceTree = "<group>"; };
+		BB000000000000000120AAAA /* DailyScoreWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyScoreWidget.swift; sourceTree = "<group>"; };
+		BB000000000000000121AAAA /* MacroGoalsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroGoalsWidget.swift; sourceTree = "<group>"; };
+		BB000000000000000122AAAA /* ActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityWidget.swift; sourceTree = "<group>"; };
 		BB000000000000000006AAAA /* Info.plist (iOS) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist (iOS)"; path = Info.plist; sourceTree = "<group>"; };
 		BB000000000000000007AAAA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BB000000000000000008AAAA /* FitSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitSync.entitlements; sourceTree = "<group>"; };
@@ -127,6 +171,7 @@
 			children = (
 				BB000000000000000001AAAA /* FitSyncApp.swift */,
 				BB000000000000000011AAAA /* AppLanguage.swift */,
+				AA000000000000000010AAAA /* Core */,
 				AA000000000000000003AAAA /* Features */,
 				VV000000000001000001AAAA /* Localizable.strings */,
 				BB000000000000000007AAAA /* Assets.xcassets */,
@@ -136,12 +181,35 @@
 			path = "FitSync iOS";
 			sourceTree = "<group>";
 		};
+		AA000000000000000010AAAA /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000100AAAA /* Theme.swift */,
+				BB000000000000000101AAAA /* Components.swift */,
+				BB000000000000000102AAAA /* HistoryPeriod.swift */,
+				AA000000000000000011AAAA /* Charts */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		AA000000000000000011AAAA /* Charts */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000103AAAA /* InteractiveDateChart.swift */,
+				BB000000000000000104AAAA /* FitCalendarView.swift */,
+			);
+			path = Charts;
+			sourceTree = "<group>";
+		};
 		AA000000000000000003AAAA /* Features */ = {
 			isa = PBXGroup;
 			children = (
 				AA000000000000000004AAAA /* Dashboard */,
 				AA000000000000000005AAAA /* Workout */,
-				BB000000000000000005AAAA /* NutritionRecoveryInsights.swift */,
+				AA000000000000000012AAAA /* Settings */,
+				AA000000000000000013AAAA /* Nutrition */,
+				AA000000000000000014AAAA /* Recovery */,
+				AA000000000000000015AAAA /* Insights */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -151,6 +219,10 @@
 			children = (
 				BB000000000000000002AAAA /* DashboardView.swift */,
 				BB000000000000000003AAAA /* DashboardViewModel.swift */,
+				BB000000000000000106AAAA /* DateNavigationBar.swift */,
+				BB000000000000000107AAAA /* DayScoreCard.swift */,
+				BB000000000000000108AAAA /* InsightBanner.swift */,
+				BB000000000000000109AAAA /* ActivityMetricDetail.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -159,8 +231,47 @@
 			isa = PBXGroup;
 			children = (
 				BB000000000000000004AAAA /* WorkoutListView.swift */,
+				BB000000000000000117AAAA /* WorkoutRow.swift */,
+				BB000000000000000118AAAA /* WorkoutDetailView.swift */,
+				BB000000000000000119AAAA /* WorkoutCharts.swift */,
 			);
 			path = Workout;
+			sourceTree = "<group>";
+		};
+		AA000000000000000012AAAA /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000105AAAA /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		AA000000000000000013AAAA /* Nutrition */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000110AAAA /* NutritionView.swift */,
+				BB000000000000000111AAAA /* WaterLogSheet.swift */,
+			);
+			path = Nutrition;
+			sourceTree = "<group>";
+		};
+		AA000000000000000014AAAA /* Recovery */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000112AAAA /* RecoveryView.swift */,
+				BB000000000000000113AAAA /* HeartMetricComponents.swift */,
+				BB000000000000000114AAAA /* SleepComponents.swift */,
+			);
+			path = Recovery;
+			sourceTree = "<group>";
+		};
+		AA000000000000000015AAAA /* Insights */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000115AAAA /* InsightsView.swift */,
+				BB000000000000000116AAAA /* InsightCard.swift */,
+			);
+			path = Insights;
 			sourceTree = "<group>";
 		};
 		AA000000000000000006AAAA /* FitSync watchOS */ = {
@@ -178,6 +289,9 @@
 			isa = PBXGroup;
 			children = (
 				BB00000000000000000DAAAA /* FitSyncWidgets.swift */,
+				BB000000000000000120AAAA /* DailyScoreWidget.swift */,
+				BB000000000000000121AAAA /* MacroGoalsWidget.swift */,
+				BB000000000000000122AAAA /* ActivityWidget.swift */,
 				BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */,
 				BB00000000000000000EAAAA /* Info.plist (Widgets) */,
 				BB000000000000000010AAAA /* FitSync Widgets.entitlements */,
@@ -355,8 +469,27 @@
 				DD000000000000000002AAAA /* DashboardView.swift in Sources */,
 				DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */,
 				DD000000000000000004AAAA /* WorkoutListView.swift in Sources */,
-				DD000000000000000005AAAA /* NutritionRecoveryInsights.swift in Sources */,
 				DD000000000001000002AAAA /* AppLanguage.swift in Sources */,
+				DD000000000000000100AAAA /* Theme.swift in Sources */,
+				DD000000000000000101AAAA /* Components.swift in Sources */,
+				DD000000000000000102AAAA /* HistoryPeriod.swift in Sources */,
+				DD000000000000000103AAAA /* InteractiveDateChart.swift in Sources */,
+				DD000000000000000104AAAA /* FitCalendarView.swift in Sources */,
+				DD000000000000000105AAAA /* SettingsView.swift in Sources */,
+				DD000000000000000106AAAA /* DateNavigationBar.swift in Sources */,
+				DD000000000000000107AAAA /* DayScoreCard.swift in Sources */,
+				DD000000000000000108AAAA /* InsightBanner.swift in Sources */,
+				DD000000000000000109AAAA /* ActivityMetricDetail.swift in Sources */,
+				DD000000000000000110AAAA /* NutritionView.swift in Sources */,
+				DD000000000000000111AAAA /* WaterLogSheet.swift in Sources */,
+				DD000000000000000112AAAA /* RecoveryView.swift in Sources */,
+				DD000000000000000113AAAA /* HeartMetricComponents.swift in Sources */,
+				DD000000000000000114AAAA /* SleepComponents.swift in Sources */,
+				DD000000000000000115AAAA /* InsightsView.swift in Sources */,
+				DD000000000000000116AAAA /* InsightCard.swift in Sources */,
+				DD000000000000000117AAAA /* WorkoutRow.swift in Sources */,
+				DD000000000000000118AAAA /* WorkoutDetailView.swift in Sources */,
+				DD000000000000000119AAAA /* WorkoutCharts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,6 +506,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD00000000000000000BAAAA /* FitSyncWidgets.swift in Sources */,
+				DD000000000000000120AAAA /* DailyScoreWidget.swift in Sources */,
+				DD000000000000000121AAAA /* MacroGoalsWidget.swift in Sources */,
+				DD000000000000000122AAAA /* ActivityWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
