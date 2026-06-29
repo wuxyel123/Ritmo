@@ -113,7 +113,7 @@ struct ScoreSmallView: View {
 }
 
 private struct ScorePillarRow: View {
-    let icon: String; let color: Color; let label: String
+    let icon: String; let color: Color; let label: LocalizedStringKey
     let value: Double; let maxScore: Double
     var body: some View {
         HStack(spacing: 5) {
@@ -131,7 +131,7 @@ struct ScoreGaugeView: View {
     let s: DailySnapshot
     var body: some View {
         Gauge(value: Double(s.dayScore), in: 0...100) {
-            Image(systemName: "star.fill")
+            Text("⭐")
         } currentValueLabel: {
             Text("\(s.dayScore)")
         }
@@ -149,17 +149,18 @@ struct ScoreRectangularView: View {
                 Text("\(s.dayScore)").font(.headline.bold()).foregroundStyle(scoreColor)
                 Text("/ 100").font(.caption2).foregroundStyle(.secondary)
                 Spacer()
-                Label(s.hasWorkedOutToday ? "Allenato" : "Riposo",
-                      systemImage: s.hasWorkedOutToday ? "dumbbell.fill" : "moon.fill")
-                    .font(.caption2)
-                    .foregroundStyle(s.hasWorkedOutToday ? .purple : .secondary)
+                Label {
+                    if s.hasWorkedOutToday { Text("Allenato") } else { Text("Riposo") }
+                } icon: {
+                    Text(s.hasWorkedOutToday ? "💪" : "🌙")
+                }
+                .font(.caption2)
+                .foregroundStyle(s.hasWorkedOutToday ? .purple : .secondary)
             }
             HStack(spacing: 10) {
-                Label("\(Int(s.activeCalories))kcal", systemImage: "bolt.fill").foregroundStyle(.red)
-                Label(s.steps >= 1000
-                      ? String(format: "%.1fk", Double(s.steps) / 1000)
-                      : "\(s.steps)", systemImage: "figure.walk").foregroundStyle(.cyan)
-                Label("\(Int(s.calories))kcal", systemImage: "fork.knife").foregroundStyle(.orange)
+                Label { Text("\(formatKilo(s.activeCalories))kcal") } icon: { Text("⚡") }.foregroundStyle(.red)
+                Label { Text(s.steps >= 1000 ? String(format: "%.1fk", Double(s.steps) / 1000) : "\(s.steps)") } icon: { Text("🚶") }.foregroundStyle(.cyan)
+                Label { Text("\(formatKilo(s.calories))kcal") } icon: { Text("🍽️") }.foregroundStyle(.orange)
             }
             .font(.caption)
         }
@@ -196,9 +197,9 @@ struct MacroGoalsWidgetView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text("\(Int(s.calories))")
+                    Text(formatKilo(s.calories))
                         .font(.title3.bold()).foregroundStyle(.orange)
-                    Text("/ \(Int(s.calorieGoal)) kcal")
+                    Text("/ \(formatKilo(s.calorieGoal)) kcal")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
@@ -240,7 +241,7 @@ struct MacroGoalsWidgetView: View {
 }
 
 struct MacroCell: View {
-    let icon: String; let label: String
+    let icon: String; let label: LocalizedStringKey
     let current: Double; let goal: Double; let unit: String; let color: Color
     var progress: Double { min(current / max(goal, 1), 1) }
     var body: some View {
@@ -310,7 +311,7 @@ struct ActivitySmallView: View {
             // Active calories — hero number
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .lastTextBaseline, spacing: 3) {
-                    Text("\(Int(s.activeCalories))")
+                    Text(formatKilo(s.activeCalories))
                         .font(.system(size: 34, weight: .black, design: .rounded))
                         .foregroundStyle(.red)
                     Text("kcal").font(.caption2).foregroundStyle(.secondary)
@@ -333,7 +334,7 @@ struct ActivitySmallView: View {
                 }
                 HStack(spacing: 4) {
                     Image(systemName: "fork.knife").font(.caption2).foregroundStyle(.orange)
-                    Text("\(Int(s.calories))")
+                    Text(formatKilo(s.calories))
                         .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(.orange)
                     Text("kcal man.").font(.caption2).foregroundStyle(.secondary)
@@ -375,7 +376,7 @@ struct ActivityMediumView: View {
             // Top: 3 key stats
             HStack(spacing: 0) {
                 ActivityStatBlock(icon: "bolt.fill", color: .red,
-                                  value: "\(Int(s.activeCalories))", unit: "kcal", label: "Attivi")
+                                  value: formatKilo(s.activeCalories), unit: "kcal", label: "Attivi")
                 Spacer()
                 Rectangle().fill(.quaternary).frame(width: 1, height: 36)
                 Spacer()
@@ -388,7 +389,7 @@ struct ActivityMediumView: View {
                 Rectangle().fill(.quaternary).frame(width: 1, height: 36)
                 Spacer()
                 ActivityStatBlock(icon: "fork.knife", color: .orange,
-                                  value: "\(Int(s.calories))", unit: "kcal", label: "Mangiati")
+                                  value: formatKilo(s.calories), unit: "kcal", label: "Mangiati")
             }
 
             Divider()
@@ -411,7 +412,7 @@ struct ActivityMediumView: View {
 
 private struct ActivityStatBlock: View {
     let icon: String; let color: Color
-    let value: String; let unit: String; let label: String
+    let value: String; let unit: String; let label: LocalizedStringKey
     var body: some View {
         VStack(alignment: .center, spacing: 2) {
             Image(systemName: icon).font(.caption).foregroundStyle(color)
@@ -445,7 +446,7 @@ struct ActivityCircularView: View {
     let s: DailySnapshot
     var body: some View {
         Gauge(value: Double(s.steps), in: 0...Double(max(s.stepGoal, 1))) {
-            Image(systemName: "figure.walk")
+            Text("🚶")
         } currentValueLabel: {
             Text(s.steps >= 1000 ? "\(s.steps / 1000)k" : "\(s.steps)")
         }
@@ -459,17 +460,15 @@ struct ActivityRectangularView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 10) {
-                Label("\(Int(s.activeCalories)) kcal", systemImage: "bolt.fill").foregroundStyle(.red)
-                Label(s.steps >= 1000
-                      ? String(format: "%.1fk", Double(s.steps) / 1000)
-                      : "\(s.steps)", systemImage: "figure.walk").foregroundStyle(.cyan)
-                Label("\(Int(s.calories)) kcal", systemImage: "fork.knife").foregroundStyle(.orange)
+                Label { Text("\(formatKilo(s.activeCalories))kcal") } icon: { Text("⚡") }.foregroundStyle(.red)
+                Label { Text(s.steps >= 1000 ? String(format: "%.1fk", Double(s.steps) / 1000) : "\(s.steps)") } icon: { Text("🚶") }.foregroundStyle(.cyan)
+                Label { Text("\(formatKilo(s.calories))kcal") } icon: { Text("🍽️") }.foregroundStyle(.orange)
             }
             .font(.caption.bold())
             HStack(spacing: 10) {
-                Label("\(Int(s.protein))g", systemImage: "p.circle.fill").foregroundStyle(.red)
-                Label("\(Int(s.carbs))g", systemImage: "c.circle.fill").foregroundStyle(.yellow)
-                Label("\(Int(s.fat))g", systemImage: "f.circle.fill").foregroundStyle(.green)
+                Label { Text("\(Int(s.protein))g") } icon: { Text("🥩") }.foregroundStyle(.red)
+                Label { Text("\(Int(s.carbs))g") } icon: { Text("🍞") }.foregroundStyle(.yellow)
+                Label { Text("\(Int(s.fat))g") } icon: { Text("🥑") }.foregroundStyle(.green)
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -478,6 +477,10 @@ struct ActivityRectangularView: View {
 }
 
 // MARK: - Shared helpers
+
+private func formatKilo(_ value: Double) -> String {
+    value >= 1000 ? String(format: "%.1fk", value / 1000) : "\(Int(value))"
+}
 
 struct WProgressBar: View {
     let value: Double; let color: Color; let height: CGFloat

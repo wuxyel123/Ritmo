@@ -23,6 +23,7 @@
 		DD00000000000000000EAAAA /* FitSync Widgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC000000000000000003AAAA /* FitSync Widgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DD000000000001000001AAAA /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000001000001AAAA /* Localizable.strings */; };
 		DD000000000001000002AAAA /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000011AAAA /* AppLanguage.swift */; };
+		DD000000000002000001AAAA /* Localizable.strings (Widget) in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000002000001AAAA /* Localizable.strings (Widget) */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,11 @@
 		LL000000000001000003AAAA /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
 		LL000000000001000004AAAA /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		LL000000000001000005AAAA /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		WW000000000001000001AAAA /* en (widget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WW000000000001000002AAAA /* fr (widget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WW000000000001000003AAAA /* pt (widget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = "pt.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WW000000000001000004AAAA /* de (widget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = "de.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WW000000000001000005AAAA /* es (widget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = "es.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		BB000000000000000011AAAA /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -175,6 +181,7 @@
 				BB00000000000000000FAAAA /* Assets.xcassets (Widgets) */,
 				BB00000000000000000EAAAA /* Info.plist (Widgets) */,
 				BB000000000000000010AAAA /* FitSync Widgets.entitlements */,
+				VV000000000002000001AAAA /* Localizable.strings (Widget) */,
 			);
 			path = "FitSync Widgets";
 			sourceTree = "<group>";
@@ -333,6 +340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD00000000000000000CAAAA /* Assets.xcassets (Widgets) in Resources */,
+				DD000000000002000001AAAA /* Localizable.strings (Widget) in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +395,18 @@
 				LL000000000001000003AAAA /* pt */,
 				LL000000000001000004AAAA /* de */,
 				LL000000000001000005AAAA /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		VV000000000002000001AAAA /* Localizable.strings (Widget) */ = {
+			isa = PBXVariantGroup;
+			children = (
+				WW000000000001000001AAAA /* en (widget) */,
+				WW000000000001000002AAAA /* fr (widget) */,
+				WW000000000001000003AAAA /* pt (widget) */,
+				WW000000000001000004AAAA /* de (widget) */,
+				WW000000000001000005AAAA /* es (widget) */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

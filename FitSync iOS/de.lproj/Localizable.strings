@@ -4,6 +4,8 @@
 "Nutrizione" = "Ernährung";
 "Recupero" = "Erholung";
 "Obiettivi" = "Ziele";
+"Impostazioni" = "Einstellungen";
+"Insights" = "Insights";
 
 // Settings sections
 "Corpo" = "Körper";
@@ -36,21 +38,27 @@
 "grammi totali" = "Gesamtgramm";
 "Grammi totali" = "Gesamtgramm";
 "automatico" = "automatisch";
-
-// Macro modes
 "g / kg" = "g / kg";
 
 // Dashboard
+"Nutrizione oggi" = "Heutige Ernährung";
+"Ultimo allenamento" = "Letztes Training";
+"Giorni recenti" = "Letzte Tage";
 "Score Giornaliero" = "Tagespunktzahl";
+"Score del giorno" = "Tages-Score";
 "Punteggio del giorno" = "Tages-Score";
-"Movimento" = "Bewegung";
+"Componenti del punteggio" = "Score-Aufschlüsselung";
+"su %lld kcal" = "von %lld kcal";
+"su %@" = "von %@";
 
 // Charts
-"Media: " = "Durchschnitt: ";
-"Obiettivo: " = "Ziel: ";
 "Media" = "Durchschnitt";
 "Obiettivo" = "Ziel";
 "Periodo" = "Zeitraum";
+"Nessun dato per questo periodo" = "Keine Daten für diesen Zeitraum";
+"7 giorni" = "7 Tage";
+"30 giorni" = "30 Tage";
+"Anno" = "Jahr";
 
 // Common
 "Chiudi" = "Schließen";
@@ -65,12 +73,35 @@
 
 // Recovery
 "Sonno" = "Schlaf";
+"Sonno stanotte" = "Schlaf heute Nacht";
 "Frequenza cardiaca" = "Herzfrequenz";
 "Variabilità" = "Variabilität";
+"Cuore & HRV" = "Herz & HRV";
+"Ore di sonno" = "Schlafstunden";
+"Composizione corporea" = "Körperzusammensetzung";
+"Fasi del sonno" = "Schlafphasen";
+"Timeline" = "Zeitverlauf";
+"Dettaglio sonno" = "Schlafdetail";
 
 // Workouts
 "Nessun allenamento" = "Kein Training";
 "Nessun allenamento trovato." = "Kein Training gefunden.";
+"I tuoi allenamenti Apple Fitness appaiono qui automaticamente." = "Deine Apple Fitness Trainings erscheinen hier automatisch.";
+"Sincronizza ora" = "Jetzt synchronisieren";
+"Serie" = "Sätze";
+"Tipo" = "Typ";
+"Peso" = "Gewicht";
+"Reps" = "Wdh.";
+"Zone di frequenza cardiaca" = "Herzfrequenzzonen";
+"Basate su FC max stimata 190 bpm" = "Basierend auf geschätzter max. HF 190 bpm";
+"Percorso" = "Route";
+
+// Insights
+"Personal Records 🏆" = "Persönliche Bestleistungen 🏆";
+"Volume — ultimi 7 giorni" = "Volumen — letzte 7 Tage";
+"Nessun insight disponibile" = "Keine Insights verfügbar";
+"Gli insights analizzano automaticamente: bilancio muscolare (push/pull/gambe), variabilità del sonno, distribuzione delle proteine nei giorni di allenamento vs riposo, e correlazioni tra recupero e performance. Più dati hai (almeno 2 settimane), più sono accurati." = "Insights analysieren automatisch: Muskelgleichgewicht (Push/Pull/Beine), Schlafvariabilität, Proteinverteilung an Trainings- vs. Ruhetagen und Erholungs-Leistungs-Korrelationen. Je mehr Daten (mind. 2 Wochen), desto genauer.";
+"Importa almeno 2 settimane di allenamenti da Hevy e attiva la sincronizzazione di Yazio con Apple Salute per ricevere insights personalizzati." = "Importiere mindestens 2 Wochen Training aus Hevy und aktiviere die Yazio-Synchronisation mit Apple Gesundheit für personalisierte Insights.";
 
 // Water logging
 "Aggiungi acqua" = "Wasser hinzufügen";
@@ -87,4 +118,213 @@
 "Nessun allenamento oggi" = "Kein Training heute";
 
 // Settings footer
-"Default applicati per" = "Standardwerte angewendet für";
+"Default applicati per" = "Standardwerte für";
+
+// Score card labels
+"Scegli giorno" = "Tag wählen";
+"Giornata perfetta! 🌟" = "Perfekter Tag! 🌟";
+"Ottima giornata" = "Toller Tag";
+"Buona giornata" = "Guter Tag";
+"Giornata nella media" = "Durchschnittlicher Tag";
+"Puoi fare meglio" = "Du kannst es besser";
+"💪 Allenamento completato" = "💪 Training abgeschlossen";
+"🛋️ Giorno di riposo" = "🛋️ Ruhetag";
+"su 100" = "von 100";
+"Massimo" = "Maximum";
+"Giorni obiettivo" = "Zieltage";
+"Allenamento" = "Training";
+"Come si calcola" = "Wie es berechnet wird";
+"Nessun dato sonno — punteggio neutro" = "Keine Schlafdaten — neutraler Score";
+"Nessun dato nutrizionale — punteggio neutro" = "Keine Ernährungsdaten — neutraler Score";
+"Allenamento completato oggi" = "Training heute abgeschlossen";
+"obiettivo" = "Ziel";
+
+// Score detail explanation rows
+"Movimento (max 40 pt)" = "Bewegung (max. 40 Pkt.)";
+"Media pesata di passi e calorie attive rispetto agli obiettivi. Richiede solo iPhone o Apple Watch." = "Gewichteter Durchschnitt von Schritten und aktiven Kalorien vs. Ziele. Erfordert nur iPhone oder Apple Watch.";
+"Recupero (max 30 pt)" = "Erholung (max. 30 Pkt.)";
+"Basato sulla qualità del sonno. Se mancano i dati sonno viene assegnato un punteggio neutro di 15 pt." = "Basiert auf der Schlafqualität. Fehlen Schlafdaten, werden 15 neutrale Punkte vergeben.";
+"Nutrizione (max 20 pt)" = "Ernährung (max. 20 Pkt.)";
+"Progressione verso obiettivo calorie (40%) e proteine (60%). Se non tracciata → 10 pt neutri." = "Fortschritt zum Kalorienziel (40%) und Proteinziel (60%). Nicht getrackt → 10 neutrale Pkt.";
+"Allenamento (max 10 pt)" = "Training (max. 10 Pkt.)";
+
+// Recovery / Sleep detail
+"Analizzando i tuoi dati…" = "Daten werden analysiert…";
+"Come funzionano gli Insights" = "Wie Insights funktionieren";
+"Addormentamento" = "Einschlafzeit";
+"Sveglia" = "Aufwachen";
+"ore totali" = "Stunden gesamt";
+"Profondo" = "Tief";
+"Sveglio" = "Wach";
+"Restaurativo" = "Erholsam";
+"Sogni / memoria" = "Träume / Gedächtnis";
+"Sonno leggero" = "Leichter Schlaf";
+"Svegliate" = "Wachphasen";
+"Durata (max 50 pt)" = "Dauer (max. 50 Pkt.)";
+"Sonno profondo (max 30 pt)" = "Tiefschlaf (max. 30 Pkt.)";
+"Sonno REM (max 20 pt)" = "REM-Schlaf (max. 20 Pkt.)";
+"Obiettivo: 8 ore di sonno" = "Ziel: 8 Stunden Schlaf";
+"Obiettivo: 1.5 ore di sonno profondo" = "Ziel: 1,5 Std. Tiefschlaf";
+"Obiettivo: 1.5 ore di REM" = "Ziel: 1,5 Std. REM";
+"Come si calcola il punteggio" = "Wie der Score berechnet wird";
+"Cos'è" = "Was es ist";
+"Valori di riferimento" = "Referenzwerte";
+"Consiglio" = "Tipp";
+
+// Recovery charts
+"FC a riposo" = "Ruhe-HF";
+"Peso corporeo" = "Körpergewicht";
+
+// Workout detail
+"Caricamento dati cardiaci…" = "Herzdaten werden geladen…";
+"FC durante allenamento" = "HF beim Training";
+"Z1 Recovery" = "Z1 Erholung";
+"Z2 Brucia ♥" = "Z2 Verbrennung ♥";
+"Z3 Aerobico" = "Z3 Aerob";
+"Z4 Soglia" = "Z4 Schwelle";
+"Z5 Peak" = "Z5 Peak";
+"media" = "Ø";
+"massima" = "max";
+"minima" = "min";
+"minuti" = "min";
+"kcal attive" = "akt. kcal";
+"serie" = "Sätze";
+
+// Workout row format strings
+"%lld serie" = "%lld Sätze";
+
+// Muscle Groups
+"Petto" = "Brust";
+"Schiena" = "Rücken";
+"Spalle" = "Schultern";
+"Bicipiti" = "Bizeps";
+"Tricipiti" = "Trizeps";
+"Avambracci" = "Unterarme";
+"Core" = "Rumpf";
+"Quadricipiti" = "Quadrizeps";
+"Femorali" = "Beinbeuger";
+"Glutei" = "Gesäß";
+"Polpacci" = "Waden";
+"Full Body" = "Ganzkörper";
+"Cardio" = "Cardio";
+"Altro" = "Sonstiges";
+
+// Set Types
+"Normale" = "Normal";
+"Riscaldamento" = "Aufwärmen";
+"Drop Set" = "Drop Set";
+"Al cedimento" = "Bis zum Versagen";
+
+// Data Source
+"Manuale" = "Manuell";
+
+// HealthKit workout type names
+"Corsa" = "Laufen";
+"Ciclismo" = "Radfahren";
+"Camminata" = "Gehen";
+"Nuoto" = "Schwimmen";
+"Yoga" = "Yoga";
+"Allenamento Pesi" = "Krafttraining";
+"Forza Funzionale" = "Funktionelles Training";
+"HIIT" = "HIIT";
+"Cross Training" = "Cross Training";
+"Pilates" = "Pilates";
+"Danza" = "Tanzen";
+"Scale" = "Treppensteigen";
+"Ellittica" = "Ellipse";
+"Canottaggio" = "Rudern";
+"Calcio" = "Fußball";
+"Basketball" = "Basketball";
+"Tennis" = "Tennis";
+"Golf" = "Golf";
+"Escursionismo" = "Wandern";
+"Boxe" = "Boxen";
+"Salto con la Corda" = "Seilspringen";
+"Core Training" = "Core Training";
+"Flessibilità" = "Flexibilität";
+"Mind & Body" = "Mind & Body";
+"Cardio Misto" = "Gemischtes Cardio";
+"Allenamento" = "Training";
+
+// Heart & HRV metric labels
+"FC riposo" = "Ruhe-HF";
+"FC media" = "Ø-HF";
+"HRV" = "HRV";
+"VO₂ Max" = "VO₂ Max";
+"Ossigeno" = "Sauerstoff";
+"Respiro" = "Atmung";
+"Salite" = "Etagen";
+"Mindfulness" = "Achtsamkeit";
+"Grasso corp." = "Körperfett";
+"BMI" = "BMI";
+"Massa magra" = "Magermasse";
+
+// Heart & HRV metric units
+"atti/min" = "A/min";
+"piani" = "Etagen";
+
+// Sleep metric labels
+"totale" = "gesamt";
+"profondo" = "tief";
+"REM" = "REM";
+"score /100" = "Score /100";
+
+// Sleep no-data message
+"Nessun dato sonno. Assicurati che iPhone o Apple Watch registri il sonno. Puoi anche inserirlo manualmente in Apple Salute." = "Keine Schlafdaten. Stell sicher, dass iPhone oder Apple Watch deinen Schlaf aufzeichnet. Du kannst ihn auch manuell in Gesundheit eintragen.";
+
+// MetricInfo sheet titles
+"HRV — Variabilità Cardiaca" = "HRV — Herzfrequenzvariabilität";
+"SpO₂ — Saturazione Ossigeno" = "SpO₂ — Blutsauerstoff";
+"Frequenza Respiratoria" = "Atemfrequenz";
+
+// MetricInfo — HRV
+"La HRV (Heart Rate Variability) misura la variazione del tempo tra un battito cardiaco e il successivo. Valori alti indicano che il sistema nervoso autonomo è ben bilanciato: il corpo è pronto per lo sforzo fisico e il recupero è ottimale. Valori bassi segnalano stress, fatica o malattia.\n\nApple Watch la misura automaticamente durante il sonno." = "Die HRV misst die Variation der Zeit zwischen Herzschlägen. Hohe Werte deuten auf ein gut ausbalanciertes autonomes Nervensystem hin: der Körper ist bereit für Belastung und die Erholung ist optimal. Niedrige Werte signalisieren Stress, Müdigkeit oder Krankheit.\n\nApple Watch misst sie automatisch während des Schlafs.";
+"Eccellente — atletici o molto riposati" = "Ausgezeichnet — sportlich oder sehr gut ausgeruht";
+"Buono — nella media degli adulti attivi" = "Gut — Durchschnitt aktiver Erwachsener";
+"Nella norma" = "Im Normbereich";
+"Sotto la media — corpo sotto stress" = "Unterdurchschnittlich — Körper unter Stress";
+"La HRV varia molto da persona a persona. Monitora il TUO trend nel tempo: se la tua HRV è stabile o in aumento, stai recuperando bene. Un calo improvviso può indicare overtraining o malattia in arrivo." = "Die HRV variiert stark von Person zu Person. Beobachte DEINEN Trend im Laufe der Zeit: Wenn deine HRV stabil oder steigend ist, erholst du dich gut. Ein plötzlicher Abfall kann auf Übertraining oder eine bevorstehende Krankheit hinweisen.";
+
+// MetricInfo — VO₂ Max
+"Il VO₂ Max è la quantità massima di ossigeno che i tuoi muscoli riescono a utilizzare durante uno sforzo intenso. È il principale indicatore di fitness cardiovascolare e predice la salute a lungo termine.\n\nApple Watch lo stima durante camminate e corse all'aperto con GPS." = "Der VO₂ Max ist die maximale Sauerstoffmenge, die deine Muskeln bei intensiver Belastung verwenden können. Er ist der wichtigste Indikator für kardiovaskuläre Fitness und sagt die langfristige Gesundheit voraus.\n\nApple Watch schätzt ihn bei Outdoor-Gehen und -Laufen mit GPS.";
+"Eccellente (uomini) / > 48 (donne)" = "Ausgezeichnet (Männer) / > 48 (Frauen)";
+"Buono — sopra la media" = "Gut — überdurchschnittlich";
+"Nella media" = "Durchschnittlich";
+"Sotto la media — da migliorare" = "Unterdurchschnittlich — verbesserungswürdig";
+"Il VO₂ Max migliora con l'allenamento aerobico regolare: corsa, ciclismo, nuoto. Anche 20-30 minuti di cardio moderato 3 volte a settimana producono benefici misurabili in poche settimane." = "Der VO₂ Max verbessert sich durch regelmäßiges Ausdauertraining: Laufen, Radfahren, Schwimmen. Schon 20-30 Minuten moderates Cardio 3-mal pro Woche bringen messbare Verbesserungen in wenigen Wochen.";
+
+// MetricInfo — SpO₂
+"La SpO₂ misura la percentuale di emoglobina nel sangue che trasporta ossigeno. Un valore normale indica che i polmoni stanno ossigenando correttamente il sangue.\n\nApple Watch la misura con il sensore di ossigeno nel sangue sul retro. La misurazione avviene principalmente durante il sonno." = "Die SpO₂ misst den Prozentsatz des Hämoglobins im Blut, das Sauerstoff transportiert. Ein normaler Wert zeigt, dass die Lungen das Blut richtig mit Sauerstoff versorgen.\n\nApple Watch misst sie mit dem Blutsauerstoffsensor auf der Rückseite. Die Messung erfolgt hauptsächlich während des Schlafs.";
+"Normale — nessuna preoccupazione" = "Normal — kein Grund zur Sorge";
+"Lieve ipossia — monitora" = "Leichte Hypoxie — beobachten";
+"Ipossia moderata — consulta un medico" = "Mäßige Hypoxie — Arzt aufsuchen";
+"Ipossia grave — urgente" = "Schwere Hypoxie — dringend";
+"Valori occasionalmente bassi durante il sonno possono indicare apnea notturna. Se la SpO₂ scende spesso sotto il 90% durante la notte, parla con il tuo medico." = "Gelegentlich niedrige Werte während des Schlafs können auf Schlafapnoe hinweisen. Wenn die SpO₂ nachts häufig unter 90%% fällt, sprich mit deinem Arzt.";
+
+// MetricInfo — Respiratory Rate
+"La frequenza respiratoria è il numero di atti respiratori (inspirazione + espirazione) al minuto durante il riposo. È un indicatore sensibile dello stato di salute: si alza in caso di stress, malattia o recupero insufficiente.\n\nApple Watch la misura durante il sonno tramite l'accelerometro." = "Die Atemfrequenz ist die Anzahl der Atemzüge (Einatmung + Ausatmung) pro Minute in Ruhe. Sie ist ein empfindlicher Gesundheitsindikator: Sie steigt bei Stress, Krankheit oder unzureichender Erholung.\n\nApple Watch misst sie während des Schlafs über den Beschleunigungssensor.";
+"Ottimale a riposo" = "Optimal in Ruhe";
+"Normale" = "Normal";
+"Elevata — possibile stress" = "Erhöht — möglicher Stress";
+"Alta — consulta un medico" = "Hoch — Arzt aufsuchen";
+"Un aumento della frequenza respiratoria notturna rispetto al tuo solito può essere uno dei primi segnali di un'infezione in arrivo, anche prima che compaiano altri sintomi." = "Ein Anstieg deiner nächtlichen Atemfrequenz gegenüber deinem üblichen Wert kann eines der ersten Anzeichen einer bevorstehenden Infektion sein, noch bevor andere Symptome auftreten.";
+
+// Insight titles
+"Troppo Push, poco Pull" = "Zu viel Push, zu wenig Pull";
+"Pull dominante" = "Pull-dominant";
+"Skip leg day detected 🦵" = "Skip leg day erkannt 🦵";
+"Recupero insufficiente" = "Unzureichende Erholung";
+"Proteine insufficienti" = "Zu wenig Protein";
+"Idratazione bassa" = "Niedrige Hydratation";
+"Proteine nei giorni di riposo" = "Protein an Ruhetagen";
+"Il sonno migliora le tue performance" = "Schlaf verbessert deine Leistung";
+
+// Insight messages
+"In 14 giorni hai fatto %@%% più volume push che pull. Rischio infortuni alla spalla. Aggiungi rematori o trazioni." = "In 14 Tagen hast du %@%% mehr Push- als Pull-Volumen gemacht. Verletzungsrisiko an der Schulter. Füge Rudern oder Klimmzüge hinzu.";
+"Hai più volume pull che push. Bilancia con più esercizi per petto e spalle." = "Du hast mehr Pull- als Push-Volumen. Gleiche es mit mehr Brust- und Schulterübungen aus.";
+"Nelle ultime 2 settimane hai allenato le gambe molto meno del busto. Le gambe sono il motore della forza totale." = "In den letzten 2 Wochen hast du die Beine viel weniger trainiert als den Oberkörper. Die Beine sind der Motor der Gesamtkraft.";
+"Stai dormendo in media %@h. Con meno di 7h il testosterone cala del 10-15%% e i progressi rallentano." = "Du schläfst durchschnittlich %@h. Mit weniger als 7h sinkt das Testosteron um 10-15%% und der Fortschritt verlangsamt sich.";
+"Media settimanale (%@ giorni tracciati): %@g su %@g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento." = "Wochendurchschnitt (%@ Tage erfasst): %@g von %@g Ziel. Mit weniger Protein verlierst du auch beim Training Muskelmasse.";
+"Bevi in media %@L al giorno. L'obiettivo è %@L." = "Du trinkst durchschnittlich %@L pro Tag. Das Ziel ist %@L.";
+"Mangi %@g in meno di proteine nei giorni senza allenamento. Il muscolo si ricostruisce anche a riposo — mantieni l'apporto costante." = "An Ruhetagen isst du %@g weniger Protein. Der Muskel baut sich auch in Ruhe auf — halte die Zufuhr konstant.";
+"Con 7.5h+ di sonno il tuo volume di allenamento è %@%% più alto. Dormire è parte dell'allenamento." = "Mit 7,5h+ Schlaf ist dein Trainingsvolumen %@%% höher. Schlafen ist Teil des Trainings.";

@@ -1,0 +1,36 @@
+// Widget configuration
+"Score Giornaliero" = "Puntuación Diaria";
+"Il tuo punteggio composito: nutrizione, movimento e recupero." = "Tu puntuación compuesta: nutrición, movimiento y recuperación.";
+"Obiettivi Macro" = "Objetivos de Macros";
+"Calorie mangiate, proteine, carboidrati e grassi verso l'obiettivo." = "Calorías ingeridas, proteínas, carbohidratos y grasas hacia el objetivo.";
+"Attività" = "Actividad";
+"Calorie attive, passi, calorie mangiate e macro." = "Calorías activas, pasos, calorías ingeridas y macros.";
+
+// Widget labels
+"Nutrizione" = "Nutrición";
+"Allenato" = "Entrenado";
+"Riposo" = "Descanso";
+"attivi" = "activas";
+"passi" = "pasos";
+"kcal man." = "kcal ingeridas";
+"Acqua" = "Agua";
+
+// Score pillar labels
+"Mov." = "Mov.";
+"Rec." = "Rec.";
+"Nut." = "Nut.";
+"All." = "Entr.";
+
+// Macro cell labels
+"Proteine" = "Proteína";
+"Carbs" = "Carbos";
+"Grassi" = "Grasas";
+"Fibre" = "Fibra";
+
+// Activity stat labels
+"Attivi" = "Activas";
+"Passi" = "Pasos";
+"Mangiati" = "Ingeridas";
+
+// Macro cell goal format
+"su %lld%@" = "de %lld%@";

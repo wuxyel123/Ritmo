@@ -6,6 +6,7 @@ import FitSyncCore
 struct DashboardView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @Query private var storedGoals: [UserGoals]
     @StateObject private var vm = DashboardViewModel()
     @State private var selectedDate = Date.now
@@ -48,7 +49,7 @@ struct DashboardView: View {
                                 MacroRow(emoji: "🥩", label: "Proteine",
                                          current: vm.snapshot.protein, goal: vm.snapshot.proteinGoal,
                                          unit: "g", color: FitSyncTheme.protein)
-                                MacroRow(emoji: "🍞", label: "Carbs",
+                                MacroRow(emoji: "🍞", label: "Carboidrati",
                                          current: vm.snapshot.carbs, goal: vm.snapshot.carbsGoal,
                                          unit: "g", color: FitSyncTheme.carbs)
                                 MacroRow(emoji: "🥑", label: "Grassi",
@@ -141,7 +142,7 @@ struct DashboardView: View {
                                     }
                                     HStack {
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text(session.title)
+                                            Text(LocalizedStringKey(session.title))
                                                 .font(.headline)
                                             Text(session.startTime, style: .relative)
                                                 .font(.caption)
@@ -159,7 +160,7 @@ struct DashboardView: View {
                                     if !session.muscleGroups.isEmpty {
                                         HStack {
                                             ForEach(session.muscleGroups, id: \.self) { group in
-                                                Text(group.rawValue)
+                                                Text(LocalizedStringKey(group.rawValue))
                                                     .font(.caption2)
                                                     .padding(.horizontal, 8)
                                                     .padding(.vertical, 3)
@@ -192,7 +193,7 @@ struct DashboardView: View {
                 }
                 .padding(FitSyncTheme.pagePadding)
             }
-            .navigationTitle(isToday ? "Oggi" : selectedDate.formatted(.dateTime.weekday(.wide).day().month()))
+            .navigationTitle(isToday ? Text("Oggi") : Text(selectedDate, format: .dateTime.weekday(.wide).day().month().locale(locale)))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
@@ -219,6 +220,7 @@ struct DateNavigationBar: View {
     let onDateChanged: () -> Void
     var healthRepo: HealthKitRepository? = nil
 
+    @Environment(\.locale) private var locale
     private let calendar = Calendar.current
     @State private var showingCalendar = false
     @State private var daysWithData: Set<String> = []
@@ -239,8 +241,8 @@ struct DateNavigationBar: View {
                     if isToday {
                         Text("Oggi").font(.headline.bold())
                     } else {
-                        Text(selectedDate, format: .dateTime.weekday(.wide)).font(.headline.bold())
-                        Text(selectedDate, format: .dateTime.day().month().year())
+                        Text(selectedDate, format: .dateTime.weekday(.wide).locale(locale)).font(.headline.bold())
+                        Text(selectedDate, format: .dateTime.day().month().year().locale(locale))
                             .font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
                     }
                     Image(systemName: "calendar").font(.caption2).foregroundStyle(FitSyncTheme.accent)
@@ -343,7 +345,7 @@ struct DayScoreCard: View {
         }
     }
 
-    private func scoreLabel(_ score: Int) -> String {
+    private func scoreLabel(_ score: Int) -> LocalizedStringKey {
         switch score {
         case 90...: return "Giornata perfetta! 🌟"
         case 75..<90: return "Ottima giornata"
@@ -463,7 +465,7 @@ struct DayScoreDetailSheet: View {
     }
 
     @ViewBuilder
-    private func explanationRow(_ title: String, _ body: String) -> some View {
+    private func explanationRow(_ title: LocalizedStringKey, _ body: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption.bold())
             Text(body).font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
@@ -473,7 +475,7 @@ struct DayScoreDetailSheet: View {
 
 struct ScoreComponentRow: View {
     let icon: String
-    let label: String
+    let label: LocalizedStringKey
     let description: String
     let score: Double
     let maxScore: Double
@@ -524,15 +526,22 @@ struct InsightBanner: View {
         }
     }
 
+    private var localizedMessage: String {
+        let format = NSLocalizedString(insight.messageKey, comment: "")
+        guard !insight.messageArgs.isEmpty else { return format }
+        let args: [CVarArg] = insight.messageArgs.map { $0 as CVarArg }
+        return String(format: format, arguments: args)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(insight.icon)
                 .font(.title2)
             VStack(alignment: .leading, spacing: 4) {
-                Text(insight.title)
+                Text(LocalizedStringKey(insight.title))
                     .font(.subheadline.bold())
                     .foregroundStyle(accentColor)
-                Text(insight.message)
+                Text(localizedMessage)
                     .font(.caption)
                     .foregroundStyle(FitSyncTheme.textSecondary)
                     .lineLimit(3)
@@ -599,7 +608,7 @@ struct ActivityMetricDetailView: View {
 
                     // Period picker
                     Picker("Periodo", selection: $period) {
-                        ForEach(HistoryPeriod.allCases) { p in Text(p.rawValue).tag(p) }
+                        ForEach(HistoryPeriod.allCases) { p in Text(p.localizedLabel).tag(p) }
                     }
                     .pickerStyle(.segmented)
 
@@ -648,7 +657,7 @@ struct ActivityMetricDetailView: View {
                 }
                 .padding(FitSyncTheme.pagePadding)
             }
-            .navigationTitle(metric.title)
+            .navigationTitle(LocalizedStringKey(metric.title))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
@@ -682,7 +691,7 @@ struct ActivityMetricDetailView: View {
     }
 
     @ViewBuilder
-    private func statPill(label: String, value: String, color: Color) -> some View {
+    private func statPill(label: LocalizedStringKey, value: String, color: Color) -> some View {
         VStack(spacing: 2) {
             Text(value).font(.headline.bold()).foregroundStyle(color)
             Text(label).font(.caption2).foregroundStyle(.secondary)
