@@ -144,7 +144,8 @@ public final class InsightsService {
                 insights.append(FitInsight(
                     id: UUID(),
                     title: "Troppo Push, poco Pull",
-                    message: "In 14 giorni hai fatto \(Int(ratio * 100))% più volume push che pull. Rischio infortuni alla spalla. Aggiungi rematori o trazioni.",
+                    messageKey: "In 14 giorni hai fatto %@%% più volume push che pull. Rischio infortuni alla spalla. Aggiungi rematori o trazioni.",
+                    messageArgs: ["\(Int(ratio * 100))"],
                     type: .warning,
                     priority: .high,
                     category: .workout,
@@ -154,7 +155,7 @@ public final class InsightsService {
                 insights.append(FitInsight(
                     id: UUID(),
                     title: "Pull dominante",
-                    message: "Hai più volume pull che push. Bilancia con più esercizi per petto e spalle.",
+                    messageKey: "Hai più volume pull che push. Bilancia con più esercizi per petto e spalle.",
                     type: .suggestion,
                     priority: .medium,
                     category: .workout,
@@ -170,7 +171,7 @@ public final class InsightsService {
             insights.append(FitInsight(
                 id: UUID(),
                 title: "Skip leg day detected 🦵",
-                message: "Nelle ultime 2 settimane hai allenato le gambe molto meno del busto. Le gambe sono il motore della forza totale.",
+                messageKey: "Nelle ultime 2 settimane hai allenato le gambe molto meno del busto. Le gambe sono il motore della forza totale.",
                 type: .warning,
                 priority: .high,
                 category: .workout,
@@ -192,7 +193,8 @@ public final class InsightsService {
             insights.append(FitInsight(
                 id: UUID(),
                 title: "Recupero insufficiente",
-                message: "Stai dormendo in media \(String(format: "%.1f", avgSleep))h. Con meno di 7h il testosterone cala del 10-15% e i progressi rallentano.",
+                messageKey: "Stai dormendo in media %@h. Con meno di 7h il testosterone cala del 10-15%% e i progressi rallentano.",
+                messageArgs: [String(format: "%.1f", avgSleep)],
                 type: .warning,
                 priority: .high,
                 category: .recovery,
@@ -216,7 +218,8 @@ public final class InsightsService {
             insights.append(FitInsight(
                 id: UUID(),
                 title: "Proteine insufficienti",
-                message: "Media settimanale (\(last7.count) giorni tracciati): \(Int(avgProtein))g su \(Int(goals.dailyProteinG))g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento.",
+                messageKey: "Media settimanale (%@ giorni tracciati): %@g su %@g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento.",
+                messageArgs: ["\(last7.count)", "\(Int(avgProtein))", "\(Int(goals.dailyProteinG))"],
                 type: .warning,
                 priority: .high,
                 category: .nutrition,
@@ -229,7 +232,8 @@ public final class InsightsService {
             insights.append(FitInsight(
                 id: UUID(),
                 title: "Idratazione bassa",
-                message: "Bevi in media \(Int(avgWater / 1000 * 10) / 10)L al giorno. L'obiettivo è \(Int(goals.dailyWaterMl / 100) / 10)L.",
+                messageKey: "Bevi in media %@L al giorno. L'obiettivo è %@L.",
+                messageArgs: [String(format: "%.1f", avgWater / 1000), String(format: "%.1f", goals.dailyWaterMl / 1000)],
                 type: .suggestion,
                 priority: .medium,
                 category: .nutrition,
@@ -274,7 +278,8 @@ public final class InsightsService {
             return [FitInsight(
                 id: UUID(),
                 title: "Proteine nei giorni di riposo",
-                message: "Mangi \(Int(workoutProtein - restProtein))g in meno di proteine nei giorni senza allenamento. Il muscolo si ricostruisce anche a riposo — mantieni l'apporto costante.",
+                messageKey: "Mangi %@g in meno di proteine nei giorni senza allenamento. Il muscolo si ricostruisce anche a riposo — mantieni l'apporto costante.",
+                messageArgs: ["\(Int(workoutProtein - restProtein))"],
                 type: .tip,
                 priority: .medium,
                 category: .nutrition,
@@ -319,7 +324,8 @@ public final class InsightsService {
             return [FitInsight(
                 id: UUID(),
                 title: "Il sonno migliora le tue performance",
-                message: "Con 7.5h+ di sonno il tuo volume di allenamento è \(Int(diff))% più alto. Dormire è parte dell'allenamento.",
+                messageKey: "Con 7.5h+ di sonno il tuo volume di allenamento è %@%% più alto. Dormire è parte dell'allenamento.",
+                messageArgs: ["\(Int(diff))"],
                 type: .positive,
                 priority: .low,
                 category: .recovery,
@@ -335,7 +341,8 @@ public final class InsightsService {
 public struct FitInsight: Identifiable {
     public let id: UUID
     public let title: String
-    public let message: String
+    public let messageKey: String
+    public let messageArgs: [String]
     public let type: InsightType
     public let priority: InsightPriority
     public let category: InsightCategory
@@ -344,7 +351,8 @@ public struct FitInsight: Identifiable {
     public init(
         id: UUID = UUID(),
         title: String,
-        message: String,
+        messageKey: String,
+        messageArgs: [String] = [],
         type: InsightType,
         priority: InsightPriority,
         category: InsightCategory,
@@ -352,7 +360,8 @@ public struct FitInsight: Identifiable {
     ) {
         self.id = id
         self.title = title
-        self.message = message
+        self.messageKey = messageKey
+        self.messageArgs = messageArgs
         self.type = type
         self.priority = priority
         self.category = category

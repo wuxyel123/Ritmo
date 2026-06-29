@@ -44,7 +44,7 @@ struct ContentView: View {
                 .tabItem { Label("Insights", systemImage: "chart.line.uptrend.xyaxis") }.tag(4)
 
             SettingsTabView()
-                .tabItem { Label("Obiettivi", systemImage: "slider.horizontal.3") }.tag(5)
+                .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(5)
         }
         .tint(FitSyncTheme.accent)
         .onOpenURL { url in
@@ -123,12 +123,12 @@ struct SectionHeader: View {
 
     var body: some View {
         HStack {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.title3)
                 .fontWeight(.semibold)
             Spacer()
             if let action, let onAction {
-                Button(action, action: onAction)
+                Button(LocalizedStringKey(action), action: onAction)
                     .font(.subheadline)
                     .foregroundStyle(FitSyncTheme.accent)
             }
@@ -180,7 +180,7 @@ struct MacroRow: View {
         VStack(spacing: 6) {
             HStack {
                 Text(emoji)
-                Text(label)
+                Text(LocalizedStringKey(label))
                     .font(.subheadline)
                     .foregroundStyle(FitSyncTheme.textSecondary)
                 Spacer()
@@ -272,7 +272,7 @@ struct SettingsTabView: View {
                         set: { langManager.set($0) }
                     )) {
                         ForEach(AppLanguage.allCases) { lang in
-                            Text("\(lang.flagEmoji) \(lang.displayName)").tag(lang)
+                            (Text(lang.flagEmoji + " ") + Text(LocalizedStringKey(lang.displayName))).tag(lang)
                         }
                     } label: {
                         Label("Lingua", systemImage: "globe")
@@ -399,7 +399,7 @@ struct SettingsTabView: View {
                     Text("Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg.")
                 }
             }
-            .navigationTitle(Text("Obiettivi"))
+            .navigationTitle(Text("Impostazioni"))
             .overlay(alignment: .bottom) {
                 if showToast {
                     HStack(spacing: 6) {
@@ -524,7 +524,7 @@ private struct SmartStepper: View {
 
     var body: some View {
         HStack {
-            Text(label).foregroundStyle(color.opacity(0.9))
+            Text(LocalizedStringKey(label)).foregroundStyle(color.opacity(0.9))
             Spacer()
             if allowsDirectInput {
                 HStack(spacing: 10) {
@@ -710,7 +710,7 @@ struct InteractiveDateChart: View {
         FitCard {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(title).font(.subheadline.bold())
+                    Text(LocalizedStringKey(title)).font(.subheadline.bold())
                     Spacer()
                     if let sel = selectedPoint {
                         VStack(alignment: .trailing, spacing: 0) {
@@ -721,9 +721,9 @@ struct InteractiveDateChart: View {
                         }
                     } else {
                         VStack(alignment: .trailing, spacing: 0) {
-                            Text("Media: \(Int(avg)) \(unit)").font(.caption).foregroundStyle(color)
+                            (Text("Media") + Text(": \(Int(avg)) \(unit)")).font(.caption).foregroundStyle(color)
                             if let g = goal {
-                                Text("Obiettivo: \(Int(g)) \(unit)").font(.caption2).foregroundStyle(.secondary)
+                                (Text("Obiettivo") + Text(": \(Int(g)) \(unit)")).font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -827,7 +827,7 @@ struct ExpandedChartView: View {
                         VStack(alignment: .trailing) {
                             if let g = goal {
                                 let pct = sel.value / g * 100
-                                Text(String(format: "%.0f%% obiettivo", pct))
+                                (Text(String(format: "%.0f%%", pct)) + Text(" ") + Text("obiettivo"))
                                     .font(.caption).foregroundStyle(pct >= 100 ? .green : .secondary)
                             }
                         }
@@ -903,7 +903,7 @@ struct ExpandedChartView: View {
                 .frame(maxHeight: .infinity)
                 .padding()
             }
-            .navigationTitle(title)
+            .navigationTitle(Text(LocalizedStringKey(title)))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -924,6 +924,7 @@ struct FitCalendarView: View {
     let onSelect: () -> Void
 
     @State private var displayedMonth = Date.now
+    @Environment(\.locale) private var locale
     private let calendar = Calendar.current
     private let fmt: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter(); f.formatOptions = [.withFullDate]; return f
@@ -938,7 +939,13 @@ struct FitCalendarView: View {
     private var weekdayOfFirst: Int {
         (calendar.component(.weekday, from: monthStart) - calendar.firstWeekday + 7) % 7
     }
-    private let dayNames = ["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"]
+    private var dayNames: [String] {
+        var cal = Calendar.current
+        cal.locale = locale
+        let symbols = cal.veryShortStandaloneWeekdaySymbols
+        let first = cal.firstWeekday - 1
+        return (0..<7).map { symbols[(first + $0) % 7] }
+    }
 
     var body: some View {
         VStack(spacing: 16) {

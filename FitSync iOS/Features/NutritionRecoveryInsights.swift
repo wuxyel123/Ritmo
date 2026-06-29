@@ -16,6 +16,13 @@ enum HistoryPeriod: String, CaseIterable, Identifiable {
     var chartUnit: Calendar.Component {
         switch self { case .week: .day; case .month: .day; case .year: .month }
     }
+    var localizedLabel: LocalizedStringKey {
+        switch self {
+        case .week:  "7 giorni"
+        case .month: "30 giorni"
+        case .year:  "Anno"
+        }
+    }
 }
 
 // MARK: ── NUTRITION VIEW ───────────────────────────────────────────────────
@@ -94,7 +101,7 @@ struct NutritionView: View {
                         // Period picker
                         Picker("Periodo", selection: $period) {
                             ForEach(HistoryPeriod.allCases) { p in
-                                Text(p.rawValue).tag(p)
+                                Text(p.localizedLabel).tag(p)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -391,7 +398,7 @@ struct RecoveryView: View {
                                             tip: "Un aumento della frequenza respiratoria notturna rispetto al tuo solito può essere uno dei primi segnali di un'infezione in arrivo, anche prima che compaiano altri sintomi."
                                         ))
                             HeartMetric(value: "\(vm.activity.flightsClimbed)",
-                                        label: "Scale", unit: "piani", color: .orange, icon: "figure.stairs")
+                                        label: "Salite", unit: "piani", color: .orange, icon: "figure.stairs")
                             HeartMetric(value: "\(vm.activity.mindfulMinutes)",
                                         label: "Mindfulness", unit: "min", color: .purple, icon: "brain")
                         }
@@ -400,7 +407,7 @@ struct RecoveryView: View {
                     // MARK: Periodo
                     Picker("Periodo", selection: $period) {
                         ForEach(HistoryPeriod.allCases) { p in
-                            Text(p.rawValue).tag(p)
+                            Text(p.localizedLabel).tag(p)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -517,7 +524,7 @@ struct RecoveryView: View {
 // MARK: ── Recovery sub-views ──────────────────────────────────────────────
 
 struct SleepMetric: View {
-    let value: String; let label: String; let color: Color
+    let value: String; let label: LocalizedStringKey; let color: Color
     var body: some View {
         VStack(spacing: 4) {
             Text(value).font(.title3.bold()).foregroundStyle(color)
@@ -561,7 +568,7 @@ struct SleepStageBar: View {
         .padding(.top, 4)
     }
 
-    private func legend(_ color: Color, _ label: String) -> some View {
+    private func legend(_ color: Color, _ label: LocalizedStringKey) -> some View {
         HStack(spacing: 4) {
             Circle().fill(color).frame(width: 6, height: 6)
             Text(label).foregroundStyle(FitSyncTheme.textSecondary)
@@ -573,13 +580,13 @@ struct SleepStageBar: View {
 
 struct MetricInfo {
     let title: String
-    let whatItIs: String
-    let goodValues: [(range: String, label: String, color: Color)]
-    let tip: String
+    let whatItIs: LocalizedStringKey
+    let goodValues: [(range: String, label: LocalizedStringKey, color: Color)]
+    let tip: LocalizedStringKey
 }
 
 struct HeartMetric: View {
-    let value: String; let label: String; let unit: String
+    let value: String; let label: LocalizedStringKey; let unit: LocalizedStringKey
     let color: Color; let icon: String
     var info: MetricInfo? = nil
 
@@ -657,7 +664,7 @@ struct MetricInfoSheet: View {
                 }
                 .padding(FitSyncTheme.pagePadding)
             }
-            .navigationTitle(info.title)
+            .navigationTitle(Text(LocalizedStringKey(info.title)))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -673,7 +680,7 @@ struct MetricInfoSheet: View {
 }
 
 struct EmptyDataView: View {
-    let message: String
+    let message: LocalizedStringKey
     var body: some View {
         Text(message)
             .font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
@@ -723,8 +730,11 @@ struct SleepDetailSheet: View {
                             sleepTimeRow("Sveglia", session.endTime, "sun.horizon.fill", .orange)
                             HStack(spacing: 6) {
                                 Image(systemName: "clock").foregroundStyle(FitSyncTheme.sleep).font(.caption)
-                                Text(String(format: "%.1f ore totali", session.totalHours))
-                                    .font(.subheadline.bold())
+                                HStack(spacing: 4) {
+                                    Text(String(format: "%.1f", session.totalHours))
+                                    Text("ore totali")
+                                }
+                                .font(.subheadline.bold())
                             }
                         }
                         Spacer()
@@ -764,7 +774,7 @@ struct SleepDetailSheet: View {
                                         Circle().fill(stageColor(stage.type)).frame(width: 8, height: 8)
                                         Text(stage.startTime, format: .dateTime.hour().minute())
                                             .font(.caption).frame(width: 44, alignment: .leading)
-                                        Text(stage.type.rawValue).font(.caption.bold())
+                                        Text(LocalizedStringKey(stage.type.rawValue)).font(.caption.bold())
                                         Spacer()
                                         Text(String(format: "%.0f min", stage.durationHours * 60))
                                             .font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
@@ -818,7 +828,7 @@ struct SleepDetailSheet: View {
     }
 
     @ViewBuilder
-    private func sleepTimeRow(_ label: String, _ date: Date, _ icon: String, _ color: Color) -> some View {
+    private func sleepTimeRow(_ label: LocalizedStringKey, _ date: Date, _ icon: String, _ color: Color) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon).foregroundStyle(color).font(.caption)
             VStack(alignment: .leading, spacing: 0) {
@@ -829,7 +839,7 @@ struct SleepDetailSheet: View {
     }
 
     @ViewBuilder
-    private func stageMetric(_ value: String, _ label: String, _ color: Color, _ sub: String) -> some View {
+    private func stageMetric(_ value: String, _ label: LocalizedStringKey, _ color: Color, _ sub: LocalizedStringKey) -> some View {
         VStack(spacing: 3) {
             Text(value).font(.title3.bold()).foregroundStyle(color)
             Text(label).font(.caption2.bold())
@@ -840,7 +850,7 @@ struct SleepDetailSheet: View {
     }
 
     @ViewBuilder
-    private func scoreRow(_ label: String, _ pts: Int, _ description: String) -> some View {
+    private func scoreRow(_ label: LocalizedStringKey, _ pts: Int, _ description: LocalizedStringKey) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label).font(.caption.bold())
@@ -988,19 +998,25 @@ struct InsightCard: View {
         case .tip: .purple; case .positive: .green
         }
     }
+    private var localizedMessage: String {
+        let format = NSLocalizedString(insight.messageKey, comment: "")
+        guard !insight.messageArgs.isEmpty else { return format }
+        let args: [CVarArg] = insight.messageArgs.map { $0 as CVarArg }
+        return String(format: format, arguments: args)
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text(insight.icon).font(.title3)
-                Text(insight.title).font(.subheadline.bold()).foregroundStyle(accentColor)
+                Text(LocalizedStringKey(insight.title)).font(.subheadline.bold()).foregroundStyle(accentColor)
                 Spacer()
-                Text(insight.category.displayName)
+                Text(LocalizedStringKey(insight.category.displayName))
                     .font(.caption2)
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(accentColor.opacity(0.12), in: Capsule())
                     .foregroundStyle(accentColor)
             }
-            Text(insight.message).font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
+            Text(localizedMessage).font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
         }
         .padding(FitSyncTheme.cardPadding)
         .background(FitSyncTheme.cardBG, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))

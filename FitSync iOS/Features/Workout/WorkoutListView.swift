@@ -67,7 +67,7 @@ struct WorkoutRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(session.title).font(.headline)
+                Text(LocalizedStringKey(session.title)).font(.headline)
                 Spacer()
                 SourceBadge(source: session.source)
             }
@@ -84,7 +84,7 @@ struct WorkoutRow: View {
             if !session.muscleGroups.isEmpty {
                 HStack(spacing: 6) {
                     ForEach(session.muscleGroups.prefix(3), id: \.self) { group in
-                        Text(group.rawValue)
+                        Text(LocalizedStringKey(group.rawValue))
                             .font(.caption2)
                             .padding(.horizontal, 8).padding(.vertical, 2)
                             .background(FitSyncTheme.workout.opacity(0.12), in: Capsule())
@@ -114,7 +114,7 @@ struct HealthKitWorkoutRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label(session.title, systemImage: activitySymbol).font(.headline)
+                Label(LocalizedStringKey(session.title), systemImage: activitySymbol).font(.headline)
                 Spacer()
                 SourceBadge(source: .healthKit)
             }
@@ -156,7 +156,7 @@ struct SourceBadge: View {
         }
     }
     var body: some View {
-        Label(source.rawValue, systemImage: icon)
+        Label(LocalizedStringKey(source.rawValue), systemImage: icon)
             .font(.caption2.bold())
             .padding(.horizontal, 6).padding(.vertical, 3)
             .background(color.opacity(0.12), in: Capsule())
@@ -286,7 +286,7 @@ struct WorkoutDetailView: View {
                             Image(systemName: symbol).font(.title2)
                                 .foregroundStyle(session.source == .healthKit ? .red : FitSyncTheme.workout)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(session.title).font(.headline)
+                                Text(LocalizedStringKey(session.title)).font(.headline)
                                 Text(session.startTime, format: .dateTime.weekday(.wide).day().month().year())
                                     .font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
                             }
@@ -305,7 +305,7 @@ struct WorkoutDetailView: View {
                                 let (dist, unit) = session.distanceMeters >= 1000
                                     ? (String(format: "%.2f", session.distanceMeters / 1000), "km")
                                     : (String(format: "%.0f", session.distanceMeters), "m")
-                                StatItem(value: dist, label: unit, icon: "arrow.forward")
+                                StatItem(value: dist, label: LocalizedStringKey(unit), icon: "arrow.forward")
                             }
                             if session.sets.count > 0 {
                                 Divider().frame(height: 40)
@@ -429,7 +429,7 @@ struct WorkoutDetailView: View {
                                 Text(exerciseName).font(.subheadline.bold())
                                 Spacer()
                                 if let group = sets.first?.exercise?.muscleGroup {
-                                    Text(group.rawValue)
+                                    Text(LocalizedStringKey(group.rawValue))
                                         .font(.caption2)
                                         .padding(.horizontal, 8).padding(.vertical, 2)
                                         .background(FitSyncTheme.workout.opacity(0.12), in: Capsule())
@@ -449,7 +449,7 @@ struct WorkoutDetailView: View {
                                     Text("#\(set.setIndex + 1)")
                                         .frame(width: 40, alignment: .leading)
                                         .font(.caption).foregroundStyle(FitSyncTheme.textSecondary)
-                                    Text(set.setType.displayName)
+                                    Text(LocalizedStringKey(set.setType.displayName))
                                         .frame(width: 80, alignment: .leading)
                                         .font(.caption).foregroundStyle(setTypeColor(set.setType))
                                     Text(String(format: "%.1f kg", set.weightKg))
@@ -467,7 +467,7 @@ struct WorkoutDetailView: View {
             }
             .padding(FitSyncTheme.pagePadding)
         }
-        .navigationTitle(session.title)
+        .navigationTitle(LocalizedStringKey(session.title))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -518,7 +518,7 @@ struct HRZonesChart: View {
             ForEach(zoneData, id: \.0) { name, secs, color, range in
                 let fraction = zones.total > 0 ? secs / zones.total : 0
                 HStack(spacing: 8) {
-                    Text(name).font(.caption2).frame(width: 90, alignment: .leading)
+                    Text(LocalizedStringKey(name)).font(.caption2).frame(width: 90, alignment: .leading)
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.15)).frame(height: 18)
@@ -541,7 +541,7 @@ struct HRZonesChart: View {
 }
 
 struct HeartStatItem: View {
-    let value: String; let label: String; let color: Color
+    let value: String; let label: LocalizedStringKey; let color: Color
     var body: some View {
         VStack(spacing: 4) {
             Text(value).font(.title2.bold()).foregroundStyle(color)
@@ -552,7 +552,7 @@ struct HeartStatItem: View {
 }
 
 struct StatItem: View {
-    let value: String; let label: String; let icon: String
+    let value: String; let label: LocalizedStringKey; let icon: String
     var body: some View {
         VStack(spacing: 4) {
             Text(value).font(.title2.bold())
