@@ -20,6 +20,7 @@ struct WatchTabView: View {
     @Query private var storedGoals: [UserGoals]
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @StateObject private var vm = WatchViewModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     private var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
@@ -37,6 +38,11 @@ struct WatchTabView: View {
         #endif
         .environmentObject(vm)
         .task { await reload() }
+        // Refresh all HealthKit-derived data whenever the app comes to the
+        // foreground (wrist raise / reopen) — goals already reload via onChange.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await reload() } }
+        }
         // Reload snapshot when goals change (CloudKit or local mutation)
         .onChange(of: goals.dailyCalories)       { Task { await reload() } }
         .onChange(of: goals.dailyProteinG)       { Task { await reload() } }

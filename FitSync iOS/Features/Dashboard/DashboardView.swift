@@ -7,6 +7,7 @@ struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @Query private var storedGoals: [UserGoals]
+    @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @StateObject private var vm = DashboardViewModel()
     @State private var selectedDate = Date.now
     @State private var showingCaloriesDetail = false
@@ -31,6 +32,12 @@ struct DashboardView: View {
 
                     // MARK: Score del giorno
                     DayScoreCard(snapshot: vm.snapshot)
+
+                    // MARK: Recupero (sonno + cuore)
+                    if let recovery = vm.recovery {
+                        Button { onNavigate?(3) } label: { RecoveryCard(recovery: recovery) }
+                            .buttonStyle(.plain)
+                    }
 
                     // MARK: Macro veloci
                     Button { onNavigate?(2) } label: {
@@ -171,6 +178,14 @@ struct DashboardView: View {
                                     .font(.caption2)
                                 }
                             }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // MARK: Carico allenamento
+                    if !sessions.isEmpty {
+                        Button { onNavigate?(1) } label: {
+                            TrainingLoadCard(load: TrainingLoad.compute(from: sessions))
                         }
                         .buttonStyle(.plain)
                     }

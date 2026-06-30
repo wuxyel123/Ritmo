@@ -54,12 +54,14 @@ private func buildRouteSegments(locations: [CLLocation], hrSamples: [HRSample], 
 
 struct WorkoutDetailView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Environment(\.modelContext) private var modelContext
     let session: WorkoutSession
 
     @State private var hrData: WorkoutHeartRateData?
     @State private var routeLocations: [CLLocation] = []
     @State private var routeSegments: [RouteSegment] = []
     @State private var isLoadingHR = false
+    @State private var showingRPEInfo = false
 
     var setsByExercise: [(String, [WorkoutSet])] {
         var groups: [(String, [WorkoutSet])] = []
@@ -97,6 +99,8 @@ struct WorkoutDetailView: View {
                         Divider()
                         HStack(spacing: 0) {
                             StatItem(value: "\(session.durationMinutes)", label: "minuti", icon: "clock")
+                            Divider().frame(height: 40)
+                            StatItem(value: "\(session.effortScore)", label: "sforzo /10", icon: "gauge.with.dots.needle.50percent")
                             if session.activeCalories > 0 {
                                 Divider().frame(height: 40)
                                 StatItem(value: "\(Int(session.activeCalories))", label: "kcal attive", icon: "bolt.fill")
@@ -115,6 +119,9 @@ struct WorkoutDetailView: View {
                         }
                     }
                 }
+
+                // MARK: RPE (perceived effort)
+                rpeCard
 
                 // MARK: Heart Rate (Apple Health workouts)
                 if session.source == .healthKit {
@@ -293,6 +300,70 @@ struct WorkoutDetailView: View {
         case .warmup: return .blue
         case .dropSet: return .orange
         case .failure: return .red
+        }
+    }
+
+    // MARK: - RPE editor
+
+    private var rpeCard: some View {
+        FitCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    SectionHeader(title: "Sforzo percepito (RPE)")
+                    Button { showingRPEInfo = true } label: {
+                        Image(systemName: "info.circle").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                    Text(session.hasUserRPE ? "Impostato" : "Stima \(session.autoEffort)")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                HStack(spacing: 4) {
+                    ForEach(1...10, id: \.self) { v in
+                        let selected = session.effortScore == v
+                        Button {
+                            setRPE((session.userRPE == v) ? nil : v)
+                        } label: {
+                            Text("\(v)")
+                                .font(.caption.bold())
+                                .frame(maxWidth: .infinity).frame(height: 30)
+                                .background(selected ? rpeColor(v) : Color(.systemGray6),
+                                            in: RoundedRectangle(cornerRadius: 6))
+                                .foregroundStyle(selected ? .white : .primary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                if session.hasUserRPE {
+                    Button("Usa stima automatica") { setRPE(nil) }
+                        .font(.caption).foregroundStyle(FitSyncTheme.accent)
+                }
+            }
+        }
+        .alert("Cos'è l'RPE?", isPresented: $showingRPEInfo) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("RPE (Rate of Perceived Exertion) misura quanto è stato intenso l'allenamento, da 1 (molto facile) a 10 (sforzo massimo). Impostalo per rendere il carico più accurato — utile per la forza, dove la frequenza cardiaca resta bassa pur con alta intensità.")
+        }
+    }
+
+    private func rpeColor(_ v: Int) -> Color {
+        // Intensity: 1 = green (easy) → 10 = red (maximal).
+        Color(hue: 0.33 * (1 - Double(v - 1) / 9), saturation: 0.8, brightness: 0.85)
+    }
+
+    /// Updates the local RPE and mirrors it to Apple Health (so it counts toward
+    /// load on every device and appears in the Fitness app).
+    private func setRPE(_ value: Int?) {
+        session.userRPE = value
+        try? modelContext.save()
+        guard let uuid = session.hkWorkoutUUID else { return }
+        Task {
+            if let v = value {
+                await healthRepo.saveWorkoutEffort(rpe: v, forWorkoutUUID: uuid)
+            } else {
+                await healthRepo.removeWorkoutEffort(forWorkoutUUID: uuid)
+            }
         }
     }
 }

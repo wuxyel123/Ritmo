@@ -1,4 +1,5 @@
 import SwiftUI
+import FitSyncCore
 
 // MARK: - Reusable Card Component
 struct FitCard<Content: View>: View {
@@ -70,6 +71,9 @@ struct MacroRow: View {
     var fractionDigits: Int = 0
 
     var progress: Double { min(current / max(goal, 1), 1.0) }
+    // Bar color is derived from goal adherence (shared everywhere); the `color`
+    // parameter is kept for call-site compatibility but no longer drives the bar.
+    private var barColor: Color { NutritionScale.color(value: current, goal: goal) }
 
     private var formattedGoal: String {
         fractionDigits > 0
@@ -94,7 +98,7 @@ struct MacroRow: View {
                         .foregroundStyle(FitSyncTheme.textSecondary)
                 }
             }
-            FitProgressBar(value: progress, color: color)
+            FitProgressBar(value: progress, color: barColor)
         }
     }
 }

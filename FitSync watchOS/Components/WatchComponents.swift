@@ -41,6 +41,7 @@ struct WatchGoalRow: View {
         return min(Double(current) / Double(goal), 1.0)
     }
     private var isComplete: Bool { current >= goal }
+    private var barColor: Color { NutritionScale.color(value: Double(current), goal: Double(goal)) }
 
     var body: some View {
         VStack(spacing: 3) {
@@ -56,9 +57,9 @@ struct WatchGoalRow: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 2).fill(color.opacity(0.2)).frame(height: 5)
+                    RoundedRectangle(cornerRadius: 2).fill(barColor.opacity(0.2)).frame(height: 5)
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(isComplete ? Color.green : color)
+                        .fill(barColor)
                         .frame(width: geo.size.width * progress, height: 5)
                 }
             }
@@ -77,6 +78,7 @@ struct WatchGoalRowDecimal: View {
 
     private var progress: Double { goal > 0 ? min(current / goal, 1.0) : 0 }
     private var isComplete: Bool { current >= goal }
+    private var barColor: Color { NutritionScale.color(value: current, goal: goal) }
 
     var body: some View {
         VStack(spacing: 3) {
@@ -92,9 +94,9 @@ struct WatchGoalRowDecimal: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 2).fill(color.opacity(0.2)).frame(height: 5)
+                    RoundedRectangle(cornerRadius: 2).fill(barColor.opacity(0.2)).frame(height: 5)
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(isComplete ? Color.green : color)
+                        .fill(barColor)
                         .frame(width: geo.size.width * progress, height: 5)
                 }
             }

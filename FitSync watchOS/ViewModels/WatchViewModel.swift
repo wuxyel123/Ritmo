@@ -9,6 +9,7 @@ final class WatchViewModel: ObservableObject {
     @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var sleepSession: SleepSession? = nil   // primary (longest) — used by recovery score
     @Published var sleepSessions: [SleepSession] = []  // all sessions for the night
+    @Published var recovery: RecoveryScore? = nil
 
     private let healthRepo = HealthKitRepository()
 
@@ -22,9 +23,11 @@ final class WatchViewModel: ObservableObject {
         async let snapshotResult  = healthRepo.fetchDailySnapshot(for: .now, goals: goals)
         async let allSleepResult  = healthRepo.fetchAllSleepSessions(for: .now)
         async let activityResult  = healthRepo.fetchDailyActivity(for: .now)
+        async let recoveryResult  = healthRepo.fetchRecovery()
         snapshot      = await snapshotResult
         sleepSessions = await allSleepResult
         activity      = await activityResult
+        recovery      = await recoveryResult
         sleepSession  = sleepSessions.max(by: { $0.totalHours < $1.totalHours })
         persistSnapshot(snapshot)
     }
