@@ -31,19 +31,6 @@ struct WatchHealthView: View {
                                  "atti/min", .teal)
                 }
 
-                Divider().padding(.vertical, 2)
-
-                // Sleep summary
-                if let s = vm.sleepSession {
-                    WatchSectionHeader(icon: "😴", title: "Sonno")
-                    healthMetric("bed.double.fill", "Durata",
-                                 String(format: "%.1fh", s.totalHours),
-                                 "", .indigo)
-                    healthMetric("moon.stars.fill", "Score",
-                                 "\(s.qualityScore)",
-                                 "/ 100", watchScoreColor(s.qualityScore))
-                }
-
                 Color.clear.frame(height: 16)
             }
             .padding(.horizontal, 8)
