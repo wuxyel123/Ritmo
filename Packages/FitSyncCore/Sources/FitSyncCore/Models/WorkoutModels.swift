@@ -167,6 +167,36 @@ public final class UserGoals {
     }
 }
 
+// MARK: - UserGoals WatchConnectivity helpers
+
+extension UserGoals {
+    public var syncPayload: [String: Any] {
+        [
+            "dailyCalories":       dailyCalories,
+            "dailyProteinG":       dailyProteinG,
+            "dailyCarbsG":         dailyCarbsG,
+            "dailyFatG":           dailyFatG,
+            "dailyFiberG":         dailyFiberG,
+            "dailyWaterMl":        dailyWaterMl,
+            "weeklyWorkouts":      weeklyWorkouts,
+            "dailySteps":          dailySteps,
+            "dailyActiveCalories": dailyActiveCalories
+        ]
+    }
+
+    public func applySync(_ payload: [String: Any]) {
+        if let v = payload["dailyCalories"]       as? Double { dailyCalories       = v }
+        if let v = payload["dailyProteinG"]       as? Double { dailyProteinG       = v }
+        if let v = payload["dailyCarbsG"]         as? Double { dailyCarbsG         = v }
+        if let v = payload["dailyFatG"]           as? Double { dailyFatG           = v }
+        if let v = payload["dailyFiberG"]         as? Double { dailyFiberG         = v }
+        if let v = payload["dailyWaterMl"]        as? Double { dailyWaterMl        = v }
+        if let v = payload["weeklyWorkouts"]      as? Int    { weeklyWorkouts      = v }
+        if let v = payload["dailySteps"]          as? Int    { dailySteps          = v }
+        if let v = payload["dailyActiveCalories"] as? Double { dailyActiveCalories = v }
+    }
+}
+
 // MARK: - Enums
 public enum DataSource: String, Codable {
     case hevy = "Hevy"

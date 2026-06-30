@@ -36,7 +36,7 @@ struct InsightsView: View {
                                 .font(.system(size: 60)).foregroundStyle(FitSyncTheme.accent.opacity(0.4))
                             Text("Nessun insight disponibile")
                                 .font(.title3.bold())
-                            Text("Importa almeno 2 settimane di allenamenti da Hevy e attiva la sincronizzazione di Yazio con Apple Salute per ricevere insights personalizzati.")
+                            Text("Registra almeno 2 settimane di allenamenti e collega il tuo food tracker ad Apple Salute per ricevere insights personalizzati.")
                                 .font(.subheadline).foregroundStyle(FitSyncTheme.textSecondary)
                                 .multilineTextAlignment(.center)
                         }.padding(FitSyncTheme.pagePadding)

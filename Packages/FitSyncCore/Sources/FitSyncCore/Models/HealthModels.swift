@@ -106,17 +106,21 @@ public struct SleepSession: Identifiable, Codable {
     public let startTime: Date
     public let endTime: Date
     public let stages: [SleepStage]
+    /// Minutes the bedtime deviated from recent averages; nil = no history (no consistency penalty)
+    public let bedtimeDeviationMinutes: Double?
 
     public init(
         id: UUID = UUID(),
         startTime: Date,
         endTime: Date,
-        stages: [SleepStage] = []
+        stages: [SleepStage] = [],
+        bedtimeDeviationMinutes: Double? = nil
     ) {
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
         self.stages = stages
+        self.bedtimeDeviationMinutes = bedtimeDeviationMinutes
     }
 
     public var totalHours: Double {
@@ -131,12 +135,24 @@ public struct SleepSession: Identifiable, Codable {
         stages.filter { $0.type == .rem }.reduce(0) { $0 + $1.durationHours }
     }
 
-    /// Qualità sonno 0-100
+    /// Sleep quality 0-100
+    /// duration 40 | deep% 20 | rem% 20 | continuity 10 | schedule consistency 10
     public var qualityScore: Int {
-        let hoursScore = min(totalHours / 8.0, 1.0) * 50
-        let deepScore = min(deepSleepHours / 1.5, 1.0) * 30
-        let remScore = min(remSleepHours / 1.5, 1.0) * 20
-        return Int(hoursScore + deepScore + remScore)
+        let total = max(totalHours, 0.01)
+        let awakeH = stages.filter { $0.type == .awake }.reduce(0) { $0 + $1.durationHours }
+
+        let durationScore    = min(totalHours / 8.0, 1.0) * 40
+        let deepScore        = min((deepSleepHours / total) / 0.15, 1.0) * 20
+        let remScore         = min((remSleepHours  / total) / 0.20, 1.0) * 20
+        let continuityScore  = max(0.0, 1.0 - (awakeH / total) / 0.05) * 10
+        let consistencyScore: Double
+        if let dev = bedtimeDeviationMinutes {
+            // ≤15 min deviation = 10 pts, 60+ min deviation = 0 pts
+            consistencyScore = max(0.0, 1.0 - max(0.0, dev - 15) / 45.0) * 10
+        } else {
+            consistencyScore = 10
+        }
+        return Int(durationScore + deepScore + remScore + continuityScore + consistencyScore)
     }
 }
 
@@ -164,6 +180,47 @@ public enum SleepStageType: String, Codable {
     case core = "Core"
     case deep = "Profondo"
     case unspecified = "Sonno"
+}
+
+// MARK: - SleepQuality
+
+public enum SleepQuality: Int, Codable, CaseIterable, Sendable {
+    case scarso = 1
+    case sufficiente = 2
+    case buono = 3
+    case ottimo = 4
+
+    public var label: String {
+        switch self {
+        case .scarso:      return "Scarso"
+        case .sufficiente: return "Sufficiente"
+        case .buono:       return "Buono"
+        case .ottimo:      return "Ottimo"
+        }
+    }
+
+    public var emoji: String {
+        switch self {
+        case .scarso:      return "😞"
+        case .sufficiente: return "😐"
+        case .buono:       return "😊"
+        case .ottimo:      return "🤩"
+        }
+    }
+
+    /// Maps 1-4 to a 0-30 recovery score
+    public var baseRecoveryScore: Double { Double(rawValue) / 4.0 * 30 }
+
+    /// (deep fraction, REM fraction) of total sleep duration for Apple Health stage writing.
+    /// Core = 1 - deep - rem. Based on typical sleep architecture scaled by quality.
+    public var sleepStageFractions: (deep: Double, rem: Double) {
+        switch self {
+        case .scarso:      return (0.05, 0.10)   // poor: mostly light sleep
+        case .sufficiente: return (0.12, 0.15)
+        case .buono:       return (0.20, 0.22)
+        case .ottimo:      return (0.25, 0.25)   // excellent: ~50% restorative
+        }
+    }
 }
 
 // MARK: - DailyActivity

@@ -33,7 +33,7 @@ struct NutritionView: View {
                                 SectionHeader(title: isToday ? "Oggi" : selectedDate.formatted(.dateTime.day().month()))
                                 Spacer()
                                 if n.calories < 50 {
-                                    Label("Dati via Yazio → Apple Health", systemImage: "info.circle")
+                                    Label("Dati da Apple Salute", systemImage: "heart.fill")
                                         .font(.caption2).foregroundStyle(.secondary)
                                 }
                             }
@@ -92,17 +92,8 @@ struct NutritionView: View {
                         macroChart("Acqua",     { $0.waterMl/1000 }, goals.dailyWaterMl/1000,"L",    FitSyncTheme.water,    .bar)
                     }
 
-                    // Yazio tip
-                    FitCard {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Come tracciare la nutrizione", systemImage: "lightbulb.fill")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(.yellow)
-                            Text("FitSync legge automaticamente i dati nutrizionali da Apple Salute. Se usi **Yazio**, attiva la sincronizzazione in: Yazio → Profilo → Connessioni → Apple Salute. I dati appariranno qui automaticamente.")
-                                .font(.caption)
-                                .foregroundStyle(FitSyncTheme.textSecondary)
-                        }
-                    }
+                    // Food tracker info
+                    FoodTrackerInfoCard()
                 }
                 .padding(FitSyncTheme.pagePadding)
             }
@@ -135,6 +126,71 @@ struct NutritionView: View {
         let pts = vm.displayHistory.map { ChartPoint(date: $0.date, value: value($0)) }
         InteractiveDateChart(title: title, points: pts, goal: goal, color: color,
                              unit: unit, chartUnit: period.chartUnit, chartType: type)
+    }
+}
+
+// MARK: - FoodTrackerInfoCard
+
+private struct FoodTrackerInfoCard: View {
+    @State private var expanded = false
+
+    var body: some View {
+        FitCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(.red)
+                            .font(.subheadline)
+                        Text("Come collegare il tuo food tracker")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if expanded {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("FitSync legge i dati nutrizionali direttamente da Apple Salute. Per far apparire i tuoi pasti qui, connetti la tua app di tracciamento alimentare ad Apple Salute:")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            infoStep("1", "Apri l'app del tuo food tracker preferito (es. MyFitnessPal, Cronometer, Lifesum…)")
+                            infoStep("2", "Vai nelle impostazioni dell'app e cerca \"Apple Salute\" o \"HealthKit\"")
+                            infoStep("3", "Attiva la sincronizzazione dei dati nutrizionali")
+                            infoStep("4", "I dati appariranno automaticamente in FitSync")
+                        }
+
+                        Label("I dati rimangono privati sul tuo dispositivo", systemImage: "lock.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 2)
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+        }
+    }
+
+    private func infoStep(_ number: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(number)
+                .font(.caption2.bold())
+                .foregroundStyle(.white)
+                .frame(width: 16, height: 16)
+                .background(Color.red.opacity(0.8), in: Circle())
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 

@@ -63,14 +63,19 @@ struct DashboardView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // MARK: Attività (Move / Steps / Sleep)
+                    // MARK: Attività (Move / Steps / Sleep / Salute)
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
                               spacing: FitSyncTheme.gap) {
                         Button { showingCaloriesDetail = true } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Label("Calorie attive", systemImage: "bolt.fill")
-                                        .font(.caption).foregroundStyle(.red)
+                                    HStack {
+                                        Label("Calorie attive", systemImage: "bolt.fill")
+                                            .font(.caption).foregroundStyle(.red)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                                    }
                                     Text("\(Int(vm.snapshot.activeCalories))")
                                         .font(.title2.bold())
                                     Text("su \(Int(vm.snapshot.activeCalorieGoal)) kcal")
@@ -90,8 +95,13 @@ struct DashboardView: View {
                         Button { showingStepsDetail = true } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Label("Passi", systemImage: "figure.walk")
-                                        .font(.caption).foregroundStyle(FitSyncTheme.steps)
+                                    HStack {
+                                        Label("Passi", systemImage: "figure.walk")
+                                            .font(.caption).foregroundStyle(FitSyncTheme.steps)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                                    }
                                     Text(vm.snapshot.steps.formatted())
                                         .font(.title2.bold())
                                     Text("su \(vm.snapshot.stepGoal.formatted())")
@@ -111,8 +121,13 @@ struct DashboardView: View {
                         Button { onNavigate?(3) } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Label("Sonno", systemImage: "bed.double.fill")
-                                        .font(.caption).foregroundStyle(FitSyncTheme.sleep)
+                                    HStack {
+                                        Label("Sonno", systemImage: "bed.double.fill")
+                                            .font(.caption).foregroundStyle(FitSyncTheme.sleep)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                                    }
                                     Text(String(format: "%.1fh", vm.snapshot.sleepHours))
                                         .font(.title2.bold())
                                     Text("score \(vm.snapshot.sleepScore)/100")
@@ -126,11 +141,43 @@ struct DashboardView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        Button { onNavigate?(4) } label: {
+                            FitCard {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Label("Salute", systemImage: "heart.fill")
+                                            .font(.caption).foregroundStyle(.red)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                                    }
+                                    Text(vm.activity.heartRateResting.map { "\(Int($0)) bpm" } ?? "--")
+                                        .font(.title2.bold())
+                                    HStack(spacing: 4) {
+                                        Text("HRV")
+                                            .foregroundStyle(FitSyncTheme.textSecondary)
+                                        Text(vm.activity.hrv.map { "\(Int($0)) ms" } ?? "--")
+                                            .foregroundStyle(.green)
+                                    }
+                                    .font(.caption2)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "drop.fill")
+                                            .foregroundStyle(.cyan)
+                                        Text(vm.activity.spO2.map { String(format: "%.0f%%", $0) } ?? "--")
+                                            .foregroundStyle(.cyan)
+                                        Text("SpO₂")
+                                            .foregroundStyle(FitSyncTheme.textSecondary)
+                                    }
+                                    .font(.caption2)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     // MARK: Ultimo allenamento
                     if let session = vm.lastSession {
-                        Button { vm.showingLastWorkoutDetail = true } label: {
+                        Button { onNavigate?(1) } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
@@ -173,21 +220,14 @@ struct DashboardView: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .sheet(isPresented: $vm.showingLastWorkoutDetail) {
-                            NavigationStack {
-                                WorkoutDetailView(session: session)
-                                    .toolbar {
-                                        ToolbarItem(placement: .confirmationAction) {
-                                            Button("Chiudi") { vm.showingLastWorkoutDetail = false }
-                                        }
-                                    }
-                            }
-                        }
                     }
 
                     // MARK: Insight top
                     if let topInsight = vm.topInsight {
-                        InsightBanner(insight: topInsight)
+                        Button { onNavigate?(5) } label: {
+                            InsightBanner(insight: topInsight)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(FitSyncTheme.pagePadding)

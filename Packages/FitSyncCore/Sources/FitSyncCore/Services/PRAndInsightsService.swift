@@ -118,6 +118,7 @@ public final class InsightsService {
 
         insights += muscleBalanceInsights(sessions: sessions)
         insights += recoveryInsights(sessions: sessions, sleepHistory: sleepHistory)
+        insights += sleepQualityInsights(sleepHistory: sleepHistory)
         insights += nutritionInsights(nutritionHistory: nutritionHistory, goals: goals)
         insights += proteinPostWorkoutInsights(sessions: sessions, nutritionHistory: nutritionHistory)
         insights += sleepPerformanceInsights(sessions: sessions, sleepHistory: sleepHistory)
@@ -287,6 +288,84 @@ public final class InsightsService {
             )]
         }
         return []
+    }
+
+    private func sleepQualityInsights(sleepHistory: [SleepSession]) -> [FitInsight] {
+        guard sleepHistory.count >= 3 else { return [] }
+        var insights: [FitInsight] = []
+        let sorted = sleepHistory.sorted { $0.startTime > $1.startTime }
+
+        // Very short last night
+        if let last = sorted.first, last.totalHours < 5 {
+            insights.append(FitInsight(
+                title: "Notte molto corta",
+                messageKey: "Hai dormito solo %@h la scorsa notte. Considera attività leggera e rimanda allenamenti intensi.",
+                messageArgs: [String(format: "%.1f", last.totalHours)],
+                type: .warning, priority: .high, category: .recovery, icon: "⚠️"
+            ))
+        }
+
+        // Irregular schedule (≥5 sessions)
+        if sleepHistory.count >= 5 {
+            func minutesSinceNoon(_ d: Date) -> Double {
+                let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+                let m = Double((c.hour ?? 0) * 60 + (c.minute ?? 0))
+                return m < 720 ? m + 1440 : m
+            }
+            let bedtimes = sorted.map { minutesSinceNoon($0.startTime) }
+            let mean = bedtimes.reduce(0, +) / Double(bedtimes.count)
+            let stdDev = sqrt(bedtimes.map { pow($0 - mean, 2) }.reduce(0, +) / Double(bedtimes.count))
+            if stdDev > 45 {
+                insights.append(FitInsight(
+                    title: "Orario di sonno irregolare",
+                    messageKey: "Il tuo orario di addormentamento varia di ±%@ minuti. La regolarità è il fattore più importante per la qualità del sonno.",
+                    messageArgs: ["\(Int(stdDev))"],
+                    type: .warning, priority: .medium, category: .recovery, icon: "🕐"
+                ))
+            }
+        }
+
+        // Low deep / REM (only sessions with stage data)
+        let withStages = sleepHistory.filter { !$0.stages.isEmpty }
+        if withStages.count >= 3 {
+            let total    = withStages.map { $0.totalHours }.reduce(0, +)
+            let deepPct  = total > 0 ? withStages.map { $0.deepSleepHours }.reduce(0, +) / total * 100 : 0
+            let remPct   = total > 0 ? withStages.map { $0.remSleepHours  }.reduce(0, +) / total * 100 : 0
+
+            if deepPct > 0 && deepPct < 10 {
+                insights.append(FitInsight(
+                    title: "Poco sonno profondo",
+                    messageKey: "Il tuo sonno profondo medio è %@%% del totale (obiettivo ≥15%%). Il deep sleep è fondamentale per il recupero muscolare.",
+                    messageArgs: ["\(Int(deepPct))"],
+                    type: .suggestion, priority: .medium, category: .recovery, icon: "💤"
+                ))
+            }
+            if remPct > 0 && remPct < 15 {
+                insights.append(FitInsight(
+                    title: "REM insufficiente",
+                    messageKey: "Il tuo sonno REM medio è %@%% del totale (obiettivo ≥20%%). Il REM consolida la memoria e regola il recupero emotivo.",
+                    messageArgs: ["\(Int(remPct))"],
+                    type: .suggestion, priority: .medium, category: .recovery, icon: "🧠"
+                ))
+            }
+        }
+
+        // Positive trend — last 3 nights vs prior 4
+        if sorted.count >= 7 {
+            let recentAvg = sorted.prefix(3).map { $0.totalHours }.reduce(0, +) / 3
+            let priorCount = Double(min(sorted.count - 3, 4))
+            let priorAvg  = sorted.dropFirst(3).prefix(4).map { $0.totalHours }.reduce(0, +) / priorCount
+            if recentAvg >= 7 && recentAvg > priorAvg + 0.5 {
+                insights.append(FitInsight(
+                    title: "Il tuo sonno sta migliorando",
+                    messageKey: "Nelle ultime 3 notti hai dormito in media %@h, più dei giorni precedenti. Continua così!",
+                    messageArgs: [String(format: "%.1f", recentAvg)],
+                    type: .positive, priority: .low, category: .recovery, icon: "🌙"
+                ))
+            }
+        }
+
+        return insights
     }
 
     private func sleepPerformanceInsights(

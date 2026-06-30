@@ -43,6 +43,9 @@ struct InsightBanner: View {
                     .lineLimit(3)
             }
             Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption).foregroundStyle(.secondary)
+                .padding(.top, 2)
         }
         .padding(FitSyncTheme.cardPadding)
         .background(bgColor, in: RoundedRectangle(cornerRadius: FitSyncTheme.cardRadius))

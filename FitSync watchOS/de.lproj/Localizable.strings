@@ -1,0 +1,25 @@
+// Dashboard
+"Score oggi" = "Heutiger Score";
+"su 100" = "von 100";
+"Passi" = "Schritte";
+"Sonno" = "Schlaf";
+"Kcal attive" = "Aktive Kcal";
+
+// Goals
+"Obiettivi oggi" = "Heutige Ziele";
+"Calorie" = "Kalorien";
+"Proteine" = "Protein";
+"Carboidrati" = "Kohlenhydrate";
+"Grassi" = "Fette";
+"Fibre" = "Ballaststoffe";
+"Acqua" = "Wasser";
+
+// Workout
+"Allenamento" = "Training";
+"Nessun allenamento oggi" = "Kein Training heute";
+"Allenamento completato" = "Training abgeschlossen";
+"Ultimo" = "Letztes";
+
+// Log
+"Acqua aggiunta!" = "Wasser hinzugefügt!";
+"Sonno salvato!" = "Schlaf gespeichert!";
