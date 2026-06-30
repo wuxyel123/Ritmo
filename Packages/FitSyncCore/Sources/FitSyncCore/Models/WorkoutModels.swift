@@ -14,6 +14,8 @@ public final class WorkoutSession {
     public var distanceMeters: Double
     public var hkActivityType: Int
     public var hkWorkoutUUID: String?
+    /// User-provided Rate of Perceived Exertion (1–10). Overrides the auto effort estimate.
+    public var userRPE: Int?
 
     @Relationship(deleteRule: .cascade)
     public var sets: [WorkoutSet]
@@ -28,7 +30,8 @@ public final class WorkoutSession {
         activeCalories: Double = 0,
         distanceMeters: Double = 0,
         hkActivityType: Int = 0,
-        hkWorkoutUUID: String? = nil
+        hkWorkoutUUID: String? = nil,
+        userRPE: Int? = nil
     ) {
         self.id = id
         self.title = title
@@ -40,6 +43,7 @@ public final class WorkoutSession {
         self.distanceMeters = distanceMeters
         self.hkActivityType = hkActivityType
         self.hkWorkoutUUID = hkWorkoutUUID
+        self.userRPE = userRPE
         self.sets = []
     }
 

@@ -61,13 +61,21 @@ public final class HealthKitRepository: ObservableObject {
             HKSeriesType.workoutRoute()
         ]
 
-        let shareTypes: Set<HKSampleType> = [
+        var readTypesVar = readTypes
+        var shareTypes: Set<HKSampleType> = [
             HKQuantityType(.dietaryWater),
             HKCategoryType(.sleepAnalysis)
         ]
 
+        // Workout effort score (RPE) — iOS 18 / watchOS 11+. Read others', write ours.
+        if #available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *) {
+            let effort = HKQuantityType(.workoutEffortScore)
+            readTypesVar.insert(effort)
+            shareTypes.insert(effort)
+        }
+
         do {
-            try await store.requestAuthorization(toShare: shareTypes, read: readTypes)
+            try await store.requestAuthorization(toShare: shareTypes, read: readTypesVar)
             isAuthorized = true
         } catch {
             authError = error
@@ -409,29 +417,11 @@ public final class HealthKitRepository: ObservableObject {
         //   se non tracciata → 10 neutro, non penalizza
         let nutritionScore: Double
         if n.calories > 50 {
-            let goalCal  = max(goals.dailyCalories, 1)
-            let goalProt = max(goals.dailyProteinG, 1)
-            // ±100 kcal of goal → full calorie credit
-            let calDiff = n.calories - goalCal
-            let calProg: Double
-            if abs(calDiff) <= 100 {
-                calProg = 1.0
-            } else if calDiff > 100 {
-                calProg = max(0, 1.0 - (calDiff - 100) / goalCal)
-            } else {
-                calProg = min(n.calories / goalCal, 1.0)
-            }
-            // ±10 g of protein goal → full protein credit
-            let protDiff = n.protein - goalProt
-            let protProg: Double
-            if abs(protDiff) <= 10 {
-                protProg = 1.0
-            } else if protDiff > 10 {
-                protProg = max(0, 1.0 - (protDiff - 10) / goalProt)
-            } else {
-                protProg = min(n.protein / goalProt, 1.0)
-            }
-            nutritionScore = (calProg * 0.4 + protProg * 0.6) * 20
+            // Adherence: full within ±5% of goal, → 0 at ±50% off (see NutritionScale).
+            // Calories gate the score (over/under-eating kills it); protein modulates 60–100%.
+            let calAdherence  = NutritionScale.adherence(value: n.calories, goal: goals.dailyCalories)
+            let protAdherence = NutritionScale.adherence(value: n.protein,  goal: goals.dailyProteinG)
+            nutritionScore = calAdherence * (0.6 + 0.4 * protAdherence) * 20
         } else {
             nutritionScore = 10
         }
@@ -479,6 +469,35 @@ public final class HealthKitRepository: ObservableObject {
             sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)]
         )
         return (try? await descriptor.result(for: store)) ?? []
+    }
+
+    // MARK: - Recovery (sleep + heart)
+
+    /// Sleep-weighted recovery readiness using last night's sleep quality plus
+    /// today's HRV / resting HR against a 28-day baseline.
+    public func fetchRecovery(for date: Date = .now) async -> RecoveryScore {
+        async let sleepResult   = fetchLatestSleep()
+        async let activityResult = fetchDailyActivity(for: date)
+        async let hrvHistResult  = fetchHRVHistory(days: 28)
+        async let rhrHistResult  = fetchRHRHistory(days: 28)
+
+        let sleep    = await sleepResult
+        let activity = await activityResult
+        let hrvHist  = await hrvHistResult
+        let rhrHist  = await rhrHistResult
+
+        func average(_ pts: [DateValuePoint]) -> Double? {
+            guard !pts.isEmpty else { return nil }
+            return pts.reduce(0) { $0 + $1.value } / Double(pts.count)
+        }
+
+        return RecoveryScore(
+            sleepScore: sleep?.qualityScore ?? 0,
+            hrvToday: activity.hrv,
+            hrvBaseline: average(hrvHist),
+            rhrToday: activity.heartRateResting,
+            rhrBaseline: average(rhrHist)
+        )
     }
 
     // MARK: - Trend storici per grafici
@@ -543,23 +562,85 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Importa allenamenti da Apple Health in SwiftData
 
+    private static let excludedWorkoutsKey = "excludedWorkoutUUIDs"
+
+    /// HealthKit-workout UUIDs the user removed in-app, so import never re-adds them.
+    public func excludedWorkoutUUIDs() -> Set<String> {
+        guard let d = UserDefaults(suiteName: Self.appGroupID) else { return [] }
+        return Set(d.stringArray(forKey: Self.excludedWorkoutsKey) ?? [])
+    }
+
+    public func excludeWorkout(uuid: String) {
+        guard let d = UserDefaults(suiteName: Self.appGroupID) else { return }
+        var set = Set(d.stringArray(forKey: Self.excludedWorkoutsKey) ?? [])
+        set.insert(uuid)
+        d.set(Array(set), forKey: Self.excludedWorkoutsKey)
+    }
+
+    /// Removes a workout from the app. HealthKit workouts can't be deleted from
+    /// the store by us (not app-owned), so we record the UUID as excluded and
+    /// drop the local copy — import won't bring it back.
+    @MainActor
+    public func deleteWorkout(_ session: WorkoutSession, in modelContext: ModelContext) {
+        if session.source == .healthKit, let uuid = session.hkWorkoutUUID {
+            excludeWorkout(uuid: uuid)
+        }
+        modelContext.delete(session)
+        try? modelContext.save()
+    }
+
     public func importHealthKitWorkouts(into modelContext: ModelContext) async {
         guard HKHealthStore.isHealthDataAvailable() else { return }
-        let hkWorkouts = await fetchWorkouts(days: 90)
+        let windowDays = 90
+        let hkWorkouts = await fetchWorkouts(days: windowDays)
+        // Don't reconcile on an empty fetch — could be a transient/unauthorized read.
         guard !hkWorkouts.isEmpty else { return }
+        let cutoff = Calendar.current.date(byAdding: .day, value: -windowDays, to: .now) ?? .distantPast
 
-        let allDescriptor = FetchDescriptor<WorkoutSession>()
-        let existing = (try? modelContext.fetch(allDescriptor)) ?? []
-        let existingKeys = Set(
-            existing
-                .filter { $0.source == .healthKit }
-                .map { "\($0.hkActivityType)_\(Int($0.startTime.timeIntervalSince1970 / 60))" }
-        )
+        let excluded = excludedWorkoutUUIDs()
+        let currentUUIDs = Set(hkWorkouts.map { $0.uuid.uuidString })
 
-        var inserted = false
+        let existing = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
+        var existingByUUID: [String: WorkoutSession] = [:]
+        for s in existing where s.source == .healthKit {
+            if let uuid = s.hkWorkoutUUID { existingByUUID[uuid] = s }
+        }
+
+        // Workouts recent enough to bother reading their RPE (the load window).
+        let rpeCutoff = Calendar.current.date(byAdding: .day, value: -28, to: .now) ?? .distantPast
+
+        var changed = false
+
+        // Reflect deletions: drop local HK sessions (within window) that are no
+        // longer in HealthKit, or that the user removed in-app.
+        for s in existing where s.source == .healthKit {
+            guard let uuid = s.hkWorkoutUUID else { continue }
+            let goneFromHealth = s.startTime >= cutoff && !currentUUIDs.contains(uuid)
+            if goneFromHealth || excluded.contains(uuid) {
+                modelContext.delete(s)
+                changed = true
+            }
+        }
+
         for hkWorkout in hkWorkouts {
-            let key = "\(hkWorkout.workoutActivityType.rawValue)_\(Int(hkWorkout.startDate.timeIntervalSince1970 / 60))"
-            if existingKeys.contains(key) { continue }
+            let uuid = hkWorkout.uuid.uuidString
+            if excluded.contains(uuid) { continue }
+
+            // Pull the user's RPE (workout effort score) from HealthKit for recent
+            // workouts, so a set RPE counts toward load on every device.
+            var effort: Int? = nil
+            if hkWorkout.startDate >= rpeCutoff, #available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *) {
+                effort = await readWorkoutEffort(for: hkWorkout)
+            }
+
+            // Already imported → just keep its RPE in sync with HealthKit.
+            if let session = existingByUUID[uuid] {
+                if let e = effort, session.userRPE != e {
+                    session.userRPE = e
+                    changed = true
+                }
+                continue
+            }
 
             let energyType = HKQuantityType(.activeEnergyBurned)
             let distType = HKQuantityType(.distanceWalkingRunning)
@@ -580,12 +661,76 @@ public final class HealthKitRepository: ObservableObject {
                 activeCalories: calories,
                 distanceMeters: distance,
                 hkActivityType: Int(hkWorkout.workoutActivityType.rawValue),
-                hkWorkoutUUID: hkWorkout.uuid.uuidString
+                hkWorkoutUUID: uuid,
+                userRPE: effort
             )
             modelContext.insert(session)
-            inserted = true
+            changed = true
         }
-        if inserted { try? modelContext.save() }
+        if changed { try? modelContext.save() }
+    }
+
+    // MARK: - Workout effort (RPE) ↔ HealthKit
+
+    /// Finds the HKWorkout with the given UUID string.
+    private func fetchWorkout(uuid: String) async -> HKWorkout? {
+        guard let id = UUID(uuidString: uuid) else { return nil }
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workout(HKQuery.predicateForObject(with: id))],
+            sortDescriptors: []
+        )
+        return (try? await descriptor.result(for: store))?.first
+    }
+
+    /// Saves the user's RPE (1–10) to Apple Health as a workout effort score and
+    /// relates it to the workout, so it syncs across devices and shows in Fitness.
+    public func saveWorkoutEffort(rpe: Int, forWorkoutUUID uuid: String) async {
+        guard #available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *) else { return }
+        guard let workout = await fetchWorkout(uuid: uuid) else { return }
+        await removeWorkoutEffort(for: workout)   // replace any prior value of ours
+        let sample = HKQuantitySample(
+            type: HKQuantityType(.workoutEffortScore),
+            quantity: HKQuantity(unit: .appleEffortScore(), doubleValue: Double(min(max(rpe, 1), 10))),
+            start: workout.startDate, end: workout.endDate
+        )
+        do {
+            try await store.save(sample)
+            try await store.relateWorkoutEffortSample(sample, with: workout, activity: nil)
+        } catch {
+            authError = error
+        }
+    }
+
+    /// Removes the app's stored RPE for a workout from Apple Health.
+    public func removeWorkoutEffort(forWorkoutUUID uuid: String) async {
+        guard #available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *) else { return }
+        guard let workout = await fetchWorkout(uuid: uuid) else { return }
+        await removeWorkoutEffort(for: workout)
+    }
+
+    @available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *)
+    private func removeWorkoutEffort(for workout: HKWorkout) async {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(
+                type: HKQuantityType(.workoutEffortScore),
+                predicate: HKQuery.predicateForWorkoutEffortSamplesRelated(workout: workout, activity: nil))],
+            sortDescriptors: []
+        )
+        guard let samples = try? await descriptor.result(for: store) else { return }
+        let ours = samples.filter { $0.sourceRevision.source == HKSource.default() }
+        if !ours.isEmpty { try? await store.delete(ours) }
+    }
+
+    @available(iOS 18.0, watchOS 11.0, macOS 15.0, visionOS 2.0, *)
+    private func readWorkoutEffort(for workout: HKWorkout) async -> Int? {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(
+                type: HKQuantityType(.workoutEffortScore),
+                predicate: HKQuery.predicateForWorkoutEffortSamplesRelated(workout: workout, activity: nil))],
+            sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)]
+        )
+        guard let sample = (try? await descriptor.result(for: store))?.first else { return nil }
+        return Int(sample.quantity.doubleValue(for: .appleEffortScore()).rounded())
     }
 
     // MARK: - Workout heart rate

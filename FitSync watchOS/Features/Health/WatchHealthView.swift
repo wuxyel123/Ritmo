@@ -7,6 +7,12 @@ struct WatchHealthView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
+
+                if let r = vm.recovery {
+                    recoveryCard(r)
+                    Divider().padding(.vertical, 2)
+                }
+
                 WatchSectionHeader(icon: "❤️", title: "Salute")
 
                 healthMetric("heart.fill",          "FC riposo",
@@ -35,6 +41,45 @@ struct WatchHealthView: View {
             }
             .padding(.horizontal, 8)
         }
+    }
+
+    private func recoveryColor(_ status: RecoveryStatus) -> Color {
+        switch status {
+        case .poor:      return .red
+        case .fair:      return .orange
+        case .good:      return .yellow
+        case .excellent: return .green
+        }
+    }
+
+    @ViewBuilder
+    private func recoveryCard(_ r: RecoveryScore) -> some View {
+        let color = recoveryColor(r.status)
+        HStack(spacing: 10) {
+            ZStack {
+                Circle().stroke(Color.gray.opacity(0.25), lineWidth: 5)
+                Circle()
+                    .trim(from: 0, to: CGFloat(r.overall) / 100)
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 0) {
+                    Text("\(r.overall)")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(color)
+                }
+            }
+            .frame(width: 46, height: 46)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Recupero").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(r.status.label))
+                    .font(.caption.bold()).foregroundStyle(color)
+                Text(r.hasHeartData ? "Sonno · HRV · FC" : "Solo sonno")
+                    .font(.system(size: 8)).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 2)
     }
 
     private func healthMetric(

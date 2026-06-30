@@ -14,6 +14,44 @@ struct WatchWorkoutView: View {
             .sorted { $0.startTime > $1.startTime }
     }
 
+    @ViewBuilder
+    private var trainingLoadCard: some View {
+        let load = TrainingLoad.compute(from: sessions)
+        if load.acute > 0 || load.chronic > 0 {
+            let color: Color = switch load.status {
+                case .low:      .blue
+                case .optimal:  .green
+                case .high:     .orange
+                case .veryHigh: .red
+            }
+            VStack(spacing: 4) {
+                HStack {
+                    Text("Carico").font(.system(size: 10)).foregroundStyle(.secondary)
+                    Spacer()
+                    Text(LocalizedStringKey(load.status.label))
+                        .font(.system(size: 9, weight: .bold)).foregroundStyle(color)
+                }
+                HStack(alignment: .bottom, spacing: 6) {
+                    Text("\(load.acute)")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(color)
+                    Text("7gg").font(.system(size: 8)).foregroundStyle(.secondary)
+                    Spacer()
+                    HStack(alignment: .bottom, spacing: 2) {
+                        let maxV = max(load.weeklyEfforts.max() ?? 1, 1)
+                        ForEach(Array(load.weeklyEfforts.enumerated()), id: \.offset) { _, v in
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(v > 0 ? color : Color.gray.opacity(0.25))
+                                .frame(width: 4, height: max(3, CGFloat(v) / CGFloat(maxV) * 18))
+                        }
+                    }
+                }
+            }
+            .padding(8)
+            .background(Color.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -23,6 +61,9 @@ struct WatchWorkoutView: View {
                     Text("Allenamento")
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // MARK: Training load
+                    trainingLoadCard
 
                     // MARK: Today's sessions
                     if todaySessions.isEmpty && !vm.snapshot.hasWorkedOutToday {
@@ -247,6 +288,7 @@ struct WatchWorkoutDetailView: View {
         let columns = [GridItem(.flexible()), GridItem(.flexible())]
         return LazyVGrid(columns: columns, spacing: 6) {
             statTile("clock", "\(session.durationMinutes)", "min", .teal)
+            statTile("gauge.with.dots.needle.50percent", "\(session.effortScore)", "sforzo /10", .pink)
             if session.activeCalories > 0 {
                 statTile("flame.fill", "\(Int(session.activeCalories))", "kcal", .red)
             }

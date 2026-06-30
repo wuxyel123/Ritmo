@@ -8,6 +8,7 @@ final class DashboardViewModel: ObservableObject {
     @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var lastSession: WorkoutSession?
     @Published var topInsight: FitInsight?
+    @Published var recovery: RecoveryScore?
     @Published var isLoading = false
 
     private let insightsService = InsightsService()
@@ -16,13 +17,16 @@ final class DashboardViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        let isToday = Calendar.current.isDateInToday(date)
         async let snap = healthRepo.fetchDailySnapshot(for: date, goals: goals)
         async let act  = healthRepo.fetchDailyActivity(for: date)
         snapshot = await snap
         activity = await act
+        // Recovery is a "today" readiness metric only
+        recovery = isToday ? await healthRepo.fetchRecovery() : nil
 
         // Only cache today's snapshot for widgets
-        if Calendar.current.isDateInToday(date) {
+        if isToday {
             saveSnapshotForWidgets(snapshot)
         }
 

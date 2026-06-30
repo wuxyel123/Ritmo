@@ -18,6 +18,11 @@ struct RecoveryView: View {
             ScrollView {
                 VStack(spacing: FitSyncTheme.gap) {
 
+                    // MARK: Recovery (sleep + heart) — separate from sleep score
+                    if let recovery = vm.recovery {
+                        RecoveryCard(recovery: recovery)
+                    }
+
                     // MARK: Tonight's sleep — always shown inline
                     if vm.allSleepSessions.isEmpty {
                         emptyState
@@ -132,6 +137,7 @@ struct RecoveryView: View {
 final class RecoveryViewModel: ObservableObject {
     @Published var allSleepSessions: [SleepSession] = []
     @Published var sleepHistory: [SleepSession] = []
+    @Published var recovery: RecoveryScore?
 
     func reload(healthRepo: HealthKitRepository, days: Int) async {
         let chartDays = min(days, 30)
@@ -144,5 +150,80 @@ final class RecoveryViewModel: ObservableObject {
         }
         sleepHistory     = arr
         allSleepSessions = await healthRepo.fetchAllSleepSessions(for: .now)
+        recovery         = await healthRepo.fetchRecovery()
+    }
+}
+
+// MARK: - Recovery Card
+
+struct RecoveryCard: View {
+    let recovery: RecoveryScore
+
+    private var color: Color {
+        switch recovery.status {
+        case .poor:      return .red
+        case .fair:      return .orange
+        case .good:      return .yellow
+        case .excellent: return .green
+        }
+    }
+
+    var body: some View {
+        FitCard {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    SectionHeader(title: "Recupero")
+                    Text("Prontezza di oggi · sonno + cuore (diverso dal punteggio del sonno)")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle().stroke(Color.gray.opacity(0.2), lineWidth: 7)
+                        Circle()
+                            .trim(from: 0, to: CGFloat(recovery.overall) / 100)
+                            .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                        VStack(spacing: 0) {
+                            Text("\(recovery.overall)")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundStyle(color)
+                            Text("/100").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(width: 76, height: 76)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(LocalizedStringKey(recovery.status.label))
+                            .font(.headline).foregroundStyle(color)
+                        component("Sonno", recovery.sleep, FitSyncTheme.sleep)
+                        if recovery.hasHeartData {
+                            component("HRV", recovery.hrv, .green)
+                            component("FC riposo", recovery.restingHR, .red)
+                        } else {
+                            Text("Aggiungi HRV e FC a riposo per un punteggio completo")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    private func component(_ label: String, _ value: Int, _ tint: Color) -> some View {
+        HStack(spacing: 6) {
+            Text(LocalizedStringKey(label))
+                .font(.caption2).foregroundStyle(.secondary)
+                .frame(width: 64, alignment: .leading)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(tint.opacity(0.2)).frame(height: 5)
+                    Capsule().fill(tint)
+                        .frame(width: geo.size.width * CGFloat(min(value, 100)) / 100, height: 5)
+                }
+            }
+            .frame(height: 5)
+            Text("\(value)").font(.caption2.bold()).frame(width: 26, alignment: .trailing)
+        }
     }
 }
