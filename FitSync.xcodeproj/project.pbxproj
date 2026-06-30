@@ -558,10 +558,12 @@
 				FF000000000000000006AAAA /* Sources */,
 				FF000000000000000007AAAA /* Frameworks */,
 				FF000000000000000008AAAA /* Resources */,
+				FF000000000000000016AAAA /* Embed Watch Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				JJ000000000000000003AAAA /* PBXTargetDependency */,
 			);
 			name = "FitSync watchOS";
 			packageProductDependencies = (
