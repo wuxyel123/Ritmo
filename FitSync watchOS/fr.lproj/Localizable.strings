@@ -1,0 +1,25 @@
+// Dashboard
+"Score oggi" = "Score du jour";
+"su 100" = "sur 100";
+"Passi" = "Pas";
+"Sonno" = "Sommeil";
+"Kcal attive" = "Kcal actives";
+
+// Goals
+"Obiettivi oggi" = "Objectifs du jour";
+"Calorie" = "Calories";
+"Proteine" = "Protéines";
+"Carboidrati" = "Glucides";
+"Grassi" = "Lipides";
+"Fibre" = "Fibres";
+"Acqua" = "Eau";
+
+// Workout
+"Allenamento" = "Entraînement";
+"Nessun allenamento oggi" = "Aucun entraînement";
+"Allenamento completato" = "Entraînement terminé";
+"Ultimo" = "Dernier";
+
+// Log
+"Acqua aggiunta!" = "Eau ajoutée !";
+"Sonno salvato!" = "Sommeil enregistré !";

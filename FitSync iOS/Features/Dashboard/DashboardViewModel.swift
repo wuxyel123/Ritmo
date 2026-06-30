@@ -5,10 +5,10 @@ import FitSyncCore
 @MainActor
 final class DashboardViewModel: ObservableObject {
     @Published var snapshot: DailySnapshot = .placeholder
+    @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var lastSession: WorkoutSession?
     @Published var topInsight: FitInsight?
     @Published var isLoading = false
-    @Published var showingLastWorkoutDetail = false
 
     private let insightsService = InsightsService()
 
@@ -25,7 +25,10 @@ final class DashboardViewModel: ObservableObject {
             $0.source == .hevy && $0.startTime >= start && $0.startTime < end
         }
 
-        snapshot = await healthRepo.fetchDailySnapshot(for: date, goals: goals, hasHevyWorkout: hasHevyWorkout)
+        async let snap = healthRepo.fetchDailySnapshot(for: date, goals: goals, hasHevyWorkout: hasHevyWorkout)
+        async let act  = healthRepo.fetchDailyActivity(for: date)
+        snapshot = await snap
+        activity = await act
 
         // Only cache today's snapshot for widgets
         if calendar.isDateInToday(date) {

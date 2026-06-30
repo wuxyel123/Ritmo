@@ -62,7 +62,8 @@ public final class HealthKitRepository: ObservableObject {
         ]
 
         let shareTypes: Set<HKSampleType> = [
-            HKQuantityType(.dietaryWater)
+            HKQuantityType(.dietaryWater),
+            HKCategoryType(.sleepAnalysis)
         ]
 
         do {
@@ -82,6 +83,96 @@ public final class HealthKitRepository: ObservableObject {
         let sample = HKQuantitySample(type: type, quantity: quantity,
                                       start: Date(), end: Date())
         try await store.save(sample)
+    }
+
+    // MARK: - Sleep Quality (App Group UserDefaults)
+
+    private static let appGroupID = "group.alessandrodiscalzi.com.fitsync"
+
+    public func saveSleepQuality(_ quality: SleepQuality, for date: Date = .now) {
+        guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return }
+        defaults.set(quality.rawValue, forKey: sleepQualityKey(for: date))
+    }
+
+    public func loadSleepQuality(for date: Date = .now) -> SleepQuality? {
+        guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return nil }
+        let raw = defaults.integer(forKey: sleepQualityKey(for: date))
+        return SleepQuality(rawValue: raw)
+    }
+
+    private func sleepQualityKey(for date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return "sleepQuality-\(f.string(from: date))"
+    }
+
+    // MARK: - Sleep Logging
+
+    /// Writes sleep to Apple Health.
+    /// On iOS 16+ / watchOS 9+, when quality is specified, writes three consecutive
+    /// stage samples (deep → REM → core) whose proportions reflect the quality rating,
+    /// so Apple Health's sleep stages screen shows meaningful breakdown.
+    /// On older OS or when quality is nil, writes a single asleepUnspecified sample.
+    /// Quality is also persisted in the shared App Group for recovery score blending.
+    public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil) async throws {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        guard end > start else { throw URLError(.badServerResponse) }
+
+        let type = HKCategoryType(.sleepAnalysis)
+        let total = end.timeIntervalSince(start)
+
+        if #available(iOS 16.0, watchOS 9.0, *), let q = quality {
+            let (deepFrac, remFrac) = q.sleepStageFractions
+            let deepDuration = total * deepFrac
+            let remDuration  = total * remFrac
+            let t1 = start.addingTimeInterval(deepDuration)
+            let t2 = t1.addingTimeInterval(remDuration)
+            let samples: [HKCategorySample] = [
+                HKCategorySample(type: type,
+                                 value: HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                                 start: start, end: t1),
+                HKCategorySample(type: type,
+                                 value: HKCategoryValueSleepAnalysis.asleepREM.rawValue,
+                                 start: t1, end: t2),
+                HKCategorySample(type: type,
+                                 value: HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                                 start: t2, end: end),
+            ]
+            for s in samples { try await store.save(s) }
+        } else {
+            let value: Int
+            if #available(iOS 16.0, watchOS 9.0, *) {
+                value = HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
+            } else {
+                value = HKCategoryValueSleepAnalysis.inBed.rawValue
+            }
+            try await store.save(HKCategorySample(type: type, value: value, start: start, end: end))
+        }
+
+        if let q = quality { saveSleepQuality(q, for: start) }
+    }
+
+    /// Deletes FitSync-written sleep samples that overlap the exact [start, end] window.
+    /// Used when editing a manually registered session. Cannot remove Apple Watch samples.
+    public func deleteSleepSamples(from start: Date, to end: Date) async throws {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        try await store.deleteObjects(of: type, predicate: predicate)
+    }
+
+    /// Deletes all sleep analysis samples that FitSync wrote for the night ending on `date`,
+    /// and clears the stored quality rating. Cannot remove samples from Apple Watch or other apps.
+    public func deleteSleep(for date: Date) async throws {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return }
+        let calendar = Calendar.current
+        let sleepStart = calendar.date(bySettingHour: 18, minute: 0, second: 0,
+                                       of: calendar.date(byAdding: .day, value: -1, to: date)!)!
+        let sleepEnd   = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date)!
+        let predicate  = HKQuery.predicateForSamples(withStart: sleepStart, end: sleepEnd)
+        try await store.deleteObjects(of: type, predicate: predicate)
+        UserDefaults(suiteName: Self.appGroupID)?.removeObject(forKey: sleepQualityKey(for: date))
     }
 
     // MARK: - Attività Giornaliera
@@ -197,7 +288,7 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Sonno
 
-    public func fetchSleep(for date: Date) async -> SleepSession? {
+    public func fetchSleep(for date: Date, includeConsistency: Bool = false) async -> SleepSession? {
         guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
         // Cerca il sonno della notte precedente (dalle 18:00 del giorno prima alle 12:00 del giorno corrente)
         let calendar = Calendar.current
@@ -216,8 +307,13 @@ public final class HealthKitRepository: ObservableObject {
         }
 
         let start = samples.first!.startDate
-        let end = samples.last!.endDate
-        return SleepSession(startTime: start, endTime: end, stages: stages)
+        let end   = samples.last!.endDate
+        var deviation: Double? = nil
+        if includeConsistency {
+            let history = await fetchRecentBedtimes(before: date)
+            deviation = bedtimeDeviation(start, against: history)
+        }
+        return SleepSession(startTime: start, endTime: end, stages: stages, bedtimeDeviationMinutes: deviation)
     }
 
     /// Most-recent sleep session within the last `withinDays` days.
@@ -248,9 +344,12 @@ public final class HealthKitRepository: ObservableObject {
             guard let t = sleepStageType(from: s.value) else { return nil }
             return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t)
         }
+        let history  = await fetchRecentBedtimes(before: wakeTime)
+        let deviation = bedtimeDeviation(nightSamples.first!.startDate, against: history)
         return SleepSession(startTime: nightSamples.first!.startDate,
                             endTime: nightSamples.last!.endDate,
-                            stages: stages)
+                            stages: stages,
+                            bedtimeDeviationMinutes: deviation)
     }
 
     // MARK: - Allenamenti da HealthKit
@@ -271,7 +370,7 @@ public final class HealthKitRepository: ObservableObject {
     public func fetchDailySnapshot(for date: Date = .now, goals: UserGoals, hasHevyWorkout: Bool = false) async -> DailySnapshot {
         async let activity = fetchDailyActivity(for: date)
         async let nutrition = fetchNutrition(for: date)
-        async let sleep = fetchSleep(for: date)
+        async let sleep = fetchSleep(for: date, includeConsistency: true)
         async let workouts = fetchWorkoutsOn(date: date)
 
         let a = await activity
@@ -282,6 +381,7 @@ public final class HealthKitRepository: ObservableObject {
         let sleepHours = s?.totalHours ?? 0
         let sleepScore = s?.qualityScore ?? 0
         let hasWorkout = !w.isEmpty || hasHevyWorkout
+        let manualQuality = loadSleepQuality(for: date)
 
         // ── Score composito migliorato (0-100) ──────────────────────────────
         //
@@ -290,15 +390,47 @@ public final class HealthKitRepository: ObservableObject {
         let activeProgress = min(a.activeCalories / max(goals.dailyActiveCalories, 1), 1.0)
         let movementScore  = (stepProgress * 0.5 + activeProgress * 0.5) * 40
         //
-        // RECUPERO (0-30): 15 neutro se no Apple Watch / dati sonno
-        let recoveryScore: Double = s != nil ? Double(sleepScore) / 100.0 * 30 : 15
+        // RECUPERO (0-30): blended da dati oggettivi HK + qualità soggettiva
+        let recoveryScore: Double
+        if let session = s {
+            let objective = Double(session.qualityScore) / 100.0 * 30
+            if let q = manualQuality {
+                recoveryScore = objective * 0.6 + q.baseRecoveryScore * 0.4
+            } else {
+                recoveryScore = objective
+            }
+        } else if let q = manualQuality {
+            recoveryScore = q.baseRecoveryScore
+        } else {
+            recoveryScore = 15
+        }
         //
-        // NUTRIZIONE (0-20): solo se l'utente ha loggato cibo (es. tramite Yazio → HK)
+        // NUTRIZIONE (0-20): solo se l'utente ha loggato cibo tramite un food tracker → Apple Salute
         //   se non tracciata → 10 neutro, non penalizza
         let nutritionScore: Double
         if n.calories > 50 {
-            let calProg  = min(n.calories / max(goals.dailyCalories, 1), 1.0)
-            let protProg = min(n.protein  / max(goals.dailyProteinG, 1), 1.0)
+            let goalCal  = max(goals.dailyCalories, 1)
+            let goalProt = max(goals.dailyProteinG, 1)
+            // ±100 kcal of goal → full calorie credit
+            let calDiff = n.calories - goalCal
+            let calProg: Double
+            if abs(calDiff) <= 100 {
+                calProg = 1.0
+            } else if calDiff > 100 {
+                calProg = max(0, 1.0 - (calDiff - 100) / goalCal)
+            } else {
+                calProg = min(n.calories / goalCal, 1.0)
+            }
+            // ±10 g of protein goal → full protein credit
+            let protDiff = n.protein - goalProt
+            let protProg: Double
+            if abs(protDiff) <= 10 {
+                protProg = 1.0
+            } else if protDiff > 10 {
+                protProg = max(0, 1.0 - (protDiff - 10) / goalProt)
+            } else {
+                protProg = min(n.protein / goalProt, 1.0)
+            }
             nutritionScore = (calProg * 0.4 + protProg * 0.6) * 20
         } else {
             nutritionScore = 10
@@ -703,6 +835,97 @@ public final class HealthKitRepository: ObservableObject {
         case .inBed: return nil
         default: return .unspecified
         }
+    }
+
+    /// All distinct sleep sessions for the night of `date` (18:00 prev day → 12:00 date).
+    /// Consecutive samples with a gap ≤ 30 min are merged into one session.
+    public func fetchAllSleepSessions(for date: Date) async -> [SleepSession] {
+        guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return [] }
+        let calendar = Calendar.current
+        let sleepStart = calendar.date(bySettingHour: 18, minute: 0, second: 0,
+                                       of: calendar.date(byAdding: .day, value: -1, to: date)!)!
+        let sleepEnd   = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date)!
+        let predicate  = HKQuery.predicateForSamples(withStart: sleepStart, end: sleepEnd)
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.categorySample(type: type, predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate)]
+        )
+        guard let samples = try? await descriptor.result(for: store), !samples.isEmpty else { return [] }
+
+        let history = await fetchRecentBedtimes(before: date)
+
+        var sessions: [SleepSession] = []
+        var group: [HKCategorySample] = [samples[0]]
+        var groupEnd = samples[0].endDate
+
+        for i in 1..<samples.count {
+            let s = samples[i]
+            if s.startDate.timeIntervalSince(groupEnd) > 30 * 60 {
+                let dev = bedtimeDeviation(group.first!.startDate, against: history)
+                sessions.append(buildSleepSession(from: group, bedtimeDeviation: dev))
+                group = [s]
+            } else {
+                group.append(s)
+            }
+            groupEnd = max(groupEnd, s.endDate)
+        }
+        let dev = bedtimeDeviation(group.first!.startDate, against: history)
+        sessions.append(buildSleepSession(from: group, bedtimeDeviation: dev))
+        return sessions
+    }
+
+    private func buildSleepSession(from samples: [HKCategorySample], bedtimeDeviation: Double? = nil) -> SleepSession {
+        let sorted = samples.sorted { $0.startDate < $1.startDate }
+        let stages = sorted.compactMap { s -> SleepStage? in
+            guard let t = sleepStageType(from: s.value) else { return nil }
+            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t)
+        }
+        return SleepSession(startTime: sorted.first!.startDate,
+                            endTime: sorted.last!.endDate,
+                            stages: stages,
+                            bedtimeDeviationMinutes: bedtimeDeviation)
+    }
+
+    // MARK: - Bedtime consistency helpers
+
+    private func fetchRecentBedtimes(before date: Date, lookbackDays: Int = 14) async -> [Date] {
+        guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return [] }
+        let calendar   = Calendar.current
+        let rangeStart = calendar.date(byAdding: .day, value: -lookbackDays, to: date)!
+        let rangeEnd   = calendar.startOfDay(for: date)
+        guard rangeEnd > rangeStart else { return [] }
+        let predicate  = HKQuery.predicateForSamples(withStart: rangeStart, end: rangeEnd)
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.categorySample(type: type, predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate)]
+        )
+        guard let samples = try? await descriptor.result(for: store), !samples.isEmpty else { return [] }
+        // Group into nights and take the first sample of each as the bedtime
+        var bedtimes: [Date] = []
+        var groupEnd: Date = .distantPast
+        for sample in samples {
+            if sample.startDate.timeIntervalSince(groupEnd) > 4 * 3600 {
+                bedtimes.append(sample.startDate)
+            }
+            if sample.endDate > groupEnd { groupEnd = sample.endDate }
+        }
+        return bedtimes
+    }
+
+    private func bedtimeDeviation(_ bedtime: Date, against history: [Date]) -> Double? {
+        guard !history.isEmpty else { return nil }
+        // Convert to "minutes since noon" so midnight-crossover times compare correctly
+        // (e.g. 23:30 and 00:15 are 45 min apart, not 1395)
+        func minutesSinceNoon(_ d: Date) -> Double {
+            let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+            let m = Double((c.hour ?? 0) * 60 + (c.minute ?? 0))
+            return m < 720 ? m + 1440 : m
+        }
+        let target = minutesSinceNoon(bedtime)
+        let avg    = history.map(minutesSinceNoon).reduce(0, +) / Double(history.count)
+        var diff   = abs(target - avg)
+        if diff > 720 { diff = 1440 - diff }
+        return diff
     }
 }
 

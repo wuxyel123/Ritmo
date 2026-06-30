@@ -8,6 +8,10 @@ struct FitSyncApp: App {
     @StateObject private var langManager = LanguageManager()
     @StateObject private var healthRepo = HealthKitRepository()
 
+    init() {
+        _ = GoalsSyncService.shared  // activate WCSession early
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -40,20 +44,24 @@ struct ContentView: View {
             RecoveryView()
                 .tabItem { Label("Recupero", systemImage: "bed.double.fill") }.tag(3)
 
+            HealthView()
+                .tabItem { Label("Salute", systemImage: "heart.fill") }.tag(4)
+
             InsightsView()
-                .tabItem { Label("Insights", systemImage: "chart.line.uptrend.xyaxis") }.tag(4)
+                .tabItem { Label("Insights", systemImage: "chart.line.uptrend.xyaxis") }.tag(5)
 
             SettingsTabView()
-                .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(5)
+                .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(6)
         }
         .tint(FitSyncTheme.accent)
         .onOpenURL { url in
             switch url.host {
             case "nutrition": selectedTab = 2
-            case "recovery": selectedTab = 3
-            case "insights": selectedTab = 4
-            case "workouts": selectedTab = 1
-            default: selectedTab = 0
+            case "recovery":  selectedTab = 3
+            case "health":    selectedTab = 4
+            case "insights":  selectedTab = 5
+            case "workouts":  selectedTab = 1
+            default:          selectedTab = 0
             }
         }
     }

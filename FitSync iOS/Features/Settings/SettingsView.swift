@@ -294,6 +294,7 @@ struct SettingsTabView: View {
         g.dailySteps          = Int(steps)
         g.dailyActiveCalories = activeKcal
         try? modelContext.save()
+        GoalsSyncService.shared.send(g)
     }
 
     private func flash(_ msg: String) {
