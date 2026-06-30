@@ -8,7 +8,7 @@ struct WatchMacroGoalsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 6) {
-                Text("Obiettivi oggi")
+                Text("Nutrizione")
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -27,9 +27,9 @@ struct WatchMacroGoalsView: View {
                 WatchGoalRow(emoji: "🌾", label: "Fibre",
                              current: Int(vm.snapshot.fiber), goal: Int(vm.snapshot.fiberGoal),
                              unit: "g", color: .mint)
-                WatchGoalRow(emoji: "💧", label: "Acqua",
-                             current: Int(vm.snapshot.waterMl / 100), goal: Int(vm.snapshot.waterGoal / 100),
-                             unit: "dl", color: .blue)
+                WatchGoalRowDecimal(emoji: "💧", label: "Acqua",
+                                    current: vm.snapshot.waterMl / 1000, goal: vm.snapshot.waterGoal / 1000,
+                                    unit: "L", color: .blue)
             }
             .padding(.horizontal, 8)
         }

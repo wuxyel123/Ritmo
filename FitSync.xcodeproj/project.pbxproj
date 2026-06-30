@@ -48,6 +48,7 @@
 		DD000000000002000001AAAA /* Localizable.strings (Widget) in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000002000001AAAA /* Localizable.strings (Widget) */; };
 		DD000000000000000200AAAA /* FitSyncWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000200AAAA /* FitSyncWatchWidget.swift */; };
 		DD000000000000000201AAAA /* FitSync Watch Widget.appex in Embed Watch Extensions */ = {isa = PBXBuildFile; fileRef = CC000000000000000004AAAA /* FitSync Watch Widget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DD000000000000000400AAAA /* FitSync watchOS.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CC000000000000000002AAAA /* FitSync watchOS.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DD000000000000000202AAAA /* FitSyncCore in Frameworks */ = {isa = PBXBuildFile; productRef = II000000000000000005AAAA /* FitSyncCore */; };
 		DD000000000000000203AAAA /* SleepLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000203AAAA /* SleepLogSheet.swift */; };
 		DD000000000000000300AAAA /* WatchDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000300AAAA /* WatchDashboardView.swift */; };
@@ -57,6 +58,7 @@
 		DD000000000000000309AAAA /* WatchSleepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000309AAAA /* WatchSleepView.swift */; };
 		DD000000000000000310AAAA /* WatchRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000310AAAA /* WatchRecoveryView.swift */; };
 		DD000000000000000311AAAA /* GoalsSyncService.swift (watchOS) in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000311AAAA /* GoalsSyncService.swift */; };
+		DD000000000000000312AAAA /* WatchHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000312AAAA /* WatchHealthView.swift */; };
 		DD000000000000000204AAAA /* GoalsSyncService.swift (iOS) in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000204AAAA /* GoalsSyncService.swift */; };
 		DD000000000000000205AAAA /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000205AAAA /* HealthView.swift */; };
 		DD000000000000000304AAAA /* WatchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000304AAAA /* WatchComponents.swift */; };
@@ -82,6 +84,13 @@
 			remoteGlobalIDString = EE000000000000000004AAAA;
 			remoteInfo = "FitSync Watch Widget";
 		};
+		JJ000000000000000401AAAA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000AAAA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE000000000000000002AAAA;
+			remoteInfo = "FitSync watchOS";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -105,6 +114,17 @@
 				DD000000000000000201AAAA /* FitSync Watch Widget.appex in Embed Watch Extensions */,
 			);
 			name = "Embed Watch Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000000000000000400AAAA /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				DD000000000000000400AAAA /* FitSync watchOS.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -178,6 +198,7 @@
 		BB000000000000000303AAAA /* WatchWaterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWaterView.swift; sourceTree = "<group>"; };
 		BB000000000000000309AAAA /* WatchSleepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSleepView.swift; sourceTree = "<group>"; };
 		BB000000000000000310AAAA /* WatchRecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecoveryView.swift; sourceTree = "<group>"; };
+		BB000000000000000312AAAA /* WatchHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHealthView.swift; sourceTree = "<group>"; };
 		BB000000000000000311AAAA /* GoalsSyncService.swift (watchOS) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsSyncService.swift; sourceTree = "<group>"; };
 		BB000000000000000204AAAA /* GoalsSyncService.swift (iOS) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsSyncService.swift; sourceTree = "<group>"; };
 		BB000000000000000205AAAA /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
@@ -392,8 +413,17 @@
 				AA000000000000000304AAAA /* Water */,
 				AA000000000000000309AAAA /* Sleep */,
 				AA000000000000000310AAAA /* Recovery (watchOS) */,
+				AA000000000000000312AAAA /* Health (watchOS) */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		AA000000000000000312AAAA /* Health (watchOS) */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000000312AAAA /* WatchHealthView.swift */,
+			);
+			path = Health;
 			sourceTree = "<group>";
 		};
 		AA000000000000000302AAAA /* Dashboard */ = {
@@ -505,11 +535,13 @@
 				FF000000000000000002AAAA /* Frameworks */,
 				FF000000000000000003AAAA /* Resources */,
 				FF000000000000000004AAAA /* Embed Foundation Extensions */,
+				FF000000000000000400AAAA /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				JJ000000000000000001AAAA /* PBXTargetDependency */,
+				JJ000000000000000400AAAA /* PBXTargetDependency */,
 			);
 			name = FitSync;
 			packageProductDependencies = (
@@ -719,6 +751,7 @@
 				DD000000000000000305AAAA /* WatchViewModel.swift in Sources */,
 				DD000000000000000310AAAA /* WatchRecoveryView.swift in Sources */,
 				DD000000000000000311AAAA /* GoalsSyncService.swift in Sources */,
+				DD000000000000000312AAAA /* WatchHealthView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -756,6 +789,11 @@
 			isa = PBXTargetDependency;
 			target = EE000000000000000004AAAA /* FitSync Watch Widget */;
 			targetProxy = PP000000000000000002AAAA /* PBXContainerItemProxy */;
+		};
+		JJ000000000000000400AAAA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE000000000000000002AAAA /* FitSync watchOS */;
+			targetProxy = JJ000000000000000401AAAA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

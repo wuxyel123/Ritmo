@@ -33,7 +33,7 @@ struct WatchWaterView: View {
                                 await helper.log("Acqua aggiunta!") {
                                     try await healthRepo.writeWater(ml: ml)
                                 }
-                                await vm.load(goals: goals, sessions: sessions)
+                                await vm.load(goals: goals)
                             }
                         }
                     }

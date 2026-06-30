@@ -53,19 +53,6 @@ struct WatchSleepView: View {
                 sessionCard(session, index: vm.sleepSessions.count > 1 ? index + 1 : nil)
             }
 
-            Button {
-                usingTracked = true
-                viewState = .quality
-            } label: {
-                Label("Valuta qualità", systemImage: "star.fill")
-                    .font(.caption.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-                    .background(Color.indigo.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
-                    .foregroundStyle(.indigo)
-            }
-            .buttonStyle(.plain)
-
             Button(role: .destructive) { confirmingDelete = true } label: {
                 Label("Elimina", systemImage: "trash")
                     .font(.caption)
@@ -130,12 +117,8 @@ struct WatchSleepView: View {
                     .font(.caption2).foregroundStyle(.secondary)
             }
 
-            VStack(spacing: 3) {
-                scoreLine("Durata",   Int(min(sleep.totalHours / 8.0, 1.0) * 50), "/ 50")
-                scoreLine("Profondo", Int(min(sleep.deepSleepHours / 1.5, 1.0) * 30), "/ 30")
-                scoreLine("REM",      Int(min(sleep.remSleepHours / 1.5, 1.0) * 20), "/ 20")
-            }
-            .padding(.top, 2)
+            scoreBreakdown(sleep)
+                .padding(.top, 2)
 
             if vm.sleepSessions.count > 1 && sleep.id != vm.sleepSessions.last?.id {
                 Divider().padding(.vertical, 4)
@@ -270,14 +253,14 @@ struct WatchSleepView: View {
         }
         viewState = .display
         usingTracked = false
-        await vm.load(goals: goals, sessions: sessions)
+        await vm.load(goals: goals)
     }
 
     private func deleteSleep() async {
         await helper.log("Sonno eliminato") {
             try await healthRepo.deleteSleep(for: .now)
         }
-        await vm.load(goals: goals, sessions: sessions)
+        await vm.load(goals: goals)
     }
 
     // MARK: Sub-views
@@ -287,6 +270,24 @@ struct WatchSleepView: View {
             Text(emoji).font(.system(size: 11))
             Text(value).font(.caption.bold()).foregroundStyle(color)
             Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    private func scoreBreakdown(_ sleep: SleepSession) -> some View {
+        let total  = max(sleep.totalHours, 0.01)
+        let awakeH = sleep.stages.filter { $0.type == .awake }.reduce(0.0) { $0 + $1.durationHours }
+        let consScore: Int
+        if let dev = sleep.bedtimeDeviationMinutes {
+            consScore = Int(max(0.0, 1.0 - max(0.0, dev - 15) / 45.0) * 10)
+        } else {
+            consScore = 10
+        }
+        return VStack(spacing: 3) {
+            scoreLine("Durata",     Int(min(sleep.totalHours / 8.0, 1.0) * 40),                          "/ 40")
+            scoreLine("Profondo",   Int(min((sleep.deepSleepHours / total) / 0.15, 1.0) * 20),           "/ 20")
+            scoreLine("REM",        Int(min((sleep.remSleepHours  / total) / 0.20, 1.0) * 20),           "/ 20")
+            scoreLine("Continuità", Int(max(0.0, 1.0 - (awakeH / total) / 0.05) * 10),                  "/ 10")
+            scoreLine("Regolarità", consScore,                                                             "/ 10")
         }
     }
 

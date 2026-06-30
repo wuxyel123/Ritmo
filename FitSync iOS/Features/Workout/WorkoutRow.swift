@@ -84,10 +84,9 @@ struct HealthKitWorkoutRow: View {
 
 struct SourceBadge: View {
     let source: DataSource
-    var color: Color { source == .hevy ? .purple : source == .healthKit ? .red : .gray }
+    var color: Color { source == .healthKit ? .red : .gray }
     var icon: String {
         switch source {
-        case .hevy: return "h.circle.fill"
         case .healthKit: return "heart.fill"
         case .manual: return "pencil.circle.fill"
         }

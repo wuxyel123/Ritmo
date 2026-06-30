@@ -16,22 +16,13 @@ final class DashboardViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        // Check SwiftData for Hevy/manual workouts on this date (HK won't see these)
-        let calendar = Calendar.current
-        let start = calendar.startOfDay(for: date)
-        let end = calendar.date(byAdding: .day, value: 1, to: start)!
-        let allSessions = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
-        let hasHevyWorkout = allSessions.contains {
-            $0.source == .hevy && $0.startTime >= start && $0.startTime < end
-        }
-
-        async let snap = healthRepo.fetchDailySnapshot(for: date, goals: goals, hasHevyWorkout: hasHevyWorkout)
+        async let snap = healthRepo.fetchDailySnapshot(for: date, goals: goals)
         async let act  = healthRepo.fetchDailyActivity(for: date)
         snapshot = await snap
         activity = await act
 
         // Only cache today's snapshot for widgets
-        if calendar.isDateInToday(date) {
+        if Calendar.current.isDateInToday(date) {
             saveSnapshotForWidgets(snapshot)
         }
 

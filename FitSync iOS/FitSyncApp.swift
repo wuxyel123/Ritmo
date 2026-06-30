@@ -28,7 +28,10 @@ struct FitSyncApp: App {
 // MARK: - ContentView
 struct ContentView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Query private var storedGoals: [UserGoals]
     @State private var selectedTab = 0
+
+    private var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -54,6 +57,13 @@ struct ContentView: View {
                 .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(6)
         }
         .tint(FitSyncTheme.accent)
+        .task {
+            // Push goals to the Watch (its only channel for goals — no CloudKit)
+            let ctx = FitSyncStore.container.mainContext
+            let canonical = UserGoals.canonical(in: ctx)
+            try? ctx.save()
+            GoalsSyncService.shared.send(canonical)
+        }
         .onOpenURL { url in
             switch url.host {
             case "nutrition": selectedTab = 2

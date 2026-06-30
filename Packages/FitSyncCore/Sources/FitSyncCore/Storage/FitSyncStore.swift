@@ -85,7 +85,7 @@ public enum SampleData {
             title: "Push Day",
             startTime: Calendar.current.date(byAdding: .hour, value: -2, to: .now)!,
             endTime: Date.now,
-            source: .hevy
+            source: .manual
         )
         ctx.insert(session)
 

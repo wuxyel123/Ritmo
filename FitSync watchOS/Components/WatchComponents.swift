@@ -67,6 +67,42 @@ struct WatchGoalRow: View {
     }
 }
 
+struct WatchGoalRowDecimal: View {
+    let emoji: String
+    let label: String
+    let current: Double
+    let goal: Double
+    let unit: String
+    let color: Color
+
+    private var progress: Double { goal > 0 ? min(current / goal, 1.0) : 0 }
+    private var isComplete: Bool { current >= goal }
+
+    var body: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 4) {
+                Text(emoji).font(.caption)
+                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Spacer()
+                HStack(spacing: 2) {
+                    Text(String(format: "%.1f", current)).font(.caption).fontWeight(.bold)
+                        .foregroundStyle(isComplete ? .green : .primary)
+                    Text("/ \(String(format: "%.1f", goal))\(unit)").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2).fill(color.opacity(0.2)).frame(height: 5)
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(isComplete ? Color.green : color)
+                        .frame(width: geo.size.width * progress, height: 5)
+                }
+            }
+            .frame(height: 5)
+        }
+    }
+}
+
 // MARK: - Sleep stage bar (compact, no legend)
 
 struct WatchSleepStageBar: View {

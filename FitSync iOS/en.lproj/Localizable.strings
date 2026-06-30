@@ -103,7 +103,7 @@
 "Volume — ultimi 7 giorni" = "Volume — last 7 days";
 "Nessun insight disponibile" = "No insights available";
 "Gli insights analizzano automaticamente: bilancio muscolare (push/pull/gambe), variabilità del sonno, distribuzione delle proteine nei giorni di allenamento vs riposo, e correlazioni tra recupero e performance. Più dati hai (almeno 2 settimane), più sono accurati." = "Insights automatically analyze: muscle balance (push/pull/legs), sleep variability, protein distribution on training vs rest days, and recovery-performance correlations. The more data you have (at least 2 weeks), the more accurate they are.";
-"Importa almeno 2 settimane di allenamenti da Hevy e attiva la sincronizzazione di Yazio con Apple Salute per ricevere insights personalizzati." = "Import at least 2 weeks of workouts from Hevy and enable Yazio sync with Apple Health to receive personalized insights.";
+"Registra almeno 2 settimane di allenamenti e collega il tuo food tracker ad Apple Salute per ricevere insights personalizzati." = "Log at least 2 weeks of workouts and connect your food tracker to Apple Health to receive personalized insights.";
 
 // Water logging
 "Aggiungi acqua" = "Log Water";

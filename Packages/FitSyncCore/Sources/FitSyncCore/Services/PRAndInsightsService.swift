@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 // MARK: - PRService
-/// Calcola i Personal Record da tutti i set importati da Hevy
+/// Calcola i Personal Record da tutti i set registrati
 public final class PRService {
 
     public init() {}

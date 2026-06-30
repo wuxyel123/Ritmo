@@ -6,7 +6,8 @@ extension Notification.Name {
     static let goalsSyncDidUpdate = Notification.Name("goalsSyncDidUpdate")
 }
 
-/// Receives UserGoals pushed from the paired iPhone and writes them into SwiftData.
+/// Receives user goals pushed from the paired iPhone and writes them into the
+/// watch's SwiftData store (which has no CloudKit). Workouts come from HealthKit.
 final class GoalsSyncService: NSObject {
     static let shared = GoalsSyncService()
 
@@ -19,20 +20,21 @@ final class GoalsSyncService: NSObject {
         WCSession.default.activate()
     }
 
-    private func apply(_ payload: [String: Any]) {
-        guard let container else { return }
+    /// Applies any payload containing a "goals" key (or legacy top-level goals).
+    private func handle(_ payload: [String: Any]) {
+        guard let container, !payload.isEmpty else { return }
+        let goalsDict: [String: Any]
+        if let nested = payload["goals"] as? [String: Any] {
+            goalsDict = nested
+        } else if payload["dailyCalories"] != nil {
+            goalsDict = payload                      // legacy top-level format
+        } else {
+            return
+        }
         Task { @MainActor in
             let ctx = container.mainContext
-            let goals: UserGoals
-            if let existing = try? ctx.fetch(FetchDescriptor<UserGoals>()).first {
-                goals = existing
-            } else {
-                goals = UserGoals()
-                ctx.insert(goals)
-            }
-            goals.applySync(payload)
+            UserGoals.canonical(in: ctx).applySync(goalsDict)
             try? ctx.save()
-            // Notify WatchTabView so it immediately reloads vm.snapshot with the new goals.
             NotificationCenter.default.post(name: .goalsSyncDidUpdate, object: nil)
         }
     }
@@ -40,14 +42,22 @@ final class GoalsSyncService: NSObject {
 
 extension GoalsSyncService: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        apply(message)
+        handle(message)
     }
 
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        apply(userInfo)
+        handle(userInfo)
+    }
+
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        handle(applicationContext)
     }
 
     nonisolated func session(_ session: WCSession,
                              activationDidCompleteWith activationState: WCSessionActivationState,
-                             error: Error?) {}
+                             error: Error?) {
+        // Pull whatever the phone last set, so a standalone watch launch is covered.
+        let ctx = session.receivedApplicationContext
+        if !ctx.isEmpty { handle(ctx) }
+    }
 }
