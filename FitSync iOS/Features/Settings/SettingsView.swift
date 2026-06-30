@@ -283,8 +283,7 @@ struct SettingsTabView: View {
     }
 
     private func saveGoals() {
-        let g = storedGoals.first ?? UserGoals()
-        if storedGoals.isEmpty { modelContext.insert(g) }
+        let g = UserGoals.canonical(in: modelContext)
         g.dailyCalories       = calories
         g.dailyProteinG       = proteinG
         g.dailyCarbsG         = carbsG

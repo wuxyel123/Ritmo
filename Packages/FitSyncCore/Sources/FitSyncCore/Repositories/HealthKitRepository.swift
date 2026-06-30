@@ -367,7 +367,7 @@ public final class HealthKitRepository: ObservableObject {
     // MARK: - Snapshot per Widget e Watch
 
     /// Fetch snapshot per oggi (o la data specificata)
-    public func fetchDailySnapshot(for date: Date = .now, goals: UserGoals, hasHevyWorkout: Bool = false) async -> DailySnapshot {
+    public func fetchDailySnapshot(for date: Date = .now, goals: UserGoals) async -> DailySnapshot {
         async let activity = fetchDailyActivity(for: date)
         async let nutrition = fetchNutrition(for: date)
         async let sleep = fetchSleep(for: date, includeConsistency: true)
@@ -380,7 +380,7 @@ public final class HealthKitRepository: ObservableObject {
 
         let sleepHours = s?.totalHours ?? 0
         let sleepScore = s?.qualityScore ?? 0
-        let hasWorkout = !w.isEmpty || hasHevyWorkout
+        let hasWorkout = !w.isEmpty
         let manualQuality = loadSleepQuality(for: date)
 
         // ── Score composito migliorato (0-100) ──────────────────────────────

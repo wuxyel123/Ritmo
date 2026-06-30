@@ -24,7 +24,7 @@ public final class WorkoutSession {
         startTime: Date,
         endTime: Date,
         notes: String = "",
-        source: DataSource = .hevy,
+        source: DataSource = .manual,
         activeCalories: Double = 0,
         distanceMeters: Double = 0,
         hkActivityType: Int = 0,
@@ -185,21 +185,40 @@ extension UserGoals {
     }
 
     public func applySync(_ payload: [String: Any]) {
-        if let v = payload["dailyCalories"]       as? Double { dailyCalories       = v }
-        if let v = payload["dailyProteinG"]       as? Double { dailyProteinG       = v }
-        if let v = payload["dailyCarbsG"]         as? Double { dailyCarbsG         = v }
-        if let v = payload["dailyFatG"]           as? Double { dailyFatG           = v }
-        if let v = payload["dailyFiberG"]         as? Double { dailyFiberG         = v }
-        if let v = payload["dailyWaterMl"]        as? Double { dailyWaterMl        = v }
-        if let v = payload["weeklyWorkouts"]      as? Int    { weeklyWorkouts      = v }
-        if let v = payload["dailySteps"]          as? Int    { dailySteps          = v }
-        if let v = payload["dailyActiveCalories"] as? Double { dailyActiveCalories = v }
+        // Read through NSNumber so values survive WatchConnectivity/plist
+        // bridging regardless of whether they arrive as Int or Double.
+        func double(_ key: String) -> Double? { (payload[key] as? NSNumber)?.doubleValue }
+        func int(_ key: String)    -> Int?    { (payload[key] as? NSNumber)?.intValue }
+
+        if let v = double("dailyCalories")       { dailyCalories       = v }
+        if let v = double("dailyProteinG")       { dailyProteinG       = v }
+        if let v = double("dailyCarbsG")         { dailyCarbsG         = v }
+        if let v = double("dailyFatG")           { dailyFatG           = v }
+        if let v = double("dailyFiberG")         { dailyFiberG         = v }
+        if let v = double("dailyWaterMl")        { dailyWaterMl        = v }
+        if let v = int("weeklyWorkouts")         { weeklyWorkouts      = v }
+        if let v = int("dailySteps")             { dailySteps          = v }
+        if let v = double("dailyActiveCalories") { dailyActiveCalories = v }
+    }
+
+    /// Returns the single canonical `UserGoals`, creating one if none exists and
+    /// removing any duplicates (CloudKit sync + WatchConnectivity can introduce them).
+    /// This guarantees a deterministic record for both scoring and goal display.
+    @MainActor
+    public static func canonical(in context: ModelContext) -> UserGoals {
+        let all = (try? context.fetch(FetchDescriptor<UserGoals>())) ?? []
+        guard let survivor = all.first else {
+            let fresh = UserGoals()
+            context.insert(fresh)
+            return fresh
+        }
+        for duplicate in all.dropFirst() { context.delete(duplicate) }
+        return survivor
     }
 }
 
 // MARK: - Enums
 public enum DataSource: String, Codable {
-    case hevy = "Hevy"
     case healthKit = "Apple Health"
     case manual = "Manuale"
 }

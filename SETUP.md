@@ -85,8 +85,7 @@ Aggiungi queste chiavi (Xcode le aggiunge automaticamente con HealthKit, ma veri
 4. Aggiungi **Background Modes** → spunta **Background fetch** e **Remote notifications**
 
 > CloudKit sincronizza automaticamente SwiftData tra tutti i dispositivi dell'utente
-> (iPhone → Mac, iPhone → iPad). I dati degli allenamenti importati da Hevy
-> saranno disponibili anche su Mac senza fare nulla.
+> (iPhone → Mac, iPhone → iPad).
 
 ---
 
@@ -145,23 +144,6 @@ In `Assets.xcassets`, crea il colore `AccentColor`:
 ### Verifica che Yazio stia scrivendo su HealthKit:
 Apri **Salute** → Sfoglia → Nutrizione → assicurati che Yazio sia elencato come sorgente.
 
-### Verifica che Hevy stia scrivendo su HealthKit:
-Apri **Hevy** → Impostazioni → Health & Fitness → attiva "Apple Health".
-
----
-
-## Flusso import da Hevy
-
-```
-Hevy app
-  └── Profilo → Settings → Export & Import Data → Export Workouts
-       └── Ricevi email con allegato CSV
-            └── Apri email su iPhone
-                 └── Tieni premuto sull'allegato
-                      └── Condividi → FitSync
-                           └── L'app importa automaticamente ✅
-```
-
 ---
 
 ## Struttura file Swift Package (FitSyncCore)
@@ -172,8 +154,7 @@ Sources/FitSyncCore/
 │   ├── WorkoutModels.swift     (WorkoutSession, WorkoutSet, Exercise, UserGoals)
 │   └── HealthModels.swift      (NutritionDay, SleepSession, DailyActivity, DailySnapshot)
 ├── Repositories/
-│   ├── HealthKitRepository.swift
-│   └── HevyCSVRepository.swift
+│   └── HealthKitRepository.swift
 ├── Services/
 │   └── PRAndInsightsService.swift
 └── Storage/

@@ -219,7 +219,7 @@ struct WorkoutDetailView: View {
                     }
                 }
 
-                // MARK: Exercise sets (Hevy)
+                // MARK: Exercise sets
                 ForEach(setsByExercise, id: \.0) { exerciseName, sets in
                     FitCard {
                         VStack(alignment: .leading, spacing: 8) {

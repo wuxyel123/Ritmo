@@ -1,25 +1,30 @@
 import Foundation
 import WidgetKit
+import SwiftData
 import FitSyncCore
 
 @MainActor
 final class WatchViewModel: ObservableObject {
     @Published var snapshot: DailySnapshot = .placeholder
+    @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var sleepSession: SleepSession? = nil   // primary (longest) — used by recovery score
     @Published var sleepSessions: [SleepSession] = []  // all sessions for the night
 
     private let healthRepo = HealthKitRepository()
 
-    func load(goals: UserGoals, sessions: [WorkoutSession]) async {
+    func load(goals: UserGoals) async {
         await healthRepo.requestAuthorization()
-        let calendar = Calendar.current
-        let start = calendar.startOfDay(for: .now)
-        let end = calendar.date(byAdding: .day, value: 1, to: start)!
-        let hasHevyWorkout = sessions.contains { $0.source == .hevy && $0.startTime >= start && $0.startTime < end }
-        async let snapshotResult  = healthRepo.fetchDailySnapshot(for: .now, goals: goals, hasHevyWorkout: hasHevyWorkout)
+
+        // Watch is self-sufficient for HealthKit workouts: import them straight
+        // into the watch store so the workout tab fills with no phone dependency.
+        await healthRepo.importHealthKitWorkouts(into: FitSyncStore.container.mainContext)
+
+        async let snapshotResult  = healthRepo.fetchDailySnapshot(for: .now, goals: goals)
         async let allSleepResult  = healthRepo.fetchAllSleepSessions(for: .now)
+        async let activityResult  = healthRepo.fetchDailyActivity(for: .now)
         snapshot      = await snapshotResult
         sleepSessions = await allSleepResult
+        activity      = await activityResult
         sleepSession  = sleepSessions.max(by: { $0.totalHours < $1.totalHours })
         persistSnapshot(snapshot)
     }
