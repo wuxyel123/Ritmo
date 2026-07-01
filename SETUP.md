@@ -1,14 +1,14 @@
-# FitSync — Guida Setup Xcode
+# Ritmo — Guida Setup Xcode
 
 ## Struttura del progetto
 
 ```
-FitSync/
+Ritmo/
 ├── Packages/
-│   └── FitSyncCore/          ← Swift Package condiviso (modelli, repo, servizi)
-├── FitSync iOS/              ← App iPhone (target principale)
-├── FitSync watchOS/          ← App Apple Watch
-├── FitSync Widgets/          ← Widget (iOS + macOS + Watch)
+│   └── RitmoCore/          ← Swift Package condiviso (modelli, repo, servizi)
+├── Ritmo iOS/              ← App iPhone (target principale)
+├── Ritmo watchOS/          ← App Apple Watch
+├── Ritmo Widgets/          ← Widget (iOS + macOS + Watch)
 └── SETUP.md                  ← questa guida
 ```
 
@@ -18,8 +18,8 @@ FitSync/
 
 1. Apri Xcode → **Create New Project**
 2. Scegli **iOS → App**
-3. Nome: `FitSync`
-4. Bundle ID: `com.tuonome.fitsync` *(sostituisci con il tuo)*
+3. Nome: `Ritmo`
+4. Bundle ID: `com.tuonome.ritmo` *(sostituisci con il tuo)*
 5. Interface: **SwiftUI**
 6. Language: **Swift**
 7. Spunta **Include Tests**
@@ -32,13 +32,13 @@ FitSync/
 ### Apple Watch
 1. **File → New → Target**
 2. Scegli **watchOS → Watch App**
-3. Nome: `FitSync watchOS`
+3. Nome: `Ritmo watchOS`
 4. Assicurati che "Include Notification Scene" sia **deselezionato**
 
 ### Widget Extension
 1. **File → New → Target**
 2. Scegli **iOS → Widget Extension**
-3. Nome: `FitSync Widgets`
+3. Nome: `Ritmo Widgets`
 4. Spunta **Include Live Activity** se vuoi (opzionale)
 
 ---
@@ -47,21 +47,21 @@ FitSync/
 
 1. **File → Add Package Dependencies**
 2. Scegli **Add Local...**
-3. Naviga alla cartella `Packages/FitSyncCore`
+3. Naviga alla cartella `Packages/RitmoCore`
 4. Clicca **Add Package**
-5. Aggiungi `FitSyncCore` a **tutti i target**: iOS, watchOS, Widget
+5. Aggiungi `RitmoCore` a **tutti i target**: iOS, watchOS, Widget
 
 ---
 
 ## Passo 4 — Configura HealthKit (OBBLIGATORIO)
 
 ### Per il target iOS:
-1. Seleziona il target `FitSync` → **Signing & Capabilities**
+1. Seleziona il target `Ritmo` → **Signing & Capabilities**
 2. Clicca **+ Capability**
 3. Aggiungi **HealthKit**
 
 ### Per il target watchOS:
-1. Seleziona `FitSync watchOS` → **Signing & Capabilities**
+1. Seleziona `Ritmo watchOS` → **Signing & Capabilities**
 2. Aggiungi **HealthKit**
 
 ### Info.plist (iOS e watchOS):
@@ -69,17 +69,17 @@ Aggiungi queste chiavi (Xcode le aggiunge automaticamente con HealthKit, ma veri
 
 ```xml
 <key>NSHealthShareUsageDescription</key>
-<string>FitSync legge i tuoi dati di salute (passi, sonno, frequenza cardiaca, nutrizione) per mostrarti grafici e insights personalizzati.</string>
+<string>Ritmo legge i tuoi dati di salute (passi, sonno, frequenza cardiaca, nutrizione) per mostrarti grafici e insights personalizzati.</string>
 
 <key>NSHealthUpdateUsageDescription</key>
-<string>FitSync non scrive dati su Apple Health.</string>
+<string>Ritmo non scrive dati su Apple Health.</string>
 ```
 
 ---
 
 ## Passo 5 — Configura CloudKit (sync iPhone → Mac)
 
-1. Seleziona target `FitSync` → **Signing & Capabilities**
+1. Seleziona target `Ritmo` → **Signing & Capabilities**
 2. Aggiungi **iCloud**
 3. Spunta **CloudKit**
 4. Aggiungi **Background Modes** → spunta **Background fetch** e **Remote notifications**
@@ -93,9 +93,9 @@ Aggiungi queste chiavi (Xcode le aggiunge automaticamente con HealthKit, ma veri
 
 L'App Group permette alla app principale di condividere dati con Widget e Watch.
 
-1. Target **FitSync** → **Signing & Capabilities** → **+ Capability** → **App Groups**
-2. Aggiungi: `group.com.tuonome.fitsync`
-3. Fai lo stesso per `FitSync Widgets` e `FitSync watchOS`
+1. Target **Ritmo** → **Signing & Capabilities** → **+ Capability** → **App Groups**
+2. Aggiungi: `group.com.tuonome.ritmo`
+3. Fai lo stesso per `Ritmo Widgets` e `Ritmo watchOS`
 
 > Sostituisci `tuonome` con il tuo Apple Developer Team ID o nome.
 
@@ -103,7 +103,7 @@ L'App Group permette alla app principale di condividere dati con Widget e Watch.
 
 ## Passo 7 — Mac Catalyst
 
-1. Seleziona target `FitSync` → **General**
+1. Seleziona target `Ritmo` → **General**
 2. Sotto **Deployment Info** → spunta **Mac** (Catalyst)
 3. Xcode aggiungerà automaticamente il target macOS
 
@@ -115,12 +115,12 @@ Trascina i file dalle cartelle del progetto in Xcode:
 
 | File | Target |
 |------|--------|
-| `FitSync iOS/FitSyncApp.swift` | FitSync (iOS) |
-| `FitSync iOS/Features/*.swift` | FitSync (iOS) |
-| `FitSync watchOS/FitSyncWatchApp.swift` | FitSync watchOS |
-| `FitSync Widgets/FitSyncWidgets.swift` | FitSync Widgets |
+| `Ritmo iOS/RitmoApp.swift` | Ritmo (iOS) |
+| `Ritmo iOS/Features/*.swift` | Ritmo (iOS) |
+| `Ritmo watchOS/RitmoWatchApp.swift` | Ritmo watchOS |
+| `Ritmo Widgets/RitmoWidgets.swift` | Ritmo Widgets |
 
-I file in `Packages/FitSyncCore/` vengono inclusi automaticamente via Swift Package.
+I file in `Packages/RitmoCore/` vengono inclusi automaticamente via Swift Package.
 
 ---
 
@@ -146,10 +146,10 @@ Apri **Salute** → Sfoglia → Nutrizione → assicurati che Yazio sia elencato
 
 ---
 
-## Struttura file Swift Package (FitSyncCore)
+## Struttura file Swift Package (RitmoCore)
 
 ```
-Sources/FitSyncCore/
+Sources/RitmoCore/
 ├── Models/
 │   ├── WorkoutModels.swift     (WorkoutSession, WorkoutSet, Exercise, UserGoals)
 │   └── HealthModels.swift      (NutritionDay, SleepSession, DailyActivity, DailySnapshot)
@@ -158,7 +158,7 @@ Sources/FitSyncCore/
 ├── Services/
 │   └── PRAndInsightsService.swift
 └── Storage/
-    └── FitSyncStore.swift       (SwiftData + CloudKit)
+    └── RitmoStore.swift       (SwiftData + CloudKit)
 ```
 
 ---
@@ -166,5 +166,5 @@ Sources/FitSyncCore/
 ## Note importanti
 
 - **Apple Developer Account**: serve per testare HealthKit su dispositivo fisico (account gratuito è sufficiente). Per distribuire su App Store serve l'account a pagamento ($99/anno).
-- **Privacy**: tutti i dati restano sul dispositivo o nell'iCloud privato dell'utente. FitSync non ha un backend.
+- **Privacy**: tutti i dati restano sul dispositivo o nell'iCloud privato dell'utente. Ritmo non ha un backend.
 - **CloudKit**: la sync funziona solo se l'utente ha iCloud attivo e ha effettuato il login con Apple ID.
