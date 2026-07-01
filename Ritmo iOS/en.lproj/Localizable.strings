@@ -1,0 +1,333 @@
+// Navigation tabs
+"Oggi" = "Today";
+"Allenamenti" = "Workouts";
+"Nutrizione" = "Nutrition";
+"Recupero" = "Recovery";
+"Obiettivi" = "Goals";
+"Impostazioni" = "Settings";
+"Insights" = "Insights";
+
+// Settings sections
+"Corpo" = "Body";
+"Calorie giornaliere" = "Daily Calories";
+"Macro" = "Macros";
+"Proteine" = "Protein";
+"Carboidrati" = "Carbs";
+"Grassi" = "Fat";
+"Fibre & Acqua" = "Fiber & Water";
+"Fibre" = "Fiber";
+"Acqua" = "Water";
+"Movimento" = "Movement";
+"Passi" = "Steps";
+"Lingua" = "Language";
+
+// Settings labels
+"Peso corporeo (da Apple Salute)" = "Body weight (from Apple Health)";
+"Usato per calcolare i macro in modalità 'g per kg corporeo'." = "Used to calculate macros in 'g per kg body weight' mode.";
+"Calorie totali" = "Total Calories";
+"Macro attivi:" = "Active macros:";
+"Modalità inserimento" = "Input mode";
+"Macro calcolato automaticamente" = "Auto-calculated macro";
+"Il macro automatico viene calcolato dalle calorie e dagli altri due." = "The auto macro is calculated from the calories and the other two.";
+"Calorie attive" = "Active Calories";
+"Ripristina default per il tuo peso" = "Reset defaults for your weight";
+"Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg." = "Default: automatic carbs · 2g protein/kg · 0.8g fat/kg.";
+"calcolato automaticamente" = "auto-calculated";
+"Calorie insufficienti" = "Insufficient calories";
+"g per kg corporeo" = "g per kg body weight";
+"grammi totali" = "total grams";
+"Grammi totali" = "Total grams";
+"automatico" = "automatic";
+"g / kg" = "g / kg";
+
+// Dashboard
+"Nutrizione oggi" = "Today's Nutrition";
+"Ultimo allenamento" = "Last Workout";
+"Giorni recenti" = "Recent Days";
+"Score Giornaliero" = "Daily Score";
+"Score del giorno" = "Day Score";
+"Punteggio del giorno" = "Day Score";
+"Componenti del punteggio" = "Score Breakdown";
+"Obiettivo passi" = "Step Goal";
+"su %lld kcal" = "of %lld kcal";
+"su %@" = "of %@";
+
+// Charts
+"Media" = "Average";
+"Obiettivo" = "Goal";
+"Periodo" = "Period";
+"Nessun dato per questo periodo" = "No data for this period";
+"7 giorni" = "7 days";
+"30 giorni" = "30 days";
+"Anno" = "Year";
+
+// Common
+"Chiudi" = "Close";
+"Vai a oggi" = "Go to today";
+"Automatico (Sistema)" = "Automatic (System)";
+
+// Nutrition
+"Calorie" = "Calories";
+"Come tracciare la nutrizione" = "How to track nutrition";
+"Dati via Yazio → Apple Health" = "Data via Yazio → Apple Health";
+"Ritmo legge automaticamente i dati nutrizionali da Apple Salute. Se usi **Yazio**, attiva la sincronizzazione in: Yazio → Profilo → Connessioni → Apple Salute. I dati appariranno qui automaticamente." = "Ritmo automatically reads nutritional data from Apple Health. If you use **Yazio**, enable sync in: Yazio → Profile → Connections → Apple Health. Data will appear here automatically.";
+
+// Recovery
+"Sonno" = "Sleep";
+"Sonno stanotte" = "Tonight's Sleep";
+"Frequenza cardiaca" = "Heart Rate";
+"Variabilità" = "Variability";
+"Cuore & HRV" = "Heart & HRV";
+"Ore di sonno" = "Sleep Hours";
+"Composizione corporea" = "Body Composition";
+"Fasi del sonno" = "Sleep Phases";
+"Timeline" = "Timeline";
+"Dettaglio sonno" = "Sleep Detail";
+
+// Workouts
+"Nessun allenamento" = "No workouts";
+"Nessun allenamento trovato." = "No workouts found.";
+"I tuoi allenamenti Apple Fitness appaiono qui automaticamente." = "Your Apple Fitness workouts appear here automatically.";
+"Sincronizza ora" = "Sync now";
+"Serie" = "Sets";
+"Tipo" = "Type";
+"Peso" = "Weight";
+"Reps" = "Reps";
+"Frequenza cardiaca" = "Heart Rate";
+"Zone di frequenza cardiaca" = "Heart Rate Zones";
+"Basate su FC max stimata 190 bpm" = "Based on estimated max HR 190 bpm";
+"Percorso" = "Route";
+
+// Insights
+"Personal Records 🏆" = "Personal Records 🏆";
+"Volume — ultimi 7 giorni" = "Volume — last 7 days";
+"Nessun insight disponibile" = "No insights available";
+"Gli insights analizzano automaticamente: bilancio muscolare (push/pull/gambe), variabilità del sonno, distribuzione delle proteine nei giorni di allenamento vs riposo, e correlazioni tra recupero e performance. Più dati hai (almeno 2 settimane), più sono accurati." = "Insights automatically analyze: muscle balance (push/pull/legs), sleep variability, protein distribution on training vs rest days, and recovery-performance correlations. The more data you have (at least 2 weeks), the more accurate they are.";
+"Registra almeno 2 settimane di allenamenti e collega il tuo food tracker ad Apple Salute per ricevere insights personalizzati." = "Log at least 2 weeks of workouts and connect your food tracker to Apple Health to receive personalized insights.";
+
+// Water logging
+"Aggiungi acqua" = "Log Water";
+"Personalizzato" = "Custom";
+"Aggiungi" = "Add";
+"Annulla" = "Cancel";
+"ml aggiunti" = "ml added";
+"Quantità (ml)" = "Amount (ml)";
+"Inserisci quantità" = "Enter amount";
+
+// Score
+"Pieno punteggio con un allenamento, o se raggiungi l'obiettivo passi (riposo attivo intenzionale). Parziale in proporzione ai passi se nessuno dei due." = "Full score with a workout, or if you reach your step goal (intentional active rest). Partial in proportion to steps if neither.";
+"Passi raggiunti — riposo attivo" = "Steps reached — active rest";
+"Nessun allenamento oggi" = "No workout today";
+
+// Settings footer
+"Default applicati per" = "Defaults applied for";
+
+// Score card labels
+"Scegli giorno" = "Choose Day";
+"Giornata perfetta! 🌟" = "Perfect Day! 🌟";
+"Ottima giornata" = "Great Day";
+"Buona giornata" = "Good Day";
+"Giornata nella media" = "Average Day";
+"Puoi fare meglio" = "You Can Do Better";
+"💪 Allenamento completato" = "💪 Workout Done";
+"🛋️ Giorno di riposo" = "🛋️ Rest Day";
+"su 100" = "out of 100";
+"Massimo" = "Maximum";
+"Giorni obiettivo" = "Goal Days";
+"Allenamento" = "Workout";
+"Come si calcola" = "How it's calculated";
+"Nessun dato sonno — punteggio neutro" = "No sleep data — neutral score";
+"Nessun dato nutrizionale — punteggio neutro" = "No nutrition data — neutral score";
+"Allenamento completato oggi" = "Workout completed today";
+"obiettivo" = "goal";
+
+// Score detail explanation rows
+"Movimento (max 40 pt)" = "Movement (max 40 pts)";
+"Media pesata di passi e calorie attive rispetto agli obiettivi. Richiede solo iPhone o Apple Watch." = "Weighted average of steps and active calories vs. goals. Requires only iPhone or Apple Watch.";
+"Recupero (max 30 pt)" = "Recovery (max 30 pts)";
+"Basato sulla qualità del sonno. Se mancano i dati sonno viene assegnato un punteggio neutro di 15 pt." = "Based on sleep quality. If sleep data is missing, a neutral score of 15 pts is assigned.";
+"Nutrizione (max 20 pt)" = "Nutrition (max 20 pts)";
+"Progressione verso obiettivo calorie (40%) e proteine (60%). Se non tracciata → 10 pt neutri." = "Progress toward calorie goal (40%) and protein goal (60%). If untracked → 10 neutral pts.";
+"Allenamento (max 10 pt)" = "Workout (max 10 pts)";
+
+// Recovery / Sleep detail
+"Analizzando i tuoi dati…" = "Analyzing your data…";
+"Come funzionano gli Insights" = "How Insights Work";
+"Addormentamento" = "Bedtime";
+"Sveglia" = "Wake Up";
+"ore totali" = "total hours";
+"Profondo" = "Deep";
+"Sveglio" = "Awake";
+"Restaurativo" = "Restorative";
+"Sogni / memoria" = "Dreams / memory";
+"Sonno leggero" = "Light sleep";
+"Svegliate" = "Awakenings";
+"Durata (max 50 pt)" = "Duration (max 50 pts)";
+"Sonno profondo (max 30 pt)" = "Deep sleep (max 30 pts)";
+"Sonno REM (max 20 pt)" = "REM sleep (max 20 pts)";
+"Obiettivo: 8 ore di sonno" = "Goal: 8 hours of sleep";
+"Obiettivo: 1.5 ore di sonno profondo" = "Goal: 1.5 hours of deep sleep";
+"Obiettivo: 1.5 ore di REM" = "Goal: 1.5 hours of REM";
+"Come si calcola il punteggio" = "How the score is calculated";
+"Cos'è" = "What it is";
+"Valori di riferimento" = "Reference values";
+"Consiglio" = "Tip";
+
+// Recovery charts
+"FC a riposo" = "Resting HR";
+"Peso corporeo" = "Body weight";
+
+// Workout detail
+"Caricamento dati cardiaci…" = "Loading cardiac data…";
+"FC durante allenamento" = "HR during workout";
+"Z1 Recovery" = "Z1 Recovery";
+"Z2 Brucia ♥" = "Z2 Burn ♥";
+"Z3 Aerobico" = "Z3 Aerobic";
+"Z4 Soglia" = "Z4 Threshold";
+"Z5 Peak" = "Z5 Peak";
+"media" = "avg";
+"massima" = "max";
+"minima" = "min";
+"minuti" = "min";
+"kcal attive" = "active kcal";
+"serie" = "sets";
+
+// Workout row format strings
+"%lld serie" = "%lld sets";
+
+// Muscle Groups
+"Petto" = "Chest";
+"Schiena" = "Back";
+"Spalle" = "Shoulders";
+"Bicipiti" = "Biceps";
+"Tricipiti" = "Triceps";
+"Avambracci" = "Forearms";
+"Core" = "Core";
+"Quadricipiti" = "Quads";
+"Femorali" = "Hamstrings";
+"Glutei" = "Glutes";
+"Polpacci" = "Calves";
+"Full Body" = "Full Body";
+"Forza" = "Strength";
+"Cardio" = "Cardio";
+"Altro" = "Other";
+
+// Set Types
+"Normale" = "Normal";
+"Riscaldamento" = "Warm Up";
+"Drop Set" = "Drop Set";
+"Al cedimento" = "To Failure";
+
+// Data Source
+"Manuale" = "Manual";
+
+// HealthKit workout type names
+"Corsa" = "Running";
+"Ciclismo" = "Cycling";
+"Camminata" = "Walking";
+"Nuoto" = "Swimming";
+"Yoga" = "Yoga";
+"Allenamento Pesi" = "Weight Training";
+"Forza Funzionale" = "Functional Strength";
+"HIIT" = "HIIT";
+"Cross Training" = "Cross Training";
+"Pilates" = "Pilates";
+"Danza" = "Dance";
+"Scale" = "Stair Climbing";
+"Ellittica" = "Elliptical";
+"Canottaggio" = "Rowing";
+"Calcio" = "Soccer";
+"Basketball" = "Basketball";
+"Tennis" = "Tennis";
+"Golf" = "Golf";
+"Escursionismo" = "Hiking";
+"Boxe" = "Boxing";
+"Salto con la Corda" = "Jump Rope";
+"Core Training" = "Core Training";
+"Flessibilità" = "Flexibility";
+"Mind & Body" = "Mind & Body";
+"Cardio Misto" = "Mixed Cardio";
+"Allenamento" = "Workout";
+
+// Heart & HRV metric labels
+"FC riposo" = "Resting HR";
+"FC media" = "Avg HR";
+"HRV" = "HRV";
+"VO₂ Max" = "VO₂ Max";
+"Ossigeno" = "Oxygen";
+"Respiro" = "Breathing";
+"Salite" = "Flights";
+"Mindfulness" = "Mindfulness";
+"Grasso corp." = "Body Fat";
+"BMI" = "BMI";
+"Massa magra" = "Lean Mass";
+
+// Heart & HRV metric units
+"atti/min" = "br/min";
+"piani" = "floors";
+
+// Sleep metric labels
+"totale" = "total";
+"profondo" = "deep";
+"REM" = "REM";
+"score /100" = "score /100";
+
+// Sleep no-data message
+"Nessun dato sonno. Assicurati che iPhone o Apple Watch registri il sonno. Puoi anche inserirlo manualmente in Apple Salute." = "No sleep data. Make sure your iPhone or Apple Watch is tracking your sleep. You can also add it manually in Apple Health.";
+
+// MetricInfo sheet titles
+"HRV — Variabilità Cardiaca" = "HRV — Heart Rate Variability";
+"SpO₂ — Saturazione Ossigeno" = "SpO₂ — Blood Oxygen";
+"Frequenza Respiratoria" = "Respiratory Rate";
+
+// MetricInfo — HRV
+"La HRV (Heart Rate Variability) misura la variazione del tempo tra un battito cardiaco e il successivo. Valori alti indicano che il sistema nervoso autonomo è ben bilanciato: il corpo è pronto per lo sforzo fisico e il recupero è ottimale. Valori bassi segnalano stress, fatica o malattia.\n\nApple Watch la misura automaticamente durante il sonno." = "HRV (Heart Rate Variability) measures the variation in time between heartbeats. High values indicate a well-balanced autonomic nervous system: the body is ready for exertion and recovery is optimal. Low values signal stress, fatigue, or illness.\n\nApple Watch measures it automatically during sleep.";
+"Eccellente — atletici o molto riposati" = "Excellent — athletic or very well rested";
+"Buono — nella media degli adulti attivi" = "Good — average for active adults";
+"Nella norma" = "Within normal range";
+"Sotto la media — corpo sotto stress" = "Below average — body under stress";
+"La HRV varia molto da persona a persona. Monitora il TUO trend nel tempo: se la tua HRV è stabile o in aumento, stai recuperando bene. Un calo improvviso può indicare overtraining o malattia in arrivo." = "HRV varies greatly from person to person. Monitor YOUR trend over time: if your HRV is stable or rising, you are recovering well. A sudden drop can indicate overtraining or an incoming illness.";
+
+// MetricInfo — VO₂ Max
+"Il VO₂ Max è la quantità massima di ossigeno che i tuoi muscoli riescono a utilizzare durante uno sforzo intenso. È il principale indicatore di fitness cardiovascolare e predice la salute a lungo termine.\n\nApple Watch lo stima durante camminate e corse all'aperto con GPS." = "VO₂ Max is the maximum amount of oxygen your muscles can use during intense effort. It is the primary indicator of cardiovascular fitness and a strong predictor of long-term health.\n\nApple Watch estimates it during outdoor walks and runs with GPS.";
+"Eccellente (uomini) / > 48 (donne)" = "Excellent (men) / > 48 (women)";
+"Buono — sopra la media" = "Good — above average";
+"Nella media" = "Average";
+"Sotto la media — da migliorare" = "Below average — needs improvement";
+"Il VO₂ Max migliora con l'allenamento aerobico regolare: corsa, ciclismo, nuoto. Anche 20-30 minuti di cardio moderato 3 volte a settimana producono benefici misurabili in poche settimane." = "VO₂ Max improves with regular aerobic training: running, cycling, swimming. Even 20-30 minutes of moderate cardio 3 times a week produces measurable benefits within a few weeks.";
+
+// MetricInfo — SpO₂
+"La SpO₂ misura la percentuale di emoglobina nel sangue che trasporta ossigeno. Un valore normale indica che i polmoni stanno ossigenando correttamente il sangue.\n\nApple Watch la misura con il sensore di ossigeno nel sangue sul retro. La misurazione avviene principalmente durante il sonno." = "SpO₂ measures the percentage of hemoglobin in the blood carrying oxygen. A normal value indicates that the lungs are properly oxygenating the blood.\n\nApple Watch measures it with the blood oxygen sensor on the back. Measurement mainly occurs during sleep.";
+"Normale — nessuna preoccupazione" = "Normal — no concern";
+"Lieve ipossia — monitora" = "Mild hypoxia — monitor closely";
+"Ipossia moderata — consulta un medico" = "Moderate hypoxia — consult a doctor";
+"Ipossia grave — urgente" = "Severe hypoxia — urgent";
+"Valori occasionalmente bassi durante il sonno possono indicare apnea notturna. Se la SpO₂ scende spesso sotto il 90% durante la notte, parla con il tuo medico." = "Occasionally low values during sleep may indicate sleep apnea. If SpO₂ frequently drops below 90% at night, speak with your doctor.";
+
+// MetricInfo — Respiratory Rate
+"La frequenza respiratoria è il numero di atti respiratori (inspirazione + espirazione) al minuto durante il riposo. È un indicatore sensibile dello stato di salute: si alza in caso di stress, malattia o recupero insufficiente.\n\nApple Watch la misura durante il sonno tramite l'accelerometro." = "Respiratory rate is the number of breaths (inhale + exhale) per minute at rest. It is a sensitive health indicator: it rises with stress, illness, or insufficient recovery.\n\nApple Watch measures it during sleep using the accelerometer.";
+"Ottimale a riposo" = "Optimal at rest";
+"Normale" = "Normal";
+"Elevata — possibile stress" = "Elevated — possible stress";
+"Alta — consulta un medico" = "High — consult a doctor";
+"Un aumento della frequenza respiratoria notturna rispetto al tuo solito può essere uno dei primi segnali di un'infezione in arrivo, anche prima che compaiano altri sintomi." = "A rise in your nightly respiratory rate compared to your usual baseline can be one of the first signs of an incoming infection, even before other symptoms appear.";
+
+// Insight titles
+"Troppo Push, poco Pull" = "Too Much Push, Too Little Pull";
+"Pull dominante" = "Pull Dominant";
+"Skip leg day detected 🦵" = "Skip leg day detected 🦵";
+"Recupero insufficiente" = "Insufficient Recovery";
+"Proteine insufficienti" = "Insufficient Protein";
+"Idratazione bassa" = "Low Hydration";
+"Proteine nei giorni di riposo" = "Protein on Rest Days";
+"Il sonno migliora le tue performance" = "Sleep Improves Your Performance";
+
+// Insight messages (Italian template → English translation; %@ = arg, %% = literal %)
+"In 14 giorni hai fatto %@%% più volume push che pull. Rischio infortuni alla spalla. Aggiungi rematori o trazioni." = "In 14 days you did %@%% more push than pull volume. Risk of shoulder injury. Add rows or pull-ups.";
+"Hai più volume pull che push. Bilancia con più esercizi per petto e spalle." = "You have more pull than push volume. Balance with more chest and shoulder exercises.";
+"Nelle ultime 2 settimane hai allenato le gambe molto meno del busto. Le gambe sono il motore della forza totale." = "In the last 2 weeks you trained legs much less than your upper body. Legs are the engine of total strength.";
+"Stai dormendo in media %@h. Con meno di 7h il testosterone cala del 10-15%% e i progressi rallentano." = "You're sleeping an average of %@h. With less than 7h, testosterone drops 10-15%% and progress slows down.";
+"Media settimanale (%@ giorni tracciati): %@g su %@g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento." = "Weekly average (%@ days tracked): %@g out of %@g goal. With less protein you lose muscle mass even with training.";
+"Bevi in media %@L al giorno. L'obiettivo è %@L." = "You drink an average of %@L per day. Your goal is %@L.";
+"Mangi %@g in meno di proteine nei giorni senza allenamento. Il muscolo si ricostruisce anche a riposo — mantieni l'apporto costante." = "You eat %@g less protein on rest days. Muscle rebuilds at rest too — keep your intake consistent.";
+"Con 7.5h+ di sonno il tuo volume di allenamento è %@%% più alto. Dormire è parte dell'allenamento." = "With 7.5h+ of sleep your training volume is %@%% higher. Sleeping is part of training.";
