@@ -64,7 +64,8 @@ public final class HealthKitRepository: ObservableObject {
         var readTypesVar = readTypes
         var shareTypes: Set<HKSampleType> = [
             HKQuantityType(.dietaryWater),
-            HKCategoryType(.sleepAnalysis)
+            HKCategoryType(.sleepAnalysis),
+            HKObjectType.workoutType()   // to allow deleting app-owned workouts
         ]
 
         // Workout effort score (RPE) — iOS 18 / watchOS 11+. Read others', write ours.
@@ -565,28 +566,93 @@ public final class HealthKitRepository: ObservableObject {
     private static let excludedWorkoutsKey = "excludedWorkoutUUIDs"
 
     /// HealthKit-workout UUIDs the user removed in-app, so import never re-adds them.
-    public func excludedWorkoutUUIDs() -> Set<String> {
-        guard let d = UserDefaults(suiteName: Self.appGroupID) else { return [] }
-        return Set(d.stringArray(forKey: Self.excludedWorkoutsKey) ?? [])
+    /// Static + nonisolated so the watch's WatchConnectivity receiver can apply an
+    /// iPhone deletion (only touches UserDefaults).
+    public nonisolated static func excludedWorkoutUUIDs() -> Set<String> {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return [] }
+        return Set(d.stringArray(forKey: excludedWorkoutsKey) ?? [])
     }
 
-    public func excludeWorkout(uuid: String) {
-        guard let d = UserDefaults(suiteName: Self.appGroupID) else { return }
-        var set = Set(d.stringArray(forKey: Self.excludedWorkoutsKey) ?? [])
+    public nonisolated static func excludeWorkout(uuid: String) {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return }
+        var set = Set(d.stringArray(forKey: excludedWorkoutsKey) ?? [])
         set.insert(uuid)
-        d.set(Array(set), forKey: Self.excludedWorkoutsKey)
+        d.set(Array(set), forKey: excludedWorkoutsKey)
     }
 
-    /// Removes a workout from the app. HealthKit workouts can't be deleted from
-    /// the store by us (not app-owned), so we record the UUID as excluded and
-    /// drop the local copy — import won't bring it back.
+    /// Replaces the whole excluded set (used when the watch receives the iPhone's set).
+    public nonisolated static func replaceExcludedWorkoutUUIDs(_ uuids: [String]) {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return }
+        d.set(uuids, forKey: excludedWorkoutsKey)
+    }
+
+    public func excludedWorkoutUUIDs() -> Set<String> { Self.excludedWorkoutUUIDs() }
+
+    private static let trainingLoadKey = "trainingLoadFromPhone"
+
+    /// Caches the iPhone-computed TrainingLoad so the Watch can show the SAME
+    /// number instead of recomputing from its own local HealthKit import —
+    /// the two could otherwise diverge (different dedup timing, etc). The
+    /// iPhone is the source of truth; the Watch falls back to a local compute
+    /// only if it has never received one.
+    public nonisolated static func cacheTrainingLoad(_ data: Data) {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return }
+        d.set(data, forKey: trainingLoadKey)
+    }
+
+    public nonisolated static func cachedTrainingLoad() -> TrainingLoad? {
+        guard let d = UserDefaults(suiteName: appGroupID),
+              let data = d.data(forKey: trainingLoadKey) else { return nil }
+        return try? JSONDecoder().decode(TrainingLoad.self, from: data)
+    }
+
+    /// Removes a workout from the app: records the UUID as excluded (so import won't
+    /// re-add it) and drops the local copy.
     @MainActor
     public func deleteWorkout(_ session: WorkoutSession, in modelContext: ModelContext) {
         if session.source == .healthKit, let uuid = session.hkWorkoutUUID {
-            excludeWorkout(uuid: uuid)
+            Self.excludeWorkout(uuid: uuid)
         }
         modelContext.delete(session)
         try? modelContext.save()
+    }
+
+    /// Attempts to delete the underlying workout from Apple Health. Only succeeds
+    /// for app-owned workouts — Apple Watch/other-app workouts can't be deleted by us.
+    public func deleteHealthKitWorkout(uuid: String) async -> Bool {
+        guard let workout = await fetchWorkout(uuid: uuid) else { return false }
+        do {
+            try await store.delete(workout)
+            return true
+        } catch {
+            authError = error
+            return false
+        }
+    }
+
+    /// Two time ranges are the "same" real-world workout if they overlap by more
+    /// than half of the shorter one's duration. Catches auto-detected + manually
+    /// started entries for the same session, which HealthKit gives different
+    /// UUIDs — so UUID-only dedup misses them and they show up as duplicates.
+    private func overlapsSignificantly(_ aStart: Date, _ aEnd: Date, _ bStart: Date, _ bEnd: Date) -> Bool {
+        let overlapStart = max(aStart, bStart)
+        let overlapEnd = min(aEnd, bEnd)
+        guard overlapEnd > overlapStart else { return false }
+        let overlap = overlapEnd.timeIntervalSince(overlapStart)
+        let shorter = min(aEnd.timeIntervalSince(aStart), bEnd.timeIntervalSince(bStart))
+        guard shorter > 60 else { return overlap > 0 }
+        return overlap / shorter > 0.5
+    }
+
+    /// True if `a` should be kept over `b` when both represent the same workout:
+    /// prefer whichever already has a user-set RPE, then the longer, then the
+    /// one with more calories (a richer/more complete record).
+    private func preferred(_ a: WorkoutSession, over b: WorkoutSession) -> Bool {
+        if a.hasUserRPE != b.hasUserRPE { return a.hasUserRPE }
+        let aDur = a.endTime.timeIntervalSince(a.startTime)
+        let bDur = b.endTime.timeIntervalSince(b.startTime)
+        if aDur != bDur { return aDur > bDur }
+        return a.activeCalories >= b.activeCalories
     }
 
     public func importHealthKitWorkouts(into modelContext: ModelContext) async {
@@ -600,29 +666,61 @@ public final class HealthKitRepository: ObservableObject {
         let excluded = excludedWorkoutUUIDs()
         let currentUUIDs = Set(hkWorkouts.map { $0.uuid.uuidString })
 
-        let existing = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
+        let allExisting = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
+        var changed = false
+        var removed = Set<PersistentIdentifier>()
+
+        // Reflect deletions: drop local HK sessions (within window) that are no
+        // longer in HealthKit, or that the user removed in-app.
+        for s in allExisting where s.source == .healthKit {
+            guard let uuid = s.hkWorkoutUUID else { continue }
+            let goneFromHealth = s.startTime >= cutoff && !currentUUIDs.contains(uuid)
+            if goneFromHealth || excluded.contains(uuid) {
+                modelContext.delete(s)
+                removed.insert(s.persistentModelID)
+                changed = true
+            }
+        }
+
+        // Clean up existing local duplicates (e.g. from before this fix, or from
+        // HealthKit ever having offered two overlapping entries): keep the
+        // richer session of each overlapping pair, drop the rest.
+        let survivors = allExisting
+            .filter { !removed.contains($0.persistentModelID) && $0.source == .healthKit }
+            .sorted { $0.startTime < $1.startTime }
+        for i in 0..<survivors.count {
+            let a = survivors[i]
+            if removed.contains(a.persistentModelID) { continue }
+            for j in (i + 1)..<survivors.count {
+                let b = survivors[j]
+                if removed.contains(b.persistentModelID) { continue }
+                guard overlapsSignificantly(a.startTime, a.endTime, b.startTime, b.endTime) else { continue }
+                if preferred(a, over: b) {
+                    modelContext.delete(b)
+                    removed.insert(b.persistentModelID)
+                } else {
+                    modelContext.delete(a)
+                    removed.insert(a.persistentModelID)
+                    break
+                }
+            }
+        }
+        if !removed.isEmpty { changed = true }
+
         var existingByUUID: [String: WorkoutSession] = [:]
-        for s in existing where s.source == .healthKit {
+        var acceptedRanges: [(start: Date, end: Date)] = []
+        for s in allExisting where s.source == .healthKit && !removed.contains(s.persistentModelID) {
             if let uuid = s.hkWorkoutUUID { existingByUUID[uuid] = s }
+            acceptedRanges.append((s.startTime, s.endTime))
         }
 
         // Workouts recent enough to bother reading their RPE (the load window).
         let rpeCutoff = Calendar.current.date(byAdding: .day, value: -28, to: .now) ?? .distantPast
 
-        var changed = false
-
-        // Reflect deletions: drop local HK sessions (within window) that are no
-        // longer in HealthKit, or that the user removed in-app.
-        for s in existing where s.source == .healthKit {
-            guard let uuid = s.hkWorkoutUUID else { continue }
-            let goneFromHealth = s.startTime >= cutoff && !currentUUIDs.contains(uuid)
-            if goneFromHealth || excluded.contains(uuid) {
-                modelContext.delete(s)
-                changed = true
-            }
-        }
-
-        for hkWorkout in hkWorkouts {
+        // Longest-first so that if HealthKit hands us two overlapping NEW
+        // workouts (first-time import), we keep the more complete one and
+        // skip inserting the overlapping duplicate.
+        for hkWorkout in hkWorkouts.sorted(by: { $0.duration > $1.duration }) {
             let uuid = hkWorkout.uuid.uuidString
             if excluded.contains(uuid) { continue }
 
@@ -633,12 +731,20 @@ public final class HealthKitRepository: ObservableObject {
                 effort = await readWorkoutEffort(for: hkWorkout)
             }
 
-            // Already imported → just keep its RPE in sync with HealthKit.
+            // Already imported (by UUID) → just keep its RPE in sync with HealthKit.
             if let session = existingByUUID[uuid] {
                 if let e = effort, session.userRPE != e {
                     session.userRPE = e
                     changed = true
                 }
+                continue
+            }
+
+            // Same real-world session as one already accepted (different UUID,
+            // overlapping time) → skip, don't create a duplicate.
+            if acceptedRanges.contains(where: {
+                overlapsSignificantly($0.start, $0.end, hkWorkout.startDate, hkWorkout.endDate)
+            }) {
                 continue
             }
 
@@ -665,6 +771,7 @@ public final class HealthKitRepository: ObservableObject {
                 userRPE: effort
             )
             modelContext.insert(session)
+            acceptedRanges.append((hkWorkout.startDate, hkWorkout.endDate))
             changed = true
         }
         if changed { try? modelContext.save() }

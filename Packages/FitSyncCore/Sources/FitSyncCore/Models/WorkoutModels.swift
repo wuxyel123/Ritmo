@@ -174,6 +174,12 @@ public final class UserGoals {
 // MARK: - UserGoals WatchConnectivity helpers
 
 extension UserGoals {
+    /// Compact value signature — changes whenever any goal field changes, so the
+    /// iPhone can push to the Watch on a single onChange.
+    public var syncSignature: String {
+        "\(dailyCalories)|\(dailyProteinG)|\(dailyCarbsG)|\(dailyFatG)|\(dailyFiberG)|\(dailyWaterMl)|\(weeklyWorkouts)|\(dailySteps)|\(dailyActiveCalories)"
+    }
+
     public var syncPayload: [String: Any] {
         [
             "dailyCalories":       dailyCalories,

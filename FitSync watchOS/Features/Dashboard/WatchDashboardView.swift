@@ -71,11 +71,59 @@ struct WatchHomeView: View {
                 scoreRow("Nutrizione", vm.snapshot.nutritionScore, 20, .orange)
                 scoreRow("Workout",    vm.snapshot.workoutBonus,   10, .purple)
 
+                Divider()
+
+                // ── Rings complication legend ───────────────────────────────
+                ringsHint
+
                 Color.clear.frame(height: 16)
             }
             .padding(.horizontal, 8)
         }
         .navigationTitle("FitSync")
+    }
+
+    // MARK: Rings complication legend
+
+    private var ringsHint: some View {
+        let calPct   = vm.snapshot.activeCalories / max(vm.snapshot.activeCalorieGoal, 1)
+        let stepPct  = Double(vm.snapshot.steps) / Double(max(vm.snapshot.stepGoal, 1))
+        let sleepPct = vm.snapshot.sleepHours / 8.0
+        return HStack(spacing: 12) {
+            ZStack {
+                miniRing(calPct,   .red,   0)
+                miniRing(stepPct,  .green, 5)
+                miniRing(sleepPct, .cyan,  10)
+            }
+            .frame(width: 40, height: 40)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Anelli (complicazione)")
+                    .font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
+                legendItem(.red,   "🔥", "Calorie attive")
+                legendItem(.green, "🚶", "Passi")
+                legendItem(.cyan,  "😴", "Sonno")
+            }
+            Spacer()
+        }
+    }
+
+    private func miniRing(_ pct: Double, _ color: Color, _ inset: CGFloat) -> some View {
+        ZStack {
+            Circle().stroke(color.opacity(0.25), lineWidth: 4)
+            Circle().trim(from: 0, to: min(max(pct, 0), 1))
+                .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .padding(inset)
+    }
+
+    private func legendItem(_ color: Color, _ icon: String, _ label: String) -> some View {
+        HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(icon).font(.system(size: 9))
+            Text(label).font(.system(size: 10))
+        }
     }
 
     // MARK: Helpers

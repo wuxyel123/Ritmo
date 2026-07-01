@@ -9,6 +9,14 @@ import Foundation
 
 public enum WorkoutCategory {
     case strength, cardio, other
+
+    public var displayName: String {
+        switch self {
+        case .strength: return "Forza"
+        case .cardio:   return "Cardio"
+        case .other:    return "Altro"
+        }
+    }
 }
 
 extension WorkoutSession {
@@ -59,7 +67,7 @@ extension WorkoutSession {
     }
 }
 
-public enum TrainingLoadStatus: String {
+public enum TrainingLoadStatus: String, Codable {
     case low, optimal, high, veryHigh
 
     public var label: String {
@@ -72,51 +80,124 @@ public enum TrainingLoadStatus: String {
     }
 }
 
-public struct TrainingLoad {
+public struct TrainingLoad: Codable {
     public let acute: Int        // last 7 days (sum of load)
     public let chronic: Int      // typical week (28-day average)
     public let ratio: Double     // acute / chronic
     public let status: TrainingLoadStatus
     public let weeklyEfforts: [Int]   // load per day, last 7 days (oldest→newest)
 
-    public static func compute(from sessions: [WorkoutSession], now: Date = .now) -> TrainingLoad {
+    private static let lambdaAcute   = 2.0 / (7.0 + 1.0)
+    private static let lambdaChronic = 2.0 / (28.0 + 1.0)
+
+    /// Daily session-RPE load (effort × duration), oldest → today, `days` long.
+    private static func dailyLoads(from sessions: [WorkoutSession], days: Int, now: Date) -> [Double] {
         let cal = Calendar.current
         let today = cal.startOfDay(for: now)
-
-        func load(inLastDays days: Int) -> Double {
-            let cutoff = cal.date(byAdding: .day, value: -days, to: today) ?? .distantPast
-            return sessions.filter { $0.startTime >= cutoff }.reduce(0) { $0 + $1.loadValue }
+        var daily = [Double](repeating: 0, count: days)
+        for s in sessions {
+            let day = cal.startOfDay(for: s.startTime)
+            if let offset = cal.dateComponents([.day], from: day, to: today).day,
+               offset >= 0, offset < days {
+                daily[days - 1 - offset] += s.loadValue
+            }
         }
-
-        let acute = load(inLastDays: 7)
-        let chronicWeek = load(inLastDays: 28) / 4.0   // average week over 28 days
-        let ratio = chronicWeek > 0 ? acute / chronicWeek : (acute > 0 ? 2.0 : 0)
-
-        let status: TrainingLoadStatus
-        switch ratio {
-        case ..<0.8:  status = .low
-        case ..<1.3:  status = .optimal
-        case ..<1.6:  status = .high
-        default:      status = .veryHigh
-        }
-
-        // Per-day load for the last 7 days (oldest → newest) for a mini bar chart.
-        var daily: [Int] = []
-        for offset in stride(from: 6, through: 0, by: -1) {
-            guard let dayStart = cal.date(byAdding: .day, value: -offset, to: today),
-                  let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { daily.append(0); continue }
-            let v = sessions
-                .filter { $0.startTime >= dayStart && $0.startTime < dayEnd }
-                .reduce(0.0) { $0 + $1.loadValue }
-            daily.append(Int(v.rounded()))
-        }
-
-        return TrainingLoad(acute: Int(acute.rounded()),
-                            chronic: Int(chronicWeek.rounded()),
-                            ratio: ratio,
-                            status: status,
-                            weeklyEfforts: daily)
+        return daily
     }
+
+    private static func status(for ratio: Double) -> TrainingLoadStatus {
+        switch ratio {
+        case ..<0.8:  return .low
+        case ..<1.3:  return .optimal
+        case ..<1.5:  return .high
+        default:      return .veryHigh
+        }
+    }
+
+    public static func compute(from sessions: [WorkoutSession], now: Date = .now) -> TrainingLoad {
+        // Window long enough for the chronic EWMA to settle.
+        let daily = dailyLoads(from: sessions, days: 42, now: now)
+
+        // Exponentially-weighted moving averages of daily load: acute (fatigue,
+        // ~7-day) vs chronic (fitness, ~28-day). EWMA tracks the acute:chronic
+        // workload ratio (ACWR) more faithfully than flat rolling averages —
+        // recent days are weighted more (Williams et al., 2017).
+        var acuteEWMA = 0.0, chronicEWMA = 0.0
+        for v in daily {
+            acuteEWMA   = lambdaAcute   * v + (1 - lambdaAcute)   * acuteEWMA
+            chronicEWMA = lambdaChronic * v + (1 - lambdaChronic) * chronicEWMA
+        }
+
+        // Need ~a few weeks of history before the ratio is meaningful.
+        let ratio = chronicEWMA >= 1.0 ? acuteEWMA / chronicEWMA : 1.0
+
+        // Weekly-equivalent numbers so acute vs chronic are directly comparable.
+        let weeklyEfforts = daily.suffix(7).map { Int($0.rounded()) }
+        return TrainingLoad(acute: Int((acuteEWMA * 7).rounded()),
+                            chronic: Int((chronicEWMA * 7).rounded()),
+                            ratio: ratio,
+                            status: status(for: ratio),
+                            weeklyEfforts: Array(weeklyEfforts))
+    }
+
+    /// Day-by-day acute/chronic trend (weekly-equivalent), so the ACWR balance
+    /// can be charted over time instead of read as a single snapshot number.
+    public static func history(from sessions: [WorkoutSession], days: Int = 56, now: Date = .now) -> [TrainingLoadPoint] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: now)
+        let warmup = 42   // lead-in so the EWMA has settled by the first reported day
+        let total = days + warmup
+        let daily = dailyLoads(from: sessions, days: total, now: now)
+
+        var acuteEWMA = 0.0, chronicEWMA = 0.0
+        var points: [TrainingLoadPoint] = []
+        for (i, v) in daily.enumerated() {
+            acuteEWMA   = lambdaAcute   * v + (1 - lambdaAcute)   * acuteEWMA
+            chronicEWMA = lambdaChronic * v + (1 - lambdaChronic) * chronicEWMA
+            guard i >= warmup else { continue }
+            let offsetFromToday = total - 1 - i
+            guard let date = cal.date(byAdding: .day, value: -offsetFromToday, to: today) else { continue }
+            let ratio = chronicEWMA >= 1.0 ? acuteEWMA / chronicEWMA : 1.0
+            points.append(TrainingLoadPoint(date: date, acute: acuteEWMA * 7, chronic: chronicEWMA * 7,
+                                            status: status(for: ratio)))
+        }
+        return points
+    }
+
+    /// How load over the last `days` splits across strength/cardio/other, so
+    /// the source of the training stress is visible, not just its size.
+    public static func loadByCategory(from sessions: [WorkoutSession], days: Int = 28, now: Date = .now) -> [CategoryLoad] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: now) ?? .distantPast
+        var totals: [WorkoutCategory: Double] = [:]
+        for s in sessions where s.startTime >= cutoff {
+            totals[s.category, default: 0] += s.loadValue
+        }
+        return totals.map { CategoryLoad(category: $0.key, load: $0.value) }
+            .sorted { $0.load > $1.load }
+    }
+
+    /// Average load per workout over a lookback window — a baseline for "was
+    /// this session harder than usual?", distinct from its share of the week.
+    public static func averageSessionLoad(from sessions: [WorkoutSession], days: Int = 90, now: Date = .now) -> Double {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: now) ?? .distantPast
+        let recent = sessions.filter { $0.startTime >= cutoff }
+        guard !recent.isEmpty else { return 0 }
+        return recent.reduce(0.0) { $0 + $1.loadValue } / Double(recent.count)
+    }
+}
+
+public struct TrainingLoadPoint: Identifiable {
+    public let id = UUID()
+    public let date: Date
+    public let acute: Double
+    public let chronic: Double
+    public let status: TrainingLoadStatus
+}
+
+public struct CategoryLoad: Identifiable {
+    public let id = UUID()
+    public let category: WorkoutCategory
+    public let load: Double
 }
 
 // MARK: - Recovery (sleep + heart)

@@ -158,6 +158,8 @@ final class RecoveryViewModel: ObservableObject {
 
 struct RecoveryCard: View {
     let recovery: RecoveryScore
+    var showsInfo: Bool = true
+    @State private var showingInfo = false
 
     private var color: Color {
         switch recovery.status {
@@ -171,10 +173,19 @@ struct RecoveryCard: View {
     var body: some View {
         FitCard {
             VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    SectionHeader(title: "Recupero")
-                    Text("Prontezza di oggi · sonno + cuore (diverso dal punteggio del sonno)")
-                        .font(.caption2).foregroundStyle(.secondary)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        SectionHeader(title: "Recupero")
+                        Text("Prontezza di oggi · sonno + cuore (diverso dal punteggio del sonno)")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                    if showsInfo {
+                        Spacer()
+                        Button { showingInfo = true } label: {
+                            Image(systemName: "info.circle").foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 HStack(spacing: 16) {
                     ZStack {
@@ -207,6 +218,11 @@ struct RecoveryCard: View {
                     Spacer()
                 }
             }
+        }
+        .alert("Come si calcola il recupero?", isPresented: $showingInfo) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Il recupero (0–100) stima quanto sei pronto per oggi combinando:\n\n• Qualità del sonno di stanotte (65%)\n• HRV rispetto alla tua media di 28 giorni (20%)\n• Frequenza cardiaca a riposo vs la tua media (15%)\n\nHRV più alta e FC a riposo più bassa = recupero migliore. Senza dati cardiaci si usa solo il sonno. È diverso dal punteggio del sonno, che valuta la sola notte.")
         }
     }
 
