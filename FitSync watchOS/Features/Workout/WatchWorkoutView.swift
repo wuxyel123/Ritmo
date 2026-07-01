@@ -16,7 +16,9 @@ struct WatchWorkoutView: View {
 
     @ViewBuilder
     private var trainingLoadCard: some View {
-        let load = TrainingLoad.compute(from: sessions)
+        // Prefer the iPhone's ground-truth value; fall back to a local compute
+        // only if the phone hasn't synced one yet (standalone watch use).
+        let load = vm.trainingLoad ?? TrainingLoad.compute(from: sessions)
         if load.acute > 0 || load.chronic > 0 {
             let color: Color = switch load.status {
                 case .low:      .blue
@@ -86,7 +88,7 @@ struct WatchWorkoutView: View {
                         }
                         ForEach(todaySessions) { session in
                             NavigationLink {
-                                WatchWorkoutDetailView(session: session)
+                                WatchWorkoutDetailView(session: session, sessions: sessions)
                             } label: {
                                 WatchWorkoutRow(session: session)
                             }
@@ -103,7 +105,7 @@ struct WatchWorkoutView: View {
                             .font(.caption2).foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         NavigationLink {
-                            WatchWorkoutDetailView(session: last)
+                            WatchWorkoutDetailView(session: last, sessions: sessions)
                         } label: {
                             WatchWorkoutRow(session: last)
                         }
@@ -211,7 +213,9 @@ struct WatchWorkoutRow: View {
 
 struct WatchWorkoutDetailView: View {
     let session: WorkoutSession
+    let sessions: [WorkoutSession]
 
+    @EnvironmentObject private var vm: WatchViewModel
     @StateObject private var healthRepo = HealthKitRepository()
     @State private var hr: WorkoutHeartRateData?
     @State private var isLoadingHR = false
@@ -288,9 +292,27 @@ struct WatchWorkoutDetailView: View {
         let columns = [GridItem(.flexible()), GridItem(.flexible())]
         return LazyVGrid(columns: columns, spacing: 6) {
             statTile("clock", "\(session.durationMinutes)", "min", .teal)
-            statTile("gauge.with.dots.needle.50percent", "\(session.effortScore)", "sforzo /10", .pink)
+            statTile("gauge.with.dots.needle.50percent", "\(session.effortScore)",
+                    session.hasUserRPE ? "RPE" : "RPE stima", .pink)
             if session.activeCalories > 0 {
                 statTile("flame.fill", "\(Int(session.activeCalories))", "kcal", .red)
+            }
+            if let load = vm.trainingLoad, load.acute > 0 {
+                let share = min(session.loadValue / Double(load.acute), 1.0)
+                let color: Color = switch load.status {
+                    case .low:      .blue
+                    case .optimal:  .green
+                    case .high:     .orange
+                    case .veryHigh: .red
+                }
+                statTile("chart.bar.fill", "\(Int((share * 100).rounded()))%", "carico 7gg", color)
+            }
+            let avgLoad = TrainingLoad.averageSessionLoad(from: sessions)
+            if avgLoad > 0 {
+                let vsAveragePct = ((session.loadValue - avgLoad) / avgLoad) * 100
+                let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
+                let text = vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%"
+                statTile("arrow.left.arrow.right", text, "vs media", vsAvgColor)
             }
             if let dist = distanceText {
                 statTile("arrow.forward", dist, "distanza", .cyan)

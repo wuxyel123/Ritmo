@@ -28,10 +28,31 @@ struct FitSyncApp: App {
 // MARK: - ContentView
 struct ContentView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var storedGoals: [UserGoals]
     @State private var selectedTab = 0
 
     private var goals: UserGoals { storedGoals.first ?? UserGoals() }
+
+    private func pushGoals() {
+        let ctx = FitSyncStore.container.mainContext
+        let canonical = UserGoals.canonical(in: ctx)
+        try? ctx.save()
+        GoalsSyncService.shared.send(canonical)
+    }
+
+    /// Re-imports HealthKit workouts (deduping stale/duplicate entries), then
+    /// pushes the exclusion set + freshly computed training load to the Watch —
+    /// the iPhone is the source of truth for both, so the two devices agree.
+    private func syncWorkoutsToWatch() async {
+        let ctx = FitSyncStore.container.mainContext
+        await healthRepo.importHealthKitWorkouts(into: ctx)
+        GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
+        let fresh = (try? ctx.fetch(
+            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
+        )) ?? []
+        GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -58,11 +79,16 @@ struct ContentView: View {
         }
         .tint(FitSyncTheme.accent)
         .task {
-            // Push goals to the Watch (its only channel for goals — no CloudKit)
-            let ctx = FitSyncStore.container.mainContext
-            let canonical = UserGoals.canonical(in: ctx)
-            try? ctx.save()
-            GoalsSyncService.shared.send(canonical)
+            pushGoals()
+            await syncWorkoutsToWatch()
+        }
+        // Force a push whenever goals change or the app returns to the foreground.
+        .onChange(of: goals.syncSignature) { _, _ in pushGoals() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                pushGoals()
+                Task { await syncWorkoutsToWatch() }
+            }
         }
         .onOpenURL { url in
             switch url.host {

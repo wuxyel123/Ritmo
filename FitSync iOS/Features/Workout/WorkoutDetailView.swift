@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import HealthKit
 import MapKit
 import CoreLocation
@@ -55,6 +56,7 @@ private func buildRouteSegments(locations: [CLLocation], hrSamples: [HRSample], 
 struct WorkoutDetailView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \WorkoutSession.startTime, order: .reverse) private var allSessions: [WorkoutSession]
     let session: WorkoutSession
 
     @State private var hrData: WorkoutHeartRateData?
@@ -62,6 +64,8 @@ struct WorkoutDetailView: View {
     @State private var routeSegments: [RouteSegment] = []
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
+    @State private var showingDeleteDialog = false
+    @Environment(\.dismiss) private var dismiss
 
     var setsByExercise: [(String, [WorkoutSet])] {
         var groups: [(String, [WorkoutSet])] = []
@@ -119,6 +123,9 @@ struct WorkoutDetailView: View {
                         }
                     }
                 }
+
+                // MARK: Training load context — this workout vs the 7-day total
+                workoutLoadCard
 
                 // MARK: RPE (perceived effort)
                 rpeCard
@@ -277,6 +284,20 @@ struct WorkoutDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbar {
+            ToolbarItem(placement: .destructiveAction) {
+                Button(role: .destructive) { showingDeleteDialog = true } label: {
+                    Image(systemName: "trash")
+                }
+            }
+        }
+        .confirmationDialog("Eliminare l'allenamento?", isPresented: $showingDeleteDialog) {
+            Button("Rimuovi solo dall'app", role: .destructive) { remove(alsoFromHealth: false) }
+            Button("Elimina anche da Apple Salute", role: .destructive) { remove(alsoFromHealth: true) }
+            Button("Annulla", role: .cancel) {}
+        } message: {
+            Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da FitSync.")
+        }
         .task {
             guard session.source == .healthKit else { return }
             isLoadingHR = true
@@ -301,6 +322,69 @@ struct WorkoutDetailView: View {
         case .dropSet: return .orange
         case .failure: return .red
         }
+    }
+
+    // MARK: - Training load (this workout vs the 7-day total)
+
+    private var workoutLoadCard: some View {
+        let total = TrainingLoad.compute(from: allSessions)
+        let thisLoad = session.loadValue
+        let weekShare = total.acute > 0 ? min(thisLoad / Double(total.acute), 1.0) : 0
+        let avgLoad = TrainingLoad.averageSessionLoad(from: allSessions)
+        let vsAveragePct = avgLoad > 0 ? ((thisLoad - avgLoad) / avgLoad) * 100 : 0
+        let color: Color = switch total.status {
+            case .low:      .blue
+            case .optimal:  .green
+            case .high:     .orange
+            case .veryHigh: .red
+        }
+        let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
+
+        return NavigationLink {
+            TrainingLoadDetailView(sessions: allSessions)
+        } label: {
+            FitCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
+                        SectionHeader(title: "Carico di questo allenamento")
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+                    }
+                    HStack(alignment: .lastTextBaseline, spacing: 6) {
+                        Text("\(Int(thisLoad.rounded()))")
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(color)
+                        Text("punteggio").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Text("su \(total.acute) (7gg)").font(.caption2).foregroundStyle(.secondary)
+                    }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(color.opacity(0.15)).frame(height: 8)
+                            Capsule().fill(color).frame(width: geo.size.width * CGFloat(weekShare), height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+                    Text("\(Int((weekShare * 100).rounded()))% del carico degli ultimi 7 giorni")
+                        .font(.caption2).foregroundStyle(.secondary)
+
+                    if avgLoad > 0 {
+                        Divider()
+                        HStack {
+                            Text("Media dei tuoi allenamenti")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Spacer()
+                            Text(vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%")
+                                .font(.caption.bold())
+                                .foregroundStyle(vsAvgColor)
+                        }
+                        Text("La tua media è \(Int(avgLoad.rounded())) punti per allenamento")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - RPE editor
@@ -357,6 +441,7 @@ struct WorkoutDetailView: View {
     private func setRPE(_ value: Int?) {
         session.userRPE = value
         try? modelContext.save()
+        pushTrainingLoad()
         guard let uuid = session.hkWorkoutUUID else { return }
         Task {
             if let v = value {
@@ -365,5 +450,25 @@ struct WorkoutDetailView: View {
                 await healthRepo.removeWorkoutEffort(forWorkoutUUID: uuid)
             }
         }
+    }
+
+    /// Recomputes training load from the freshly-saved store and pushes it to
+    /// the Watch — the iPhone is the source of truth, so both devices agree.
+    private func pushTrainingLoad() {
+        let fresh = (try? modelContext.fetch(
+            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
+        )) ?? []
+        GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
+    }
+
+    private func remove(alsoFromHealth: Bool) {
+        let uuid = session.hkWorkoutUUID
+        healthRepo.deleteWorkout(session, in: modelContext)   // exclude + local delete
+        GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
+        pushTrainingLoad()
+        if alsoFromHealth, let uuid {
+            Task { _ = await healthRepo.deleteHealthKitWorkout(uuid: uuid) }
+        }
+        dismiss()
     }
 }

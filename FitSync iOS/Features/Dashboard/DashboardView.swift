@@ -16,6 +16,25 @@ struct DashboardView: View {
 
     var goals: UserGoals { storedGoals.first ?? UserGoals() }
     var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
+    private var trainingLoad: TrainingLoad { TrainingLoad.compute(from: sessions) }
+
+    private func recoveryColor(_ s: RecoveryStatus) -> Color {
+        switch s {
+        case .poor: return .red
+        case .fair: return .orange
+        case .good: return .yellow
+        case .excellent: return .green
+        }
+    }
+
+    private func loadColor(_ s: TrainingLoadStatus) -> Color {
+        switch s {
+        case .low: return .blue
+        case .optimal: return .green
+        case .high: return .orange
+        case .veryHigh: return .red
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -32,12 +51,6 @@ struct DashboardView: View {
 
                     // MARK: Score del giorno
                     DayScoreCard(snapshot: vm.snapshot)
-
-                    // MARK: Recupero (sonno + cuore)
-                    if let recovery = vm.recovery {
-                        Button { onNavigate?(3) } label: { RecoveryCard(recovery: recovery) }
-                            .buttonStyle(.plain)
-                    }
 
                     // MARK: Macro veloci
                     Button { onNavigate?(2) } label: {
@@ -148,6 +161,53 @@ struct DashboardView: View {
                             }
                         }
                         .buttonStyle(.plain)
+
+                        // Recupero (compact, beside Sonno)
+                        if let recovery = vm.recovery {
+                            Button { onNavigate?(3) } label: {
+                                FitCard {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack {
+                                            Label("Recupero", systemImage: "sparkles")
+                                                .font(.caption).foregroundStyle(recoveryColor(recovery.status))
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 9)).foregroundStyle(.secondary)
+                                        }
+                                        Text("\(recovery.overall)").font(.title2.bold())
+                                        Text(LocalizedStringKey(recovery.status.label))
+                                            .font(.caption2).foregroundStyle(FitSyncTheme.textSecondary)
+                                        FitProgressBar(value: Double(recovery.overall) / 100,
+                                                       color: recoveryColor(recovery.status))
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        // Carico allenamento (compact, beside Salute)
+                        if !sessions.isEmpty {
+                            NavigationLink { TrainingLoadDetailView(sessions: sessions) } label: {
+                                FitCard {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack {
+                                            Label("Carico", systemImage: "chart.bar.fill")
+                                                .font(.caption).foregroundStyle(loadColor(trainingLoad.status))
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 9)).foregroundStyle(.secondary)
+                                        }
+                                        Text("\(trainingLoad.acute)").font(.title2.bold())
+                                        Text(LocalizedStringKey(trainingLoad.status.label))
+                                            .font(.caption2).foregroundStyle(FitSyncTheme.textSecondary)
+                                        FitProgressBar(value: min(trainingLoad.ratio / 1.5, 1),
+                                                       color: loadColor(trainingLoad.status))
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+
                         Button { onNavigate?(4) } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 6) {
@@ -182,17 +242,9 @@ struct DashboardView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // MARK: Carico allenamento
-                    if !sessions.isEmpty {
-                        Button { onNavigate?(1) } label: {
-                            TrainingLoadCard(load: TrainingLoad.compute(from: sessions))
-                        }
-                        .buttonStyle(.plain)
-                    }
-
                     // MARK: Ultimo allenamento
                     if let session = vm.lastSession {
-                        Button { onNavigate?(1) } label: {
+                        NavigationLink { WorkoutDetailView(session: session) } label: {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {

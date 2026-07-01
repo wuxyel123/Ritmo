@@ -1,15 +1,16 @@
 import WatchConnectivity
 import FitSyncCore
 
-/// Pushes user goals to the paired Apple Watch over WatchConnectivity (the watch
-/// has no CloudKit). Goals are tiny, so every channel is used for reliability:
-///  - `updateApplicationContext` — latest-state, pulled on watch activation.
-///  - `transferUserInfo` — guaranteed queued delivery.
-///  - `sendMessage` — instant, when reachable.
+/// Pushes user goals + the excluded-workout set to the paired Apple Watch over
+/// WatchConnectivity (the watch has no CloudKit). Everything is tiny, so a single
+/// application context carries the latest state, backed by transferUserInfo
+/// (guaranteed delivery) and a live sendMessage when reachable.
 final class GoalsSyncService: NSObject {
     static let shared = GoalsSyncService()
 
     private var latestGoals: [String: Any]?
+    private var latestExcluded: [String]?
+    private var latestTrainingLoad: Data?
 
     override init() {
         super.init()
@@ -20,18 +21,36 @@ final class GoalsSyncService: NSObject {
 
     func send(_ goals: UserGoals) {
         latestGoals = goals.syncPayload
-        transmitGoals()
+        transmit()
     }
 
-    private func transmitGoals() {
+    /// Push the current excluded-workout set so an iPhone deletion reflects on the watch.
+    func sendExcludedWorkouts(_ uuids: [String]) {
+        latestExcluded = uuids
+        transmit()
+    }
+
+    /// Push the iPhone-computed training load so the Watch displays the SAME
+    /// number instead of recomputing from its own (independently imported,
+    /// possibly briefly out of sync) local workout list.
+    func sendTrainingLoad(_ load: TrainingLoad) {
+        latestTrainingLoad = try? JSONEncoder().encode(load)
+        transmit()
+    }
+
+    private func transmit() {
         let session = WCSession.default
-        // Only activation is required: updateApplicationContext and transferUserInfo
-        // queue safely regardless of momentary isPaired/isWatchAppInstalled state.
-        guard let payload = latestGoals, session.activationState == .activated else { return }
-        try? session.updateApplicationContext(["goals": payload])
-        session.transferUserInfo(["goals": payload])
+        // Only activation is required; app context / transferUserInfo queue safely.
+        guard session.activationState == .activated else { return }
+        var payload: [String: Any] = [:]
+        if let latestGoals { payload["goals"] = latestGoals }
+        if let latestExcluded { payload["excludedWorkouts"] = latestExcluded }
+        if let latestTrainingLoad { payload["trainingLoad"] = latestTrainingLoad }
+        guard !payload.isEmpty else { return }
+        try? session.updateApplicationContext(payload)
+        session.transferUserInfo(payload)
         if session.isReachable {
-            session.sendMessage(["goals": payload], replyHandler: nil, errorHandler: nil)
+            session.sendMessage(payload, replyHandler: nil, errorHandler: nil)
         }
     }
 }
@@ -41,12 +60,12 @@ extension GoalsSyncService: WCSessionDelegate {
                  activationDidCompleteWith activationState: WCSessionActivationState,
                  error: Error?) {
         guard activationState == .activated else { return }
-        DispatchQueue.main.async { self.transmitGoals() }
+        DispatchQueue.main.async { self.transmit() }
     }
 
-    // Re-push goals whenever the Watch becomes reachable (e.g. wrist raised)
+    // Re-push whenever the Watch becomes reachable (e.g. wrist raised)
     func sessionReachabilityDidChange(_ session: WCSession) {
-        DispatchQueue.main.async { self.transmitGoals() }
+        DispatchQueue.main.async { self.transmit() }
     }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}

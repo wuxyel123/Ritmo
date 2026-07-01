@@ -10,6 +10,9 @@ final class WatchViewModel: ObservableObject {
     @Published var sleepSession: SleepSession? = nil   // primary (longest) — used by recovery score
     @Published var sleepSessions: [SleepSession] = []  // all sessions for the night
     @Published var recovery: RecoveryScore? = nil
+    /// iPhone-computed training load, when available (the source of truth —
+    /// see HealthKitRepository.cacheTrainingLoad). Nil until the iPhone has synced.
+    @Published var trainingLoad: TrainingLoad? = nil
 
     private let healthRepo = HealthKitRepository()
 
@@ -29,6 +32,7 @@ final class WatchViewModel: ObservableObject {
         activity      = await activityResult
         recovery      = await recoveryResult
         sleepSession  = sleepSessions.max(by: { $0.totalHours < $1.totalHours })
+        trainingLoad  = HealthKitRepository.cachedTrainingLoad()
         persistSnapshot(snapshot)
     }
 

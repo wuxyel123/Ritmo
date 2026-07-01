@@ -20,21 +20,36 @@ final class GoalsSyncService: NSObject {
         WCSession.default.activate()
     }
 
-    /// Applies any payload containing a "goals" key (or legacy top-level goals).
+    /// Applies goals, the excluded-workout set, and/or the training load from the iPhone.
     private func handle(_ payload: [String: Any]) {
         guard let container, !payload.isEmpty else { return }
-        let goalsDict: [String: Any]
+
+        // Excluded workouts: mirror the iPhone's set so its deletions reflect here.
+        if let excluded = payload["excludedWorkouts"] as? [String] {
+            HealthKitRepository.replaceExcludedWorkoutUUIDs(excluded)
+        }
+
+        // Training load: iPhone is the source of truth, cache it so the Watch
+        // shows the same number instead of recomputing from its own local import.
+        if let data = payload["trainingLoad"] as? Data {
+            HealthKitRepository.cacheTrainingLoad(data)
+        }
+
+        let goalsDict: [String: Any]?
         if let nested = payload["goals"] as? [String: Any] {
             goalsDict = nested
         } else if payload["dailyCalories"] != nil {
             goalsDict = payload                      // legacy top-level format
         } else {
-            return
+            goalsDict = nil
         }
+        guard goalsDict != nil || payload["excludedWorkouts"] != nil || payload["trainingLoad"] != nil else { return }
+
         Task { @MainActor in
             let ctx = container.mainContext
-            UserGoals.canonical(in: ctx).applySync(goalsDict)
+            if let goalsDict { UserGoals.canonical(in: ctx).applySync(goalsDict) }
             try? ctx.save()
+            // Triggers WatchTabView.reload → import reconciles (prunes excluded workouts).
             NotificationCenter.default.post(name: .goalsSyncDidUpdate, object: nil)
         }
     }

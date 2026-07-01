@@ -69,9 +69,98 @@ struct FitSyncWatchWidget: Widget {
     }
 }
 
+// MARK: - Rings complication (single circular tile)
+
+struct WatchRingsView: View {
+    let entry: WatchWidgetEntry
+
+    private var calPct: Double {
+        entry.snapshot.activeCalories / max(entry.snapshot.activeCalorieGoal, 1)
+    }
+    private var stepPct: Double {
+        Double(entry.snapshot.steps) / Double(max(entry.snapshot.stepGoal, 1))
+    }
+    private var sleepPct: Double { entry.snapshot.sleepHours / 8.0 }
+
+    var body: some View {
+        GeometryReader { geo in
+            let lineW = min(geo.size.width, geo.size.height) * 0.13
+            ZStack {
+                ring(calPct,   .red,  lineW)
+                ring(stepPct,  .green, lineW).padding(lineW * 1.7)
+                ring(sleepPct, .cyan, lineW).padding(lineW * 3.4)
+            }
+        }
+    }
+
+    private func ring(_ pct: Double, _ color: Color, _ lineW: CGFloat) -> some View {
+        ZStack {
+            Circle().stroke(color.opacity(0.3), lineWidth: lineW)
+            Circle()
+                .trim(from: 0, to: min(max(pct, 0), 1))
+                .stroke(color, style: StrokeStyle(lineWidth: lineW, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+    }
+}
+
+// Labeled rectangular version of the same three ring metrics.
+struct WatchRingsRectangularView: View {
+    let entry: WatchWidgetEntry
+
+    private var calPct: Double {
+        entry.snapshot.activeCalories / max(entry.snapshot.activeCalorieGoal, 1)
+    }
+    private var stepPct: Double {
+        Double(entry.snapshot.steps) / Double(max(entry.snapshot.stepGoal, 1))
+    }
+    private var sleepPct: Double { entry.snapshot.sleepHours / 8.0 }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            WatchMetricCell(icon: "🔥",
+                            value: "\(Int(entry.snapshot.activeCalories))",
+                            pct: calPct, color: .red)
+            WatchMetricCell(icon: "🚶",
+                            value: "\(entry.snapshot.steps / 1000)k",
+                            pct: stepPct, color: .green)
+            WatchMetricCell(icon: "😴",
+                            value: String(format: "%.1fh", entry.snapshot.sleepHours),
+                            pct: sleepPct, color: .cyan)
+        }
+    }
+}
+
+struct RingsComplicationView: View {
+    @Environment(\.widgetFamily) var family
+    let entry: WatchWidgetEntry
+
+    var body: some View {
+        switch family {
+        case .accessoryRectangular: WatchRingsRectangularView(entry: entry)
+        default:                    WatchRingsView(entry: entry)
+        }
+    }
+}
+
+struct FitSyncRingsWidget: Widget {
+    let kind = "FitSyncRingsWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: WatchWidgetProvider()) { entry in
+            RingsComplicationView(entry: entry)
+                .containerBackground(.background, for: .widget)
+        }
+        .configurationDisplayName("FitSync Anelli")
+        .description("Calorie attive, passi e sonno — anelli o valori.")
+        .supportedFamilies([.accessoryCircular, .accessoryRectangular])
+    }
+}
+
 @main
 struct FitSyncWatchWidgetBundle: WidgetBundle {
     var body: some Widget {
         FitSyncWatchWidget()
+        FitSyncRingsWidget()
     }
 }

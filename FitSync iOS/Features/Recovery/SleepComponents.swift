@@ -10,6 +10,7 @@ struct SleepSessionCard: View {
     let onDelete: () -> Void
 
     @State private var confirmingDelete = false
+    @State private var selectedStage: SleepStage?
 
     private let fromWatch: Bool
     private let scoreColor: Color
@@ -30,11 +31,17 @@ struct SleepSessionCard: View {
     var body: some View {
         FitCard {
             VStack(alignment: .leading, spacing: 14) {
+                // Title (matches the Recupero card's internal title)
+                HStack(spacing: 6) {
+                    SectionHeader(title: "Sonno")
+                    if let i = index {
+                        Text("· Sessione \(i)").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+
                 // Header
                 HStack {
-                    if let i = index {
-                        Text("Sessione \(i)").font(.caption.bold()).foregroundStyle(.secondary)
-                    }
                     Label(fromWatch ? "Apple Watch" : "Manuale",
                           systemImage: fromWatch ? "applewatch" : "pencil")
                         .font(.caption2).foregroundStyle(.secondary)
@@ -85,7 +92,7 @@ struct SleepSessionCard: View {
                 HStack(spacing: 0) {
                     SleepMetric(value: String(format: "%.1fh", session.deepSleepHours), label: "Profondo", color: .indigo)
                     SleepMetric(value: String(format: "%.1fh", session.remSleepHours),  label: "REM",      color: .purple)
-                    SleepMetric(value: String(format: "%.1fh", coreH),                  label: "Core",     color: FitSyncTheme.sleep)
+                    SleepMetric(value: String(format: "%.1fh", coreH),                  label: "Core",     color: .teal)
                     if awakeH > 0.05 {
                         SleepMetric(value: String(format: "%.1fh", awakeH), label: "Sveglio", color: .orange)
                     }
@@ -94,22 +101,11 @@ struct SleepSessionCard: View {
                 FitProgressBar(value: session.totalHours / 8.0, color: FitSyncTheme.sleep)
 
                 if !session.stages.isEmpty {
-                    SleepStageBar(session: session)
-                    Divider()
-                    Text("Timeline").font(.subheadline.bold())
-                    ForEach(session.stages.sorted { $0.startTime < $1.startTime }) { stage in
-                        HStack(spacing: 10) {
-                            Circle().fill(stageColor(stage.type)).frame(width: 7, height: 7)
-                            Text(stage.startTime, format: .dateTime.hour().minute())
-                                .font(.caption).frame(width: 42, alignment: .leading)
-                            Text(LocalizedStringKey(stage.type.rawValue)).font(.caption.bold())
-                            Spacer()
-                            Text(String(format: "%.0f min", stage.durationHours * 60))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
+                    SleepStageBar(session: session, selected: $selectedStage)
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture { selectedStage = nil }
         }
         .confirmationDialog("Eliminare questa sessione di sonno?",
                             isPresented: $confirmingDelete,
@@ -209,32 +205,85 @@ struct SleepMetric: View {
 
 struct SleepStageBar: View {
     let session: SleepSession
-    var deepH:  Double { session.deepSleepHours }
-    var remH:   Double { session.remSleepHours }
-    var coreH:  Double { session.stages.filter { $0.type == .core }.reduce(0) { $0 + $1.durationHours } }
-    var total:  Double { max(session.totalHours, 0.1) }
+    @Binding var selected: SleepStage?
+
+    private var sortedStages: [SleepStage] {
+        session.stages.sorted { $0.startTime < $1.startTime }
+    }
+    private var totalDuration: Double {
+        max(sortedStages.reduce(0) { $0 + $1.durationHours }, 0.1)
+    }
+    private var hasAwake: Bool { sortedStages.contains { $0.type == .awake } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            GeometryReader { geo in
-                HStack(spacing: 1) {
-                    RoundedRectangle(cornerRadius: 3).fill(Color.indigo)
-                        .frame(width: geo.size.width * CGFloat(deepH / total))
-                    RoundedRectangle(cornerRadius: 3).fill(Color.purple)
-                        .frame(width: geo.size.width * CGFloat(remH / total))
-                    RoundedRectangle(cornerRadius: 3).fill(FitSyncTheme.sleep)
-                        .frame(maxWidth: .infinity)
+        VStack(alignment: .leading, spacing: 5) {
+            // Tooltip — the tapped phase, or a hint to interact.
+            Group {
+                if let s = selected {
+                    HStack(spacing: 6) {
+                        Circle().fill(stageColor(s.type)).frame(width: 8, height: 8)
+                        Text(LocalizedStringKey(s.type.rawValue)).font(.caption.bold())
+                        Text("\(s.startTime.formatted(.dateTime.hour().minute()))–\(s.endTime.formatted(.dateTime.hour().minute()))")
+                            .foregroundStyle(.secondary)
+                        Text("· \(Int((s.durationHours * 60).rounded())) min").foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                } else {
+                    Text("Tocca o scorri la barra per l'orario di ogni fase")
+                        .foregroundStyle(.tertiary)
                 }
             }
-            .frame(height: 10)
+            .font(.caption2)
+
+            // Chronological hypnogram — tap/scrub to select a phase (like Apple Health).
+            GeometryReader { geo in
+                HStack(spacing: 0) {
+                    ForEach(sortedStages) { stage in
+                        stageColor(stage.type)
+                            .frame(width: geo.size.width * CGFloat(stage.durationHours / totalDuration))
+                            .opacity(selected == nil || selected?.id == stage.id ? 1 : 0.35)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { v in selected = stage(atX: v.location.x, width: geo.size.width) }
+                )
+            }
+            .frame(height: 18)
+
+            // Bedtime → wake, with times on the bar.
+            HStack {
+                Label(session.startTime.formatted(.dateTime.hour().minute()), systemImage: "moon.zzz.fill")
+                    .foregroundStyle(.indigo)
+                Spacer()
+                Label(session.endTime.formatted(.dateTime.hour().minute()), systemImage: "sun.horizon.fill")
+                    .foregroundStyle(.orange)
+            }
+            .font(.caption2)
+
             HStack(spacing: 12) {
-                legend(.indigo,          "Profondo")
-                legend(.purple,          "REM")
-                legend(FitSyncTheme.sleep, "Core")
+                legend(stageColor(.deep), "Profondo")
+                legend(stageColor(.rem),  "REM")
+                legend(stageColor(.core), "Core")
+                if hasAwake { legend(stageColor(.awake), "Sveglio") }
             }
             .font(.caption2)
         }
         .padding(.top, 4)
+        .animation(.easeOut(duration: 0.12), value: selected?.id)
+    }
+
+    private func stage(atX x: CGFloat, width: CGFloat) -> SleepStage? {
+        guard width > 0, !sortedStages.isEmpty else { return nil }
+        let target = Double(max(0, min(x / width, 1))) * totalDuration
+        var acc = 0.0
+        for s in sortedStages {
+            acc += s.durationHours
+            if target <= acc { return s }
+        }
+        return sortedStages.last
     }
 
     private func legend(_ color: Color, _ label: LocalizedStringKey) -> some View {
@@ -251,7 +300,7 @@ func stageColor(_ type: SleepStageType) -> Color {
     switch type {
     case .deep:        return .indigo
     case .rem:         return .purple
-    case .core:        return FitSyncTheme.sleep
+    case .core:        return .teal     // distinct from deep (indigo)
     case .awake:       return .orange
     case .unspecified: return .gray
     }
@@ -273,6 +322,7 @@ struct SleepDetailSheet: View {
     var onDelete: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingDelete = false
+    @State private var selectedStage: SleepStage?
 
     var coreHours:  Double { session.stages.filter { $0.type == .core  }.reduce(0) { $0 + $1.durationHours } }
     var awakeHours: Double { session.stages.filter { $0.type == .awake }.reduce(0) { $0 + $1.durationHours } }
@@ -316,12 +366,12 @@ struct SleepDetailSheet: View {
                             HStack(spacing: 0) {
                                 stageMetric(String(format: "%.1fh", session.deepSleepHours), "Profondo", .indigo, "Restaurativo")
                                 stageMetric(String(format: "%.1fh", session.remSleepHours),  "REM",      .purple, "Sogni / memoria")
-                                stageMetric(String(format: "%.1fh", coreHours),              "Core",     FitSyncTheme.sleep, "Sonno leggero")
+                                stageMetric(String(format: "%.1fh", coreHours),              "Core",     .teal, "Sonno leggero")
                                 if awakeHours > 0 {
                                     stageMetric(String(format: "%.1fh", awakeHours), "Sveglio", .orange, "Svegliate")
                                 }
                             }
-                            if !session.stages.isEmpty { SleepStageBar(session: session) }
+                            if !session.stages.isEmpty { SleepStageBar(session: session, selected: $selectedStage) }
                         }
                     }
 
