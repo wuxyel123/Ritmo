@@ -59,17 +59,6 @@ struct WorkoutListView: View {
                 Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
             }
             .navigationTitle("Allenamenti")
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    if isSyncing {
-                        ProgressView().scaleEffect(0.8)
-                    } else {
-                        Button { Task { await syncHealthKit() } } label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                        }
-                    }
-                }
-            }
             .task { await syncHealthKit() }
             .refreshable { await syncHealthKit() }
         }
@@ -131,8 +120,6 @@ struct TrainingLoadCard: View {
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(color.opacity(0.15), in: Capsule())
                         .foregroundStyle(color)
-                    Image(systemName: "chevron.right")
-                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text("\(load.acute)")
