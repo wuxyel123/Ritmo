@@ -135,25 +135,45 @@ public struct SleepSession: Identifiable, Codable {
         stages.filter { $0.type == .rem }.reduce(0) { $0 + $1.durationHours }
     }
 
-    /// Sleep quality 0-100
+    /// Sleep quality 0-100, broken into its 5 weighted components so both the
+    /// total and the per-component points can be shown (single source of
+    /// truth for iOS + watchOS, which previously each computed this inline).
     /// duration 40 | deep% 20 | rem% 20 | continuity 10 | schedule consistency 10
-    public var qualityScore: Int {
+    public var scoreBreakdown: SleepScoreBreakdown {
         let total = max(totalHours, 0.01)
         let awakeH = stages.filter { $0.type == .awake }.reduce(0) { $0 + $1.durationHours }
 
         let durationScore    = min(totalHours / 8.0, 1.0) * 40
         let deepScore        = min((deepSleepHours / total) / 0.15, 1.0) * 20
         let remScore         = min((remSleepHours  / total) / 0.20, 1.0) * 20
-        let continuityScore  = max(0.0, 1.0 - (awakeH / total) / 0.05) * 10
+        // 0% awake = 10 pts, 15%+ awake = 0 pts. WASO of 15-30 min in an 8h
+        // night is normal/healthy, and HealthKit's staging tends to flag
+        // brief motion blips as "awake" — the old 5% cutoff (~24 min) zeroed
+        // this out for essentially normal sleep.
+        let continuityScore  = max(0.0, 1.0 - (awakeH / total) / 0.15) * 10
         let consistencyScore: Double
         if let dev = bedtimeDeviationMinutes {
-            // ≤15 min deviation = 10 pts, 60+ min deviation = 0 pts
-            consistencyScore = max(0.0, 1.0 - max(0.0, dev - 15) / 45.0) * 10
+            // ≤30 min deviation = 10 pts, 90+ min deviation = 0 pts (ordinary
+            // weekday/weekend bedtime drift is often 30-45 min on its own)
+            consistencyScore = max(0.0, 1.0 - max(0.0, dev - 30) / 60.0) * 10
         } else {
             consistencyScore = 10
         }
-        return Int(durationScore + deepScore + remScore + continuityScore + consistencyScore)
+        return SleepScoreBreakdown(duration: Int(durationScore), deep: Int(deepScore), rem: Int(remScore),
+                                   continuity: Int(continuityScore), consistency: Int(consistencyScore))
     }
+
+    public var qualityScore: Int { scoreBreakdown.total }
+}
+
+public struct SleepScoreBreakdown {
+    public let duration: Int      // out of 40
+    public let deep: Int          // out of 20
+    public let rem: Int           // out of 20
+    public let continuity: Int    // out of 10
+    public let consistency: Int   // out of 10
+
+    public var total: Int { duration + deep + rem + continuity + consistency }
 }
 
 public struct SleepStage: Identifiable, Codable {

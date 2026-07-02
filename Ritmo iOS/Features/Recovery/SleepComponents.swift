@@ -103,6 +103,18 @@ struct SleepSessionCard: View {
                 if !session.stages.isEmpty {
                     SleepStageBar(session: session, selected: $selectedStage)
                 }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Come si compone il punteggio").font(.caption.bold()).foregroundStyle(.secondary)
+                    let b = session.scoreBreakdown
+                    SleepScoreComponentRow(label: "Durata", points: b.duration, max: 40)
+                    SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20)
+                    SleepScoreComponentRow(label: "REM", points: b.rem, max: 20)
+                    SleepScoreComponentRow(label: "Continuità", points: b.continuity, max: 10)
+                    SleepScoreComponentRow(label: "Regolarità", points: b.consistency, max: 10)
+                }
             }
             .contentShape(Rectangle())
             .onTapGesture { selectedStage = nil }
@@ -200,6 +212,32 @@ struct SleepMetric: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+struct SleepScoreComponentRow: View {
+    let label: LocalizedStringKey
+    let points: Int
+    let max: Int
+
+    private var pct: Double { max > 0 ? Double(points) / Double(max) : 0 }
+    private var color: Color { pct >= 0.75 ? .green : pct >= 0.5 ? .orange : .red }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label).font(.caption)
+                Spacer()
+                Text("\(points) / \(max)").font(.caption.bold()).foregroundStyle(color)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(color.opacity(0.15)).frame(height: 6)
+                    Capsule().fill(color).frame(width: geo.size.width * CGFloat(pct), height: 6)
+                }
+            }
+            .frame(height: 6)
+        }
     }
 }
 
@@ -361,6 +399,18 @@ struct SleepDetailSheet: View {
                     .background(RitmoTheme.cardBG, in: RoundedRectangle(cornerRadius: RitmoTheme.cardRadius))
 
                     FitCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Come si compone il punteggio").font(.headline)
+                            let b = session.scoreBreakdown
+                            SleepScoreComponentRow(label: "Durata", points: b.duration, max: 40)
+                            SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20)
+                            SleepScoreComponentRow(label: "REM", points: b.rem, max: 20)
+                            SleepScoreComponentRow(label: "Continuità", points: b.continuity, max: 10)
+                            SleepScoreComponentRow(label: "Regolarità", points: b.consistency, max: 10)
+                        }
+                    }
+
+                    FitCard {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Fasi del sonno").font(.headline)
                             HStack(spacing: 0) {
@@ -440,4 +490,5 @@ struct SleepDetailSheet: View {
         }
         .frame(maxWidth: .infinity)
     }
+
 }

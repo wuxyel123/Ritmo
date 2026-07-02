@@ -201,7 +201,7 @@ public struct TrainingLoad: Codable {
             guard let date = cal.date(byAdding: .day, value: -offsetFromToday, to: today) else { continue }
             let ratio = chronicEWMA >= 1.0 ? acuteEWMA / chronicEWMA : 1.0
             points.append(TrainingLoadPoint(date: date, acute: acuteEWMA * 7, chronic: chronicEWMA * 7,
-                                            status: status(for: ratio)))
+                                            ratio: ratio, status: status(for: ratio)))
         }
         return points
     }
@@ -233,6 +233,7 @@ public struct TrainingLoadPoint: Identifiable {
     public let date: Date
     public let acute: Double
     public let chronic: Double
+    public let ratio: Double
     public let status: TrainingLoadStatus
 }
 

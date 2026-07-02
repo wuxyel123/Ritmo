@@ -261,33 +261,55 @@ struct TrainingLoadDetailView: View {
                     }
                 }
 
-                // MARK: Acute vs chronic trend (ACWR over time)
+                // MARK: Acute:chronic ratio trend
                 if history.count > 1 {
                     FitCard {
                         VStack(alignment: .leading, spacing: 10) {
-                            SectionHeader(title: "Andamento acuto/cronico")
-                            Text("Fatica recente (7gg) contro la tua forma di fondo (28gg)")
+                            SectionHeader(title: "Andamento del rapporto")
+                            Text("Carico recente (7gg) rispetto alla tua media di 4 settimane — 100% = in linea con la norma")
                                 .font(.caption2).foregroundStyle(.secondary)
+                            let percentages = history.map { $0.ratio * 100 }
+                            let upperBound = max(160, (percentages.max() ?? 160) * 1.1)
+                            let bandEnd = history.last!.date
+                            let bandStart = history.first!.date
                             Chart {
+                                RectangleMark(xStart: .value("Inizio", bandStart), xEnd: .value("Fine", bandEnd),
+                                              yStart: .value("Da", 0.0), yEnd: .value("A", 80.0))
+                                    .foregroundStyle(Color.blue.opacity(0.10))
+                                RectangleMark(xStart: .value("Inizio", bandStart), xEnd: .value("Fine", bandEnd),
+                                              yStart: .value("Da", 80.0), yEnd: .value("A", 130.0))
+                                    .foregroundStyle(Color.green.opacity(0.10))
+                                RectangleMark(xStart: .value("Inizio", bandStart), xEnd: .value("Fine", bandEnd),
+                                              yStart: .value("Da", 130.0), yEnd: .value("A", 150.0))
+                                    .foregroundStyle(Color.orange.opacity(0.10))
+                                RectangleMark(xStart: .value("Inizio", bandStart), xEnd: .value("Fine", bandEnd),
+                                              yStart: .value("Da", 150.0), yEnd: .value("A", upperBound))
+                                    .foregroundStyle(Color.red.opacity(0.10))
+                                RuleMark(y: .value("Base", 100.0))
+                                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                                    .foregroundStyle(.secondary)
                                 ForEach(history) { p in
-                                    LineMark(x: .value("Giorno", p.date), y: .value("Valore", p.acute))
-                                        .foregroundStyle(by: .value("Serie", "Acuto (7gg)"))
+                                    LineMark(x: .value("Giorno", p.date), y: .value("Rapporto", p.ratio * 100))
                                         .interpolationMethod(.catmullRom)
-                                }
-                                ForEach(history) { p in
-                                    LineMark(x: .value("Giorno", p.date), y: .value("Valore", p.chronic))
-                                        .foregroundStyle(by: .value("Serie", "Cronico (28gg)"))
-                                        .interpolationMethod(.catmullRom)
+                                        .lineStyle(StrokeStyle(lineWidth: 2.5))
+                                        .foregroundStyle(color)
                                 }
                             }
-                            .chartForegroundStyleScale([
-                                "Acuto (7gg)": color,
-                                "Cronico (28gg)": Color.secondary
-                            ])
+                            .chartYScale(domain: 0...upperBound)
                             .frame(height: 140)
                             .chartXAxis {
                                 AxisMarks(values: .stride(by: .day, count: 14)) {
                                     AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                                }
+                            }
+                            .chartYAxis {
+                                AxisMarks { value in
+                                    AxisGridLine()
+                                    AxisValueLabel {
+                                        if let v = value.as(Double.self) {
+                                            Text("\(Int(v))%")
+                                        }
+                                    }
                                 }
                             }
                         }
