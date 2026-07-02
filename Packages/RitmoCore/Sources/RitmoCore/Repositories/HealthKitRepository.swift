@@ -418,10 +418,12 @@ public final class HealthKitRepository: ObservableObject {
         //   se non tracciata → 10 neutro, non penalizza
         let nutritionScore: Double
         if n.calories > 50 {
-            // Adherence: full within ±5% of goal, → 0 at ±50% off (see NutritionScale).
-            // Calories gate the score (over/under-eating kills it); protein modulates 60–100%.
+            // Calories: two-sided adherence, full within ±7.5% of goal, → 0 at ±50%
+            // off (over-eating kills it too). Protein: floored — full credit AT or
+            // ABOVE goal (no penalty for extra protein), → 0 at half the goal.
+            // Calories gate the score; protein modulates 60–100% of it.
             let calAdherence  = NutritionScale.adherence(value: n.calories, goal: goals.dailyCalories)
-            let protAdherence = NutritionScale.adherence(value: n.protein,  goal: goals.dailyProteinG)
+            let protAdherence = NutritionScale.flooredAdherence(value: n.protein, goal: goals.dailyProteinG)
             nutritionScore = calAdherence * (0.6 + 0.4 * protAdherence) * 20
         } else {
             nutritionScore = 10

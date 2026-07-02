@@ -88,7 +88,7 @@ struct WatchWorkoutView: View {
                         }
                         ForEach(todaySessions) { session in
                             NavigationLink {
-                                WatchWorkoutDetailView(session: session, sessions: sessions)
+                                WatchWorkoutDetailView(session: session)
                             } label: {
                                 WatchWorkoutRow(session: session)
                             }
@@ -105,7 +105,7 @@ struct WatchWorkoutView: View {
                             .font(.caption2).foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         NavigationLink {
-                            WatchWorkoutDetailView(session: last, sessions: sessions)
+                            WatchWorkoutDetailView(session: last)
                         } label: {
                             WatchWorkoutRow(session: last)
                         }
@@ -213,7 +213,6 @@ struct WatchWorkoutRow: View {
 
 struct WatchWorkoutDetailView: View {
     let session: WorkoutSession
-    let sessions: [WorkoutSession]
 
     @EnvironmentObject private var vm: WatchViewModel
     @StateObject private var healthRepo = HealthKitRepository()
@@ -306,13 +305,18 @@ struct WatchWorkoutDetailView: View {
                     case .veryHigh: .red
                 }
                 statTile("chart.bar.fill", "\(Int((share * 100).rounded()))%", "carico 7gg", color)
-            }
-            let avgLoad = TrainingLoad.averageSessionLoad(from: sessions)
-            if avgLoad > 0 {
-                let vsAveragePct = ((session.loadValue - avgLoad) / avgLoad) * 100
-                let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
-                let text = vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%"
-                statTile("arrow.left.arrow.right", text, "vs media", vsAvgColor)
+
+                // Same matched average the iPhone computed (synced inside `load`,
+                // category-matched to this workout when possible) — not a local
+                // recompute from the watch's own session list, which could have a
+                // slightly different history and disagree with the iPhone.
+                let matched = load.matchedAverageLoad(for: session)
+                if matched.value > 0 {
+                    let vsAveragePct = ((session.loadValue - matched.value) / matched.value) * 100
+                    let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
+                    let text = vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%"
+                    statTile("arrow.left.arrow.right", text, "vs media", vsAvgColor)
+                }
             }
             if let dist = distanceText {
                 statTile("arrow.forward", dist, "distanza", .cyan)

@@ -330,8 +330,11 @@ struct WorkoutDetailView: View {
         let total = TrainingLoad.compute(from: allSessions)
         let thisLoad = session.loadValue
         let weekShare = total.acute > 0 ? min(thisLoad / Double(total.acute), 1.0) : 0
-        let avgLoad = TrainingLoad.averageSessionLoad(from: allSessions)
+        let matched = total.matchedAverageLoad(for: session)
+        let avgLoad = matched.value
         let vsAveragePct = avgLoad > 0 ? ((thisLoad - avgLoad) / avgLoad) * 100 : 0
+        let avgLabel = matched.matchedCategory.map { "Media dei tuoi allenamenti di \($0.displayName)" }
+            ?? "Media dei tuoi allenamenti"
         let color: Color = switch total.status {
             case .low:      .blue
             case .optimal:  .green
@@ -371,7 +374,7 @@ struct WorkoutDetailView: View {
                     if avgLoad > 0 {
                         Divider()
                         HStack {
-                            Text("Media dei tuoi allenamenti")
+                            Text(LocalizedStringKey(avgLabel))
                                 .font(.caption).foregroundStyle(.secondary)
                             Spacer()
                             Text(vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%")
