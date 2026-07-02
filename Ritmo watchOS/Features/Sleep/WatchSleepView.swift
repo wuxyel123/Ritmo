@@ -274,20 +274,13 @@ struct WatchSleepView: View {
     }
 
     private func scoreBreakdown(_ sleep: SleepSession) -> some View {
-        let total  = max(sleep.totalHours, 0.01)
-        let awakeH = sleep.stages.filter { $0.type == .awake }.reduce(0.0) { $0 + $1.durationHours }
-        let consScore: Int
-        if let dev = sleep.bedtimeDeviationMinutes {
-            consScore = Int(max(0.0, 1.0 - max(0.0, dev - 15) / 45.0) * 10)
-        } else {
-            consScore = 10
-        }
+        let b = sleep.scoreBreakdown
         return VStack(spacing: 3) {
-            scoreLine("Durata",     Int(min(sleep.totalHours / 8.0, 1.0) * 40),                          "/ 40")
-            scoreLine("Profondo",   Int(min((sleep.deepSleepHours / total) / 0.15, 1.0) * 20),           "/ 20")
-            scoreLine("REM",        Int(min((sleep.remSleepHours  / total) / 0.20, 1.0) * 20),           "/ 20")
-            scoreLine("Continuità", Int(max(0.0, 1.0 - (awakeH / total) / 0.05) * 10),                  "/ 10")
-            scoreLine("Regolarità", consScore,                                                             "/ 10")
+            scoreLine("Durata",     b.duration,   "/ 40")
+            scoreLine("Profondo",   b.deep,       "/ 20")
+            scoreLine("REM",        b.rem,        "/ 20")
+            scoreLine("Continuità", b.continuity, "/ 10")
+            scoreLine("Regolarità", b.consistency,"/ 10")
         }
     }
 
