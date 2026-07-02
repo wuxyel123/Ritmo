@@ -9,6 +9,7 @@ struct WorkoutListView: View {
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @State private var isSyncing = false
     @State private var pendingDelete: WorkoutSession?
+    @State private var showingManualLog = false
 
     var body: some View {
         NavigationStack {
@@ -59,6 +60,16 @@ struct WorkoutListView: View {
                 Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
             }
             .navigationTitle("Allenamenti")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showingManualLog = true } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingManualLog) {
+                ManualWorkoutLogView(onSaved: { pushTrainingLoad() })
+            }
             .task { await syncHealthKit() }
             .refreshable { await syncHealthKit() }
         }

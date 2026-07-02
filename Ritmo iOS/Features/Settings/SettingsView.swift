@@ -45,6 +45,7 @@ struct SettingsTabView: View {
     @State private var showToast = false
 
     @AppStorage("autoMacro") private var autoMacroRaw: String = AutoMacro.carbs.rawValue
+    @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -194,6 +195,29 @@ struct SettingsTabView: View {
                     SmartStepper(label: "Calorie attive", value: $activeKcal, step: 50,
                                  format: "%.0f kcal", color: .red, onChange: saveGoals)
                 } header: { Text("Movimento") }
+
+                // MARK: Notifications
+                Section {
+                    Toggle(isOn: $weeklyRecapNotification) {
+                        Label("Riepilogo settimanale", systemImage: "calendar.badge.clock")
+                    }
+                    .onChange(of: weeklyRecapNotification) { _, enabled in
+                        if enabled {
+                            Task {
+                                if await WeeklyRecapNotifier.schedule() {
+                                    flash("Notifica del lunedì attivata")
+                                } else {
+                                    weeklyRecapNotification = false
+                                    flash("Permesso notifiche negato: attivalo dalle Impostazioni di iOS")
+                                }
+                            }
+                        } else {
+                            WeeklyRecapNotifier.cancel()
+                        }
+                    }
+                } header: { Text("Notifiche") } footer: {
+                    Text("Ogni lunedì alle 9:00 un promemoria con il riepilogo della settimana appena conclusa.")
+                }
 
                 // MARK: Default reset
                 Section {

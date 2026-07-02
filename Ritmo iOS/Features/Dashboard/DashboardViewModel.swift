@@ -9,6 +9,7 @@ final class DashboardViewModel: ObservableObject {
     @Published var lastSession: WorkoutSession?
     @Published var topInsight: FitInsight?
     @Published var recovery: RecoveryScore?
+    @Published var weeklyRecap: WeeklyRecap?
     @Published var isLoading = false
 
     private let insightsService = InsightsService()
@@ -35,6 +36,19 @@ final class DashboardViewModel: ObservableObject {
             sortBy: [SortDescriptor(\.startTime, order: .reverse)]
         )
         lastSession = try? modelContext.fetch(descriptor).first
+
+        // Weekly recap: fixed for the whole week, so compute it once per launch
+        // (the 14-day sleep loop is the expensive part — don't re-run it on
+        // every date change / pull-to-refresh).
+        if weeklyRecap == nil, isToday {
+            let allSessions = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
+            var sleepHistory: [SleepSession] = []
+            for i in 0..<14 {
+                if let d = Calendar.current.date(byAdding: .day, value: -i, to: .now),
+                   let s = await healthRepo.fetchSleep(for: d) { sleepHistory.append(s) }
+            }
+            weeklyRecap = WeeklyRecap.compute(sessions: allSessions, sleepSessions: sleepHistory)
+        }
     }
 
     func generateInsights(sessions: [WorkoutSession], nutritionHistory: [NutritionDay],

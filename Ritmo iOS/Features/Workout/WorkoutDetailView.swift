@@ -65,6 +65,7 @@ struct WorkoutDetailView: View {
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
     @State private var showingDeleteDialog = false
+    @State private var showingEditor = false
     @Environment(\.dismiss) private var dismiss
 
     var setsByExercise: [(String, [WorkoutSet])] {
@@ -285,11 +286,21 @@ struct WorkoutDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
+            if session.source == .manual {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showingEditor = true } label: {
+                        Image(systemName: "pencil")
+                    }
+                }
+            }
             ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) { showingDeleteDialog = true } label: {
                     Image(systemName: "trash")
                 }
             }
+        }
+        .sheet(isPresented: $showingEditor) {
+            ManualWorkoutLogView(existing: session, onSaved: { pushTrainingLoad() })
         }
         .confirmationDialog("Eliminare l'allenamento?", isPresented: $showingDeleteDialog) {
             Button("Rimuovi solo dall'app", role: .destructive) { remove(alsoFromHealth: false) }

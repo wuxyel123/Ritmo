@@ -310,3 +310,69 @@ public struct RecoveryScore {
         }
     }
 }
+
+// MARK: - Daily recommendation
+//
+// Combines today's readiness (RecoveryScore) with the acute:chronic training
+// load into one actionable headline: push / keep the rhythm / go easy / rest.
+// Either input can be missing (no sleep data, no workout history) — the
+// recommendation degrades to whatever is available, or nil if neither is.
+
+public struct DailyRecommendation {
+    public enum Kind: String {
+        case push, maintain, easy, rest
+
+        public var title: String {
+            switch self {
+            case .push:     return "Giornata per spingere"
+            case .maintain: return "Mantieni il ritmo"
+            case .easy:     return "Giornata leggera"
+            case .rest:     return "Meglio riposare"
+            }
+        }
+
+        public var icon: String {
+            switch self {
+            case .push:     return "flame.fill"
+            case .maintain: return "metronome.fill"
+            case .easy:     return "figure.walk"
+            case .rest:     return "moon.zzz.fill"
+            }
+        }
+    }
+
+    public let kind: Kind
+    public let reason: String
+
+    /// `recovery` should be passed as nil when there's no real data behind it
+    /// (e.g. overall == 0 because the watch wasn't worn at night) — a missing
+    /// input is degraded gracefully, a fake zero would force "rest" forever.
+    public static func compute(recovery: RecoveryScore?, load: TrainingLoad?) -> DailyRecommendation? {
+        // A load with no chronic baseline yet says nothing about overreaching.
+        let usableLoad = (load?.chronic ?? 0) > 0 ? load : nil
+        guard recovery != nil || usableLoad != nil else { return nil }
+
+        if let l = usableLoad, l.status == .veryHigh {
+            return DailyRecommendation(kind: .rest,
+                reason: "Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento.")
+        }
+        if let r = recovery, r.status == .poor {
+            return DailyRecommendation(kind: .rest,
+                reason: "Recupero basso (\(r.overall)/100): il corpo sta ancora recuperando.")
+        }
+        if let l = usableLoad, l.status == .high {
+            return DailyRecommendation(kind: .easy,
+                reason: "Stai caricando più del solito: meglio tenere bassa l'intensità.")
+        }
+        if let r = recovery, r.status == .fair {
+            return DailyRecommendation(kind: .easy,
+                reason: "Recupero parziale (\(r.overall)/100): un'attività leggera è la scelta giusta.")
+        }
+        if let l = usableLoad, l.status == .low, recovery == nil || recovery!.overall >= 60 {
+            return DailyRecommendation(kind: .push,
+                reason: "Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso.")
+        }
+        return DailyRecommendation(kind: .maintain,
+            reason: "Recupero e carico in equilibrio: continua con il tuo ritmo abituale.")
+    }
+}

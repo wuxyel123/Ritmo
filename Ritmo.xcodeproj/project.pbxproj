@@ -58,6 +58,12 @@
 		DD000000000000000309AAAA /* WatchSleepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000309AAAA /* WatchSleepView.swift */; };
 		DD000000000000000310AAAA /* WatchRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000310AAAA /* WatchRecoveryView.swift */; };
 		DD000000000000000311AAAA /* GoalsSyncService.swift (watchOS) in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000311AAAA /* GoalsSyncService.swift */; };
+		DD000000000000000700AAAA /* WeeklyRecapNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000700AAAA /* WeeklyRecapNotifier.swift */; };
+		DD000000000000000701AAAA /* ManualWorkoutLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000701AAAA /* ManualWorkoutLogView.swift */; };
+		DD000000000000000702AAAA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000702AAAA /* ExercisePickerView.swift */; };
+		DD000000000000000703AAAA /* RitmoAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000703AAAA /* RitmoAppIntents.swift */; };
+		DD000000000000000704AAAA /* LiveWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000704AAAA /* LiveWorkoutManager.swift */; };
+		DD000000000000000705AAAA /* WatchLiveWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000705AAAA /* WatchLiveWorkoutView.swift */; };
 		DD000000000000000312AAAA /* WatchHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000312AAAA /* WatchHealthView.swift */; };
 		DD000000000000000204AAAA /* GoalsSyncService.swift (iOS) in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000204AAAA /* GoalsSyncService.swift */; };
 		DD000000000000000205AAAA /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000205AAAA /* HealthView.swift */; };
@@ -195,6 +201,12 @@
 		BB000000000000000300AAAA /* WatchDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDashboardView.swift; sourceTree = "<group>"; };
 		BB000000000000000301AAAA /* WatchMacroGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMacroGoalsView.swift; sourceTree = "<group>"; };
 		BB000000000000000302AAAA /* WatchWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutView.swift; sourceTree = "<group>"; };
+		BB000000000000000700AAAA /* WeeklyRecapNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyRecapNotifier.swift; sourceTree = "<group>"; };
+		BB000000000000000701AAAA /* ManualWorkoutLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualWorkoutLogView.swift; sourceTree = "<group>"; };
+		BB000000000000000702AAAA /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
+		BB000000000000000703AAAA /* RitmoAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitmoAppIntents.swift; sourceTree = "<group>"; };
+		BB000000000000000704AAAA /* LiveWorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWorkoutManager.swift; sourceTree = "<group>"; };
+		BB000000000000000705AAAA /* WatchLiveWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLiveWorkoutView.swift; sourceTree = "<group>"; };
 		BB000000000000000303AAAA /* WatchWaterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWaterView.swift; sourceTree = "<group>"; };
 		BB000000000000000309AAAA /* WatchSleepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSleepView.swift; sourceTree = "<group>"; };
 		BB000000000000000310AAAA /* WatchRecoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecoveryView.swift; sourceTree = "<group>"; };
@@ -275,6 +287,7 @@
 			children = (
 				BB000000000000000001AAAA /* RitmoApp.swift */,
 				BB000000000000000011AAAA /* AppLanguage.swift */,
+				BB000000000000000703AAAA /* RitmoAppIntents.swift */,
 				AA000000000000000010AAAA /* Core */,
 				AA000000000000000003AAAA /* Features */,
 				VV000000000001000001AAAA /* Localizable.strings */,
@@ -292,6 +305,7 @@
 				BB000000000000000101AAAA /* Components.swift */,
 				BB000000000000000102AAAA /* HistoryPeriod.swift */,
 				BB000000000000000204AAAA /* GoalsSyncService.swift */,
+				BB000000000000000700AAAA /* WeeklyRecapNotifier.swift */,
 				AA000000000000000011AAAA /* Charts */,
 			);
 			path = Core;
@@ -348,6 +362,8 @@
 				BB000000000000000117AAAA /* WorkoutRow.swift */,
 				BB000000000000000118AAAA /* WorkoutDetailView.swift */,
 				BB000000000000000119AAAA /* WorkoutCharts.swift */,
+				BB000000000000000701AAAA /* ManualWorkoutLogView.swift */,
+				BB000000000000000702AAAA /* ExercisePickerView.swift */,
 			);
 			path = Workout;
 			sourceTree = "<group>";
@@ -439,6 +455,8 @@
 			isa = PBXGroup;
 			children = (
 				BB000000000000000302AAAA /* WatchWorkoutView.swift */,
+				BB000000000000000704AAAA /* LiveWorkoutManager.swift */,
+				BB000000000000000705AAAA /* WatchLiveWorkoutView.swift */,
 			);
 			path = Workout;
 			sourceTree = "<group>";
@@ -736,6 +754,10 @@
 				DD000000000000000203AAAA /* SleepLogSheet.swift in Sources */,
 				DD000000000000000204AAAA /* GoalsSyncService.swift in Sources */,
 				DD000000000000000205AAAA /* HealthView.swift in Sources */,
+				DD000000000000000700AAAA /* WeeklyRecapNotifier.swift in Sources */,
+				DD000000000000000701AAAA /* ManualWorkoutLogView.swift in Sources */,
+				DD000000000000000702AAAA /* ExercisePickerView.swift in Sources */,
+				DD000000000000000703AAAA /* RitmoAppIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,6 +776,8 @@
 				DD000000000000000310AAAA /* WatchRecoveryView.swift in Sources */,
 				DD000000000000000311AAAA /* GoalsSyncService.swift in Sources */,
 				DD000000000000000312AAAA /* WatchHealthView.swift in Sources */,
+				DD000000000000000704AAAA /* LiveWorkoutManager.swift in Sources */,
+				DD000000000000000705AAAA /* WatchLiveWorkoutView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

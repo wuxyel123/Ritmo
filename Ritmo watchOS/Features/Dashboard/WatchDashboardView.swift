@@ -41,6 +41,29 @@ struct WatchHomeView: View {
                 }
                 .padding(.horizontal, 4)
 
+                // ── Daily recommendation ────────────────────────────────────
+                if let plan = dailyPlan {
+                    HStack(spacing: 8) {
+                        Image(systemName: plan.kind.icon)
+                            .font(.system(size: 15))
+                            .foregroundStyle(planColor(plan.kind))
+                            .frame(width: 28, height: 28)
+                            .background(planColor(plan.kind).opacity(0.2), in: Circle())
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(plan.kind.title)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(planColor(plan.kind))
+                            Text(plan.reason)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(3)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(8)
+                    .background(planColor(plan.kind).opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                }
+
                 Divider()
 
                 // ── Activity metrics ────────────────────────────────────────
@@ -127,6 +150,22 @@ struct WatchHomeView: View {
     }
 
     // MARK: Helpers
+
+    /// Same rule as iOS: recovery 0 = no data behind it, pass nil. Load comes
+    /// from the iPhone-synced TrainingLoad (ground truth), nil until synced.
+    private var dailyPlan: DailyRecommendation? {
+        let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
+        return DailyRecommendation.compute(recovery: usableRecovery, load: vm.trainingLoad)
+    }
+
+    private func planColor(_ kind: DailyRecommendation.Kind) -> Color {
+        switch kind {
+        case .push:     return .green
+        case .maintain: return .cyan
+        case .easy:     return .orange
+        case .rest:     return .red
+        }
+    }
 
     private func scoreColor(_ score: Int) -> Color {
         switch score {

@@ -10,6 +10,9 @@ struct RitmoApp: App {
 
     init() {
         _ = GoalsSyncService.shared  // activate WCSession early
+        // Re-registers the App Shortcuts with Siri/Spotlight on every launch —
+        // without this, dev builds often never surface them to Siri.
+        RitmoShortcuts.updateAppShortcutParameters()
     }
 
     var body: some Scene {

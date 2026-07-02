@@ -18,6 +18,44 @@ struct DashboardView: View {
     var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
     private var trainingLoad: TrainingLoad { TrainingLoad.compute(from: sessions) }
 
+    /// Today-only actionable headline: recovery 0 means "no data" (watch not
+    /// worn at night), not a real score, so it's passed as nil.
+    private var dailyPlan: DailyRecommendation? {
+        guard isToday else { return nil }
+        let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
+        return DailyRecommendation.compute(recovery: usableRecovery,
+                                           load: sessions.isEmpty ? nil : trainingLoad)
+    }
+
+    private func planColor(_ kind: DailyRecommendation.Kind) -> Color {
+        switch kind {
+        case .push:     return .green
+        case .maintain: return RitmoTheme.accent
+        case .easy:     return .orange
+        case .rest:     return .red
+        }
+    }
+
+    private func recapStat(value: String, label: LocalizedStringKey,
+                           delta: Double?, deltaIsPercent: Bool) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(.title3.bold())
+            Text(label).font(.system(size: 9)).foregroundStyle(RitmoTheme.textSecondary)
+            if let delta, delta != 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: delta > 0 ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 8, weight: .bold))
+                    Text(deltaIsPercent ? "\(abs(Int(delta.rounded())))%" : "\(abs(Int(delta)))")
+                        .font(.system(size: 9, weight: .semibold))
+                }
+                .foregroundStyle(delta > 0 ? .green : .orange)
+            } else {
+                Text(" ").font(.system(size: 9))
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     private func recoveryColor(_ s: RecoveryStatus) -> Color {
         switch s {
         case .poor: return .red
@@ -51,6 +89,29 @@ struct DashboardView: View {
 
                     // MARK: Score del giorno
                     DayScoreCard(snapshot: vm.snapshot)
+
+                    // MARK: Consiglio del giorno
+                    if let plan = dailyPlan {
+                        FitCard {
+                            HStack(spacing: 12) {
+                                Image(systemName: plan.kind.icon)
+                                    .font(.title3)
+                                    .foregroundStyle(planColor(plan.kind))
+                                    .frame(width: 42, height: 42)
+                                    .background(planColor(plan.kind).opacity(0.15), in: Circle())
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(LocalizedStringKey(plan.kind.title))
+                                        .font(.headline)
+                                        .foregroundStyle(planColor(plan.kind))
+                                    Text(LocalizedStringKey(plan.reason))
+                                        .font(.caption)
+                                        .foregroundStyle(RitmoTheme.textSecondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
 
                     // MARK: Macro veloci
                     Button { onNavigate?(2) } label: {
@@ -240,6 +301,45 @@ struct DashboardView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                    }
+
+                    // MARK: Riepilogo settimanale
+                    if isToday, let recap = vm.weeklyRecap {
+                        FitCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    SectionHeader(title: "Settimana scorsa")
+                                    Spacer()
+                                    Text("\(recap.weekStart, format: .dateTime.day().month(.abbreviated)) – \(recap.lastDay, format: .dateTime.day().month(.abbreviated))")
+                                        .font(.caption2)
+                                        .foregroundStyle(RitmoTheme.textSecondary)
+                                }
+                                HStack(spacing: 0) {
+                                    recapStat(value: "\(recap.workoutCount)",
+                                              label: "allenamenti",
+                                              delta: recap.workoutCount - recap.previousWorkoutCount == 0 ? nil
+                                                  : Double(recap.workoutCount - recap.previousWorkoutCount),
+                                              deltaIsPercent: false)
+                                    recapStat(value: "\(Int(recap.totalLoad.rounded()))",
+                                              label: "carico totale",
+                                              delta: recap.loadDeltaPercent,
+                                              deltaIsPercent: true)
+                                    recapStat(value: recap.avgSleepHours > 0
+                                                  ? String(format: "%.1fh", recap.avgSleepHours) : "--",
+                                              label: "sonno medio",
+                                              delta: nil, deltaIsPercent: false)
+                                }
+                                if let best = recap.bestSessionTitle {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: "trophy.fill")
+                                            .font(.caption2).foregroundStyle(.yellow)
+                                        Text("Allenamento top: ") .font(.caption)
+                                            .foregroundStyle(RitmoTheme.textSecondary)
+                                        + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // MARK: Ultimo allenamento
