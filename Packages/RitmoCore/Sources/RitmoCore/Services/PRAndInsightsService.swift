@@ -117,6 +117,7 @@ public final class InsightsService {
         var insights: [FitInsight] = []
 
         insights += muscleBalanceInsights(sessions: sessions)
+        insights += trainingLoadInsights(sessions: sessions)
         insights += recoveryInsights(sessions: sessions, sleepHistory: sleepHistory)
         insights += sleepQualityInsights(sleepHistory: sleepHistory)
         insights += nutritionInsights(nutritionHistory: nutritionHistory, goals: goals)
@@ -181,6 +182,50 @@ public final class InsightsService {
         }
 
         return insights
+    }
+
+    private func trainingLoadInsights(sessions: [WorkoutSession]) -> [FitInsight] {
+        guard !sessions.isEmpty else { return [] }
+        let load = TrainingLoad.compute(from: sessions)
+        let pct = Int((load.ratio * 100).rounded())
+
+        switch load.status {
+        case .veryHigh:
+            return [FitInsight(
+                id: UUID(),
+                title: "Carico di allenamento molto alto",
+                messageKey: "Il tuo carico degli ultimi 7 giorni è al %@%% della tua media di 4 settimane. Rischio di sovrallenamento: valuta una giornata più leggera.",
+                messageArgs: ["\(pct)"],
+                type: .warning,
+                priority: .high,
+                category: .workout,
+                icon: "🔥"
+            )]
+        case .high:
+            return [FitInsight(
+                id: UUID(),
+                title: "Carico di allenamento elevato",
+                messageKey: "Stai caricando più del solito (%@%% della tua media di 4 settimane). Va bene per brevi periodi — cura sonno e recupero.",
+                messageArgs: ["\(pct)"],
+                type: .suggestion,
+                priority: .medium,
+                category: .workout,
+                icon: "📈"
+            )]
+        case .low:
+            return [FitInsight(
+                id: UUID(),
+                title: "Margine per allenarti di più",
+                messageKey: "Il tuo carico è al %@%% della tua media di 4 settimane. C'è spazio per progredire, se vuoi.",
+                messageArgs: ["\(pct)"],
+                type: .tip,
+                priority: .low,
+                category: .workout,
+                icon: "🌱"
+            )]
+        case .optimal:
+            return []
+        }
     }
 
     private func recoveryInsights(

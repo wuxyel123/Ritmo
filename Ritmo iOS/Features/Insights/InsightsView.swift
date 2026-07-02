@@ -22,7 +22,7 @@ struct InsightsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Come funzionano gli Insights", systemImage: "brain.head.profile")
                                 .font(.subheadline.bold()).foregroundStyle(RitmoTheme.accent)
-                            Text("Gli insights analizzano automaticamente: bilancio muscolare (push/pull/gambe), variabilità del sonno, distribuzione delle proteine nei giorni di allenamento vs riposo, e correlazioni tra recupero e performance. Più dati hai (almeno 2 settimane), più sono accurati.")
+                            Text("Gli insights analizzano automaticamente: bilancio muscolare (push/pull/gambe), carico di allenamento (acuto/cronico), variabilità del sonno, distribuzione delle proteine nei giorni di allenamento vs riposo, e correlazioni tra recupero e performance. Più dati hai (almeno 2 settimane), più sono accurati.")
                                 .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
                         }
                     }
