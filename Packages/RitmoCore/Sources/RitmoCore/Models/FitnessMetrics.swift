@@ -86,6 +86,33 @@ public struct TrainingLoad: Codable {
     public let ratio: Double     // acute / chronic
     public let status: TrainingLoadStatus
     public let weeklyEfforts: [Int]   // load per day, last 7 days (oldest→newest)
+    /// Mean load per workout (90d, all categories) — baked into the synced struct
+    /// so every device compares "vs your average" against the SAME number (the
+    /// iPhone's), rather than each recomputing it from its own, possibly-diverged,
+    /// local workout history. Used as the fallback when there isn't enough
+    /// same-category history for `matchedAverageLoad(for:)` below.
+    public let averageLoad: Double
+    private let averageStrengthLoad: Double
+    private let averageCardioLoad: Double
+    private let averageOtherLoad: Double
+
+    /// The average load to compare a SPECIFIC workout against: matches its
+    /// category (cardio vs. strength vs. other) when there's enough same-category
+    /// history, since a cardio session's "normal" load looks nothing like a
+    /// strength session's — lumping them into one average made the comparison
+    /// meaningless. Falls back to the all-category average otherwise.
+    /// `matchedCategory` is nil when the fallback was used, so callers can label
+    /// the comparison accordingly (e.g. "vs your average Cardio session").
+    public func matchedAverageLoad(for session: WorkoutSession) -> (value: Double, matchedCategory: WorkoutCategory?) {
+        let categoryAvg: Double
+        switch session.category {
+        case .strength: categoryAvg = averageStrengthLoad
+        case .cardio:   categoryAvg = averageCardioLoad
+        case .other:    categoryAvg = averageOtherLoad
+        }
+        if categoryAvg > 0 { return (categoryAvg, session.category) }
+        return (averageLoad, nil)
+    }
 
     private static let lambdaAcute   = 2.0 / (7.0 + 1.0)
     private static let lambdaChronic = 2.0 / (28.0 + 1.0)
@@ -114,6 +141,17 @@ public struct TrainingLoad: Codable {
         }
     }
 
+    /// Average load for one category over the last 90 days — 0 (meaning "use the
+    /// fallback") if there are fewer than 2 sessions of that category, since a
+    /// single past session isn't a meaningful "average" to compare against.
+    private static func averageLoad(for category: WorkoutCategory, in sessions: [WorkoutSession],
+                                    days: Int = 90, now: Date, minSamples: Int = 2) -> Double {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: now) ?? .distantPast
+        let matching = sessions.filter { $0.startTime >= cutoff && $0.category == category }
+        guard matching.count >= minSamples else { return 0 }
+        return matching.reduce(0.0) { $0 + $1.loadValue } / Double(matching.count)
+    }
+
     public static func compute(from sessions: [WorkoutSession], now: Date = .now) -> TrainingLoad {
         // Window long enough for the chronic EWMA to settle.
         let daily = dailyLoads(from: sessions, days: 42, now: now)
@@ -137,7 +175,11 @@ public struct TrainingLoad: Codable {
                             chronic: Int((chronicEWMA * 7).rounded()),
                             ratio: ratio,
                             status: status(for: ratio),
-                            weeklyEfforts: Array(weeklyEfforts))
+                            weeklyEfforts: Array(weeklyEfforts),
+                            averageLoad: averageSessionLoad(from: sessions, now: now),
+                            averageStrengthLoad: averageLoad(for: .strength, in: sessions, now: now),
+                            averageCardioLoad: averageLoad(for: .cardio, in: sessions, now: now),
+                            averageOtherLoad: averageLoad(for: .other, in: sessions, now: now))
     }
 
     /// Day-by-day acute/chronic trend (weekly-equivalent), so the ACWR balance

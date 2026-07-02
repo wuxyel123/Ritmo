@@ -4,15 +4,27 @@ import SwiftUI
 /// (identical across every view and both apps) and the nutrition score penalty.
 public enum NutritionScale {
 
-    /// 0...1 adherence: full credit within ±5% of the goal, falling linearly to
-    /// 0 once you're ±50% off (under OR over). Used by the day score so that, e.g.,
-    /// a 2000 kcal goal with 3000 eaten yields no calorie credit.
+    /// 0...1 adherence: full credit within ±7.5% of the goal, falling linearly to
+    /// 0 once you're ±50% off (under OR over). Used for calories, where both
+    /// under- and over-shooting matter (excess intake, not just a shortfall) —
+    /// e.g. a 2000 kcal goal with 3000 eaten yields no calorie credit.
     public static func adherence(value: Double, goal: Double) -> Double {
         guard goal > 0 else { return 0 }
         let deviation = abs(value / goal - 1.0)
-        if deviation <= 0.05 { return 1.0 }
+        if deviation <= 0.075 { return 1.0 }
         if deviation >= 0.50 { return 0.0 }
-        return 1.0 - (deviation - 0.05) / 0.45
+        return 1.0 - (deviation - 0.075) / 0.425
+    }
+
+    /// 0...1 adherence with a FLOOR instead of a target band: full credit at or
+    /// above the goal — protein overage isn't a problem the way calorie overage
+    /// is, it's a minimum rather than a two-sided target — falling linearly to 0
+    /// at half the goal. Used for protein.
+    public static func flooredAdherence(value: Double, goal: Double) -> Double {
+        guard goal > 0 else { return 0 }
+        let ratio = value / goal
+        if ratio >= 1.0 { return 1.0 }
+        return max(0.0, (ratio - 0.5) / 0.5)
     }
 
     /// Shared progress color: red when far under, green near the goal, red again
