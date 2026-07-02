@@ -463,7 +463,11 @@ public final class HealthKitRepository: ObservableObject {
         )
     }
 
-    /// Allenamenti HK in un giorno specifico
+    /// Allenamenti HK in un giorno specifico. Filters out workouts the user
+    /// removed in-app: "remove from app" leaves the workout in HealthKit, so
+    /// without this filter the day score / "worked out today" flag would keep
+    /// counting a deleted workout (the exclusion set is synced to the watch,
+    /// so both devices agree).
     public func fetchWorkoutsOn(date: Date) async -> [HKWorkout] {
         let (start, end) = dayRange(for: date)
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
@@ -471,7 +475,9 @@ public final class HealthKitRepository: ObservableObject {
             predicates: [.workout(predicate)],
             sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)]
         )
-        return (try? await descriptor.result(for: store)) ?? []
+        let excluded = excludedWorkoutUUIDs()
+        let all = (try? await descriptor.result(for: store)) ?? []
+        return all.filter { !excluded.contains($0.uuid.uuidString) }
     }
 
     // MARK: - Recovery (sleep + heart)
