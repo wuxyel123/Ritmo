@@ -90,19 +90,10 @@ struct WorkoutListView: View {
         // HealthKit outcome (Apple-owned workouts can't be deleted by us).
         healthRepo.deleteWorkout(session, in: modelContext)   // exclude + local delete
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
-        pushTrainingLoad()
+        GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
         if deleteFromHealth, let uuid {
             Task { _ = await healthRepo.deleteHealthKitWorkout(uuid: uuid) }
         }
-    }
-
-    /// Recomputes training load from the freshly-saved store and pushes it to
-    /// the Watch — the iPhone is the source of truth, so both devices agree.
-    private func pushTrainingLoad() {
-        let fresh = (try? modelContext.fetch(
-            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
-        )) ?? []
-        GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
     }
 
     /// HealthKit first; only when it inserted NEW workouts does the Hevy API
@@ -114,7 +105,7 @@ struct WorkoutListView: View {
         if await healthRepo.importHealthKitWorkouts(into: modelContext) > 0 {
             await HevySyncCoordinator.enrichNewWorkouts(into: modelContext)
         }
-        pushTrainingLoad()
+        GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
     }
 
 }
@@ -124,14 +115,7 @@ struct WorkoutListView: View {
 struct TrainingLoadCard: View {
     let load: TrainingLoad
 
-    private var color: Color {
-        switch load.status {
-        case .low:      return .blue
-        case .optimal:  return .green
-        case .high:     return .orange
-        case .veryHigh: return .red
-        }
-    }
+    private var color: Color { loadStatusColor(load.status) }
 
     var body: some View {
         FitCard {
@@ -182,17 +166,9 @@ struct TrainingLoadDetailView: View {
     @State private var categoryLoads: [CategoryLoad] = []
     @State private var daily: [(date: Date, load: Int)] = []
 
-    private func statusColor(_ status: TrainingLoadStatus) -> Color {
-        switch status {
-        case .low:      return .blue
-        case .optimal:  return .green
-        case .high:     return .orange
-        case .veryHigh: return .red
-        }
-    }
-
     // Data only, per explicit user preference: state which band the ratio is
     // in, no advice ("valuta una giornata più leggera") or judgment.
+    // Returns the localization KEY (the Italian sentence).
     private func statusExplanation(_ status: TrainingLoadStatus) -> String {
         switch status {
         case .low:
@@ -251,7 +227,7 @@ struct TrainingLoadDetailView: View {
 
     @ViewBuilder
     private func content(_ load: TrainingLoad) -> some View {
-        let color = statusColor(load.status)
+        let color = loadStatusColor(load.status)
         VStack(alignment: .leading, spacing: RitmoTheme.gap) {
 
                 // MARK: Header
@@ -278,7 +254,8 @@ struct TrainingLoadDetailView: View {
                                 }
                             }
                         }
-                        Text(statusExplanation(load.status)).font(.subheadline).foregroundStyle(.secondary)
+                        Text(LocalizedStringKey(statusExplanation(load.status)))
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
 

@@ -156,10 +156,12 @@ struct ManualWorkoutLogView: View {
         HStack(spacing: 10) {
             Menu {
                 ForEach(SetType.allCases, id: \.self) { t in
-                    Button(t.displayName) { set.wrappedValue.type = t }
+                    Button { set.wrappedValue.type = t } label: {
+                        Text(LocalizedStringKey(t.displayName))
+                    }
                 }
             } label: {
-                Text(setTypeShort(set.wrappedValue.type))
+                Text(setTypeShortLabel(set.wrappedValue.type))
                     .font(.caption.bold())
                     .frame(width: 26, height: 26)
                     .background(setTypeColor(set.wrappedValue.type).opacity(0.15), in: Circle())
@@ -187,24 +189,6 @@ struct ManualWorkoutLogView: View {
                     .frame(width: 44)
                 Text("reps").foregroundStyle(RitmoTheme.textSecondary).font(.caption)
             }
-        }
-    }
-
-    private func setTypeShort(_ t: SetType) -> String {
-        switch t {
-        case .normal:  return "N"
-        case .warmup:  return "R"
-        case .dropSet: return "D"
-        case .failure: return "C"
-        }
-    }
-
-    private func setTypeColor(_ t: SetType) -> Color {
-        switch t {
-        case .normal:  return RitmoTheme.accent
-        case .warmup:  return .orange
-        case .dropSet: return .purple
-        case .failure: return .red
         }
     }
 

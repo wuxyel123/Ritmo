@@ -71,6 +71,7 @@
 		DD000000000000000307AAAA /* WatchRectangularView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000307AAAA /* WatchRectangularView.swift */; };
 		DD000000000000000308AAAA /* WatchInlineCornerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000308AAAA /* WatchInlineCornerViews.swift */; };
 		DA000000000001000001AAAA /* Localizable.strings (Watch) in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000003000001AAAA /* Localizable.strings (Watch) */; };
+		DD000000000003000001AAAA /* Localizable.strings (WatchWidget) in Resources */ = {isa = PBXBuildFile; fileRef = VV000000000004000001AAAA /* Localizable.strings (WatchWidget) */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -196,6 +197,11 @@
 		WC000000000001000003AAAA /* pt (watch) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = "pt.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		WC000000000001000004AAAA /* de (watch) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = "de.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		WC000000000001000005AAAA /* es (watch) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = "es.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WD000000000001000001AAAA /* en (watchwidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "en.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WD000000000001000002AAAA /* fr (watchwidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WD000000000001000003AAAA /* pt (watchwidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = "pt.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WD000000000001000004AAAA /* de (watchwidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = "de.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		WD000000000001000005AAAA /* es (watchwidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = "es.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		BB000000000000000300AAAA /* WatchDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDashboardView.swift; sourceTree = "<group>"; };
 		BB000000000000000301AAAA /* WatchMacroGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMacroGoalsView.swift; sourceTree = "<group>"; };
 		BB000000000000000302AAAA /* WatchWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutView.swift; sourceTree = "<group>"; };
@@ -274,6 +280,7 @@
 				BB000000000000000308AAAA /* WatchInlineCornerViews.swift */,
 				BB000000000000000201AAAA /* Info.plist (Watch Widget) */,
 				BB000000000000000202AAAA /* RitmoWatchWidget.entitlements */,
+				VV000000000004000001AAAA /* Localizable.strings (WatchWidget) */,
 			);
 			path = "Ritmo Watch Widget";
 			sourceTree = "<group>";
@@ -710,6 +717,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD000000000003000001AAAA /* Localizable.strings (WatchWidget) in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -848,6 +856,18 @@
 				WC000000000001000003AAAA /* pt (watch) */,
 				WC000000000001000004AAAA /* de (watch) */,
 				WC000000000001000005AAAA /* es (watch) */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		VV000000000004000001AAAA /* Localizable.strings (WatchWidget) */ = {
+			isa = PBXVariantGroup;
+			children = (
+				WD000000000001000001AAAA /* en (watchwidget) */,
+				WD000000000001000002AAAA /* fr (watchwidget) */,
+				WD000000000001000003AAAA /* pt (watchwidget) */,
+				WD000000000001000004AAAA /* de (watchwidget) */,
+				WD000000000001000005AAAA /* es (watchwidget) */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

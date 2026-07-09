@@ -65,3 +65,37 @@
 "Avvio…" = "Démarrage…";
 "%lld/%lld serie" = "%lld/%lld séries";
 "Profondo" = "Profond";
+
+// ── Localization audit sweep (2026-07-09)
+"Oggi hai già dato." = "Vous avez déjà donné aujourd'hui.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Objectif hebdo atteint : %@ sur %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "Vous en êtes à %@ sur %@ cette semaine.";
+"Ora contano recupero, proteine e sonno." = "Place à la récupération, aux protéines et au sommeil.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Charge bien au-dessus de votre norme : une pause aujourd'hui réduit le risque de surentraînement.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Récupération basse (%@/100) : le corps récupère encore.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "Vous chargez plus que d'habitude : mieux vaut garder une intensité basse.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Récupération partielle (%@/100) : une activité légère est le bon choix.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "Cela fait %@ jours depuis votre dernière séance et vous êtes récupéré : c'est le jour idéal pour reprendre.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Il n'en manque qu'une pour l'objectif hebdo (%@ sur %@) : bonne journée pour le boucler.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "Vous êtes récupéré et la charge est sous votre moyenne : journée idéale pour une séance intense.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Récupération et charge équilibrées : gardez votre rythme habituel.";
+"Questa settimana: %@ su %@ allenamenti." = "Cette semaine : %@ séances sur %@.";
+"7gg" = "7 j";
+"Aggiorna" = "Actualiser";
+"Anelli (complicazione)" = "Anneaux (complication)";
+"Annulla" = "Annuler";
+"Carico" = "Charge";
+"Com'è stato?" = "C'était comment ?";
+"Continua" = "Continuer";
+"Dettaglio" = "Détail";
+"Elimina" = "Supprimer";
+"Eliminare il sonno?" = "Supprimer le sommeil ?";
+"Frequenza cardiaca" = "Fréquence cardiaque";
+"Nessun sonno\nrilevato stanotte" = "Aucun sommeil\ndétecté cette nuit";
+"Nutrizione" = "Nutrition";
+"Recupero" = "Récupération";
+"Registra sonno" = "Enregistrer le sommeil";
+"Salta" = "Passer";
+"Ultimo allenamento" = "Dernière séance";
+"Zone FC" = "Zones FC";
+"Sessione %lld" = "Session %lld";

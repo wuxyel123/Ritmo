@@ -27,11 +27,12 @@ struct LogWaterIntent: AppIntent {
         let ml = min(max(amount, 50), 2000)
         do {
             try await HealthKitRepository().writeWater(ml: Double(ml))
-            return .result(dialog: IntentDialog("Registrati \(ml) ml di acqua 💧"))
+            let text = String(format: NSLocalizedString("Registrati %@ ml di acqua 💧", comment: ""), "\(ml)")
+            return .result(dialog: IntentDialog("\(text)"))
         } catch {
             // Most likely cause: HealthKit write permission not granted yet.
-            return .result(dialog: IntentDialog(
-                "Non riesco a scrivere su Apple Salute. Apri Ritmo e verifica i permessi di Salute."))
+            let text = NSLocalizedString("Non riesco a scrivere su Apple Salute. Apri Ritmo e verifica i permessi di Salute.", comment: "")
+            return .result(dialog: IntentDialog("\(text)"))
         }
     }
 }
@@ -58,11 +59,15 @@ struct GetDayScoreIntent: AppIntent {
                                                sessions: sessions,
                                                weeklyWorkoutGoal: goals.weeklyWorkouts)
 
+        // Composed + localized by hand: IntentDialog's literal interpolation
+        // would bake the Italian kind title / reason into the spoken answer.
+        let scoreText = String(format: NSLocalizedString("Il tuo punteggio di oggi è %@ su 100.", comment: ""),
+                               "\(snapshot.dayScore)")
         if let plan {
-            return .result(dialog: IntentDialog(
-                "Il tuo punteggio di oggi è \(snapshot.dayScore) su 100. \(plan.kind.title): \(plan.reason)"))
+            let title = NSLocalizedString(plan.kind.title, comment: "")
+            return .result(dialog: IntentDialog("\(scoreText) \(title): \(plan.reason)"))
         }
-        return .result(dialog: IntentDialog("Il tuo punteggio di oggi è \(snapshot.dayScore) su 100."))
+        return .result(dialog: IntentDialog("\(scoreText)"))
     }
 }
 

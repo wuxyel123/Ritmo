@@ -65,3 +65,37 @@
 "Avvio…" = "Starting…";
 "%lld/%lld serie" = "%lld/%lld sets";
 "Profondo" = "Deep";
+
+// ── Localization audit sweep (2026-07-09)
+"Oggi hai già dato." = "You've already put in the work today.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Weekly goal complete: %@ of %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "You're at %@ of %@ this week.";
+"Ora contano recupero, proteine e sonno." = "Now it's about recovery, protein and sleep.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Load far above your norm: a rest day today reduces overtraining risk.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Low recovery (%@/100): your body is still recovering.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "You're loading more than usual: better to keep intensity low.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Partial recovery (%@/100): light activity is the right call.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "It's been %@ days since your last workout and you're recovered: today is the day to get back to it.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Just one left for your weekly goal (%@ of %@): a good day to close it out.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "You're recovered and your load is below average: an ideal day for an intense workout.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Recovery and load in balance: keep your usual rhythm.";
+"Questa settimana: %@ su %@ allenamenti." = "This week: %@ of %@ workouts.";
+"7gg" = "7d";
+"Aggiorna" = "Refresh";
+"Anelli (complicazione)" = "Rings (complication)";
+"Annulla" = "Cancel";
+"Carico" = "Load";
+"Com'è stato?" = "How was it?";
+"Continua" = "Continue";
+"Dettaglio" = "Detail";
+"Elimina" = "Delete";
+"Eliminare il sonno?" = "Delete sleep?";
+"Frequenza cardiaca" = "Heart rate";
+"Nessun sonno\nrilevato stanotte" = "No sleep\ndetected tonight";
+"Nutrizione" = "Nutrition";
+"Recupero" = "Recovery";
+"Registra sonno" = "Log sleep";
+"Salta" = "Skip";
+"Ultimo allenamento" = "Last workout";
+"Zone FC" = "HR zones";
+"Sessione %lld" = "Session %lld";

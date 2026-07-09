@@ -65,3 +65,37 @@
 "Avvio…" = "Startet…";
 "%lld/%lld serie" = "%lld/%lld Sätze";
 "Profondo" = "Tief";
+
+// ── Localization audit sweep (2026-07-09)
+"Oggi hai già dato." = "Heute hast du schon geliefert.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Wochenziel erreicht: %@ von %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "Du stehst bei %@ von %@ diese Woche.";
+"Ora contano recupero, proteine e sonno." = "Jetzt zählen Erholung, Protein und Schlaf.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Belastung weit über deiner Norm: Eine Pause heute senkt das Übertrainings-Risiko.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Niedrige Erholung (%@/100): Der Körper erholt sich noch.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "Du belastest mehr als sonst: Halte die Intensität besser niedrig.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Teilweise Erholung (%@/100): Leichte Aktivität ist die richtige Wahl.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "Es sind %@ Tage seit deinem letzten Workout und du bist erholt: Heute ist der richtige Tag, um wieder loszulegen.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Dir fehlt nur eins zum Wochenziel (%@ von %@): ein guter Tag, es abzuschließen.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "Du bist erholt und die Belastung liegt unter deinem Schnitt: idealer Tag für ein intensives Workout.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Erholung und Belastung im Gleichgewicht: Bleib bei deinem gewohnten Rhythmus.";
+"Questa settimana: %@ su %@ allenamenti." = "Diese Woche: %@ von %@ Workouts.";
+"7gg" = "7 T";
+"Aggiorna" = "Aktualisieren";
+"Anelli (complicazione)" = "Ringe (Komplikation)";
+"Annulla" = "Abbrechen";
+"Carico" = "Belastung";
+"Com'è stato?" = "Wie war es?";
+"Continua" = "Weiter";
+"Dettaglio" = "Detail";
+"Elimina" = "Löschen";
+"Eliminare il sonno?" = "Schlaf löschen?";
+"Frequenza cardiaca" = "Herzfrequenz";
+"Nessun sonno\nrilevato stanotte" = "Kein Schlaf\nheute Nacht erkannt";
+"Nutrizione" = "Ernährung";
+"Recupero" = "Erholung";
+"Registra sonno" = "Schlaf erfassen";
+"Salta" = "Überspringen";
+"Ultimo allenamento" = "Letztes Workout";
+"Zone FC" = "HF-Zonen";
+"Sessione %lld" = "Einheit %lld";

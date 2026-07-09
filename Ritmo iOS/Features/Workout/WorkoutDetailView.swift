@@ -69,18 +69,16 @@ struct WorkoutDetailView: View {
     @State private var showingEditor = false
     @Environment(\.dismiss) private var dismiss
 
+    /// Sets grouped by exercise, in first-appearance order (single pass).
     var setsByExercise: [(String, [WorkoutSet])] {
-        var groups: [(String, [WorkoutSet])] = []
-        var seen: [String] = []
+        var order: [String] = []
+        var groups: [String: [WorkoutSet]] = [:]
         for set in session.sets.sorted(by: { $0.setIndex < $1.setIndex }) {
             let name = set.exercise?.name ?? "Esercizio"
-            if !seen.contains(name) {
-                seen.append(name)
-                groups.append((name, session.sets.filter { $0.exercise?.name == name }
-                    .sorted { $0.setIndex < $1.setIndex }))
-            }
+            if groups[name] == nil { order.append(name) }
+            groups[name, default: []].append(set)
         }
-        return groups
+        return order.map { ($0, groups[$0]!) }
     }
 
     var body: some View {
@@ -305,7 +303,9 @@ struct WorkoutDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditor) {
-            ManualWorkoutLogView(existing: session, onSaved: { pushTrainingLoad() })
+            ManualWorkoutLogView(existing: session, onSaved: {
+                GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
+            })
         }
         .confirmationDialog("Eliminare l'allenamento?", isPresented: $showingDeleteDialog) {
             if session.source == .manual {
@@ -341,15 +341,6 @@ struct WorkoutDetailView: View {
                 routeSegments = [RouteSegment(coordinates: fetchedLocs.map(\.coordinate), zone: 0)]
             }
             isLoadingHR = false
-        }
-    }
-
-    private func setTypeColor(_ type: SetType) -> Color {
-        switch type {
-        case .normal: return RitmoTheme.textSecondary
-        case .warmup: return .blue
-        case .dropSet: return .orange
-        case .failure: return .red
         }
     }
 
@@ -488,14 +479,13 @@ struct WorkoutDetailView: View {
         let matched = total.matchedAverageLoad(for: session)
         let avgLoad = matched.value
         let vsAveragePct = avgLoad > 0 ? ((thisLoad - avgLoad) / avgLoad) * 100 : 0
-        let avgLabel = matched.matchedCategory.map { "Media dei tuoi allenamenti di \($0.displayName)" }
-            ?? "Media dei tuoi allenamenti"
-        let color: Color = switch total.status {
-            case .low:      .blue
-            case .optimal:  .green
-            case .high:     .orange
-            case .veryHigh: .red
-        }
+        // Composed at runtime → localized explicitly (an interpolated
+        // LocalizedStringKey would produce a key that matches no table entry).
+        let avgLabel = matched.matchedCategory.map {
+            String(format: NSLocalizedString("Media dei tuoi allenamenti di %@", comment: ""),
+                   NSLocalizedString($0.displayName, comment: ""))
+        } ?? NSLocalizedString("Media dei tuoi allenamenti", comment: "")
+        let color = loadStatusColor(total.status)
         let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
 
         return NavigationLink {
@@ -523,13 +513,14 @@ struct WorkoutDetailView: View {
                         }
                     }
                     .frame(height: 8)
-                    Text("\(Int((weekShare * 100).rounded()))% del carico degli ultimi 7 giorni")
+                    Text(String(format: NSLocalizedString("%@ del carico degli ultimi 7 giorni", comment: ""),
+                                "\(Int((weekShare * 100).rounded()))%"))
                         .font(.caption2).foregroundStyle(.secondary)
 
                     if avgLoad > 0 {
                         Divider()
                         HStack {
-                            Text(LocalizedStringKey(avgLabel))
+                            Text(avgLabel)
                                 .font(.caption).foregroundStyle(.secondary)
                             Spacer()
                             Text(vsAveragePct >= 0 ? "+\(Int(vsAveragePct.rounded()))%" : "\(Int(vsAveragePct.rounded()))%")
@@ -600,7 +591,7 @@ struct WorkoutDetailView: View {
         session.userRPE = value
         try? modelContext.save()
         weekLoad = TrainingLoad.compute(from: allSessions)   // card shows live numbers
-        pushTrainingLoad()
+        GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
         guard let uuid = session.hkWorkoutUUID else { return }
         Task {
             if let v = value {
@@ -611,22 +602,13 @@ struct WorkoutDetailView: View {
         }
     }
 
-    /// Recomputes training load from the freshly-saved store and pushes it to
-    /// the Watch — the iPhone is the source of truth, so both devices agree.
-    private func pushTrainingLoad() {
-        let fresh = (try? modelContext.fetch(
-            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
-        )) ?? []
-        GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
-    }
-
     private func remove(alsoFromHealth: Bool) {
         let uuid = session.hkWorkoutUUID
         // App-authored workouts always take their HealthKit record with them.
         let deleteFromHealth = alsoFromHealth || session.source == .manual
         healthRepo.deleteWorkout(session, in: modelContext)   // exclude + local delete
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
-        pushTrainingLoad()
+        GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
         if deleteFromHealth, let uuid {
             Task { _ = await healthRepo.deleteHealthKitWorkout(uuid: uuid) }
         }

@@ -53,6 +53,42 @@ struct HeartStatItem: View {
     }
 }
 
+// MARK: - Shared workout styling
+//
+// One definition each — these switches were previously copied per view and
+// had already drifted apart (warmup was orange in one screen, blue in another).
+
+/// Color for a training-load status, used by the load card, the load detail
+/// and the per-workout load context.
+func loadStatusColor(_ status: TrainingLoadStatus) -> Color {
+    switch status {
+    case .low:      return .blue
+    case .optimal:  return .green
+    case .high:     return .orange
+    case .veryHigh: return .red
+    }
+}
+
+/// Color for a set type (editor chips + detail table).
+func setTypeColor(_ type: SetType) -> Color {
+    switch type {
+    case .normal:  return RitmoTheme.textSecondary
+    case .warmup:  return .orange
+    case .dropSet: return .purple
+    case .failure: return .red
+    }
+}
+
+/// One-letter label for a set type (Riscaldamento → R, Cedimento → C…).
+func setTypeShortLabel(_ type: SetType) -> String {
+    switch type {
+    case .normal:  return "N"
+    case .warmup:  return "R"
+    case .dropSet: return "D"
+    case .failure: return "C"
+    }
+}
+
 struct StatItem: View {
     let value: String; let label: LocalizedStringKey; let icon: String
     var body: some View {

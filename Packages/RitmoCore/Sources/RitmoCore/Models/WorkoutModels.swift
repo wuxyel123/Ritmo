@@ -249,6 +249,23 @@ public enum DataSource: String, Codable {
     case hevy = "Hevy"
 }
 
+// MARK: - Overlap
+
+/// Single definition of "these two time ranges are the same real-world
+/// workout": the overlap covers more than half of the shorter range (any
+/// overlap counts when the shorter one is under a minute). Used by both the
+/// HealthKit import dedup and the Hevy merge so they can never disagree.
+public func workoutRangesOverlapSignificantly(_ aStart: Date, _ aEnd: Date,
+                                              _ bStart: Date, _ bEnd: Date) -> Bool {
+    let overlapStart = max(aStart, bStart)
+    let overlapEnd = min(aEnd, bEnd)
+    guard overlapEnd > overlapStart else { return false }
+    let overlap = overlapEnd.timeIntervalSince(overlapStart)
+    let shorter = min(aEnd.timeIntervalSince(aStart), bEnd.timeIntervalSince(bStart))
+    guard shorter > 60 else { return overlap > 0 }
+    return overlap / shorter > 0.5
+}
+
 public enum SetType: String, Codable, CaseIterable {
     case normal = "normal"
     case warmup = "warmup"

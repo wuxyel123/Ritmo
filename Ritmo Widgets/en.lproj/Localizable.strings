@@ -38,3 +38,6 @@
 // ── Added 2026-07-03: post-localization features ──
 "%lld/%lld serie" = "%lld/%lld sets";
 "%lld di %lld serie completate" = "%lld of %lld sets completed";
+
+// ── Localization audit sweep (2026-07-09)
+"attive" = "active";

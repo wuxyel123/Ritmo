@@ -65,3 +65,37 @@
 "Avvio…" = "Iniciando…";
 "%lld/%lld serie" = "%lld/%lld series";
 "Profondo" = "Profundo";
+
+// ── Localization audit sweep (2026-07-09)
+"Oggi hai già dato." = "Hoy ya has cumplido.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Objetivo semanal completado: %@ de %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "Vas %@ de %@ esta semana.";
+"Ora contano recupero, proteine e sonno." = "Ahora cuentan la recuperación, las proteínas y el sueño.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Carga muy por encima de tu norma: una pausa hoy reduce el riesgo de sobreentrenamiento.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Recuperación baja (%@/100): el cuerpo aún se está recuperando.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "Estás cargando más de lo habitual: mejor mantener baja la intensidad.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Recuperación parcial (%@/100): una actividad ligera es la elección correcta.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "Han pasado %@ días desde tu último entreno y estás recuperado: hoy es el día para retomar.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Te falta solo uno para el objetivo semanal (%@ de %@): buen día para cerrarlo.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "Estás recuperado y la carga está por debajo de tu media: día ideal para un entreno intenso.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Recuperación y carga en equilibrio: sigue con tu ritmo habitual.";
+"Questa settimana: %@ su %@ allenamenti." = "Esta semana: %@ de %@ entrenos.";
+"7gg" = "7 d";
+"Aggiorna" = "Actualizar";
+"Anelli (complicazione)" = "Anillos (complicación)";
+"Annulla" = "Cancelar";
+"Carico" = "Carga";
+"Com'è stato?" = "¿Qué tal fue?";
+"Continua" = "Continuar";
+"Dettaglio" = "Detalle";
+"Elimina" = "Eliminar";
+"Eliminare il sonno?" = "¿Eliminar el sueño?";
+"Frequenza cardiaca" = "Frecuencia cardiaca";
+"Nessun sonno\nrilevato stanotte" = "Sin sueño\ndetectado esta noche";
+"Nutrizione" = "Nutrición";
+"Recupero" = "Recuperación";
+"Registra sonno" = "Registrar sueño";
+"Salta" = "Omitir";
+"Ultimo allenamento" = "Último entreno";
+"Zone FC" = "Zonas FC";
+"Sessione %lld" = "Sesión %lld";

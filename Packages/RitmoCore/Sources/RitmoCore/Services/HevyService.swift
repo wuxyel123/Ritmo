@@ -33,9 +33,12 @@ public enum HevyError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .invalidKey:     return "Chiave API non valida: controlla la chiave generata in Hevy (serve Hevy Pro)."
-        case .http(let code): return "Hevy ha risposto con un errore (HTTP \(code))."
-        case .network(let e): return "Errore di rete: \(e.localizedDescription)"
+        case .invalidKey:
+            return NSLocalizedString("Chiave API non valida: controlla la chiave generata in Hevy (serve Hevy Pro).", comment: "")
+        case .http(let code):
+            return String(format: NSLocalizedString("Hevy ha risposto con un errore (HTTP %@).", comment: ""), "\(code)")
+        case .network(let e):
+            return String(format: NSLocalizedString("Errore di rete: %@", comment: ""), e.localizedDescription)
         }
     }
 }
@@ -295,11 +298,7 @@ public final class HevyService {
     }
 
     private func overlaps(_ session: WorkoutSession, start: Date, end: Date) -> Bool {
-        let overlap = min(session.endTime, end).timeIntervalSince(max(session.startTime, start))
-        guard overlap > 0 else { return false }
-        let shorter = min(session.endTime.timeIntervalSince(session.startTime),
-                          end.timeIntervalSince(start))
-        return overlap > shorter * 0.5
+        workoutRangesOverlapSignificantly(session.startTime, session.endTime, start, end)
     }
 
     private func attach(_ hevyExercises: [HevyExercise], to session: WorkoutSession,

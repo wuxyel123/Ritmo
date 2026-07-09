@@ -344,7 +344,35 @@ public struct DailyRecommendation {
     }
 
     public let kind: Kind
-    public let reason: String
+
+    /// One localizable sentence of the reason: `key` is the Italian source
+    /// sentence (the lookup key in each app's Localizable.strings), `args`
+    /// fill its %@ placeholders. Kept structured so the composed reason can
+    /// be localized at render time instead of baking Italian into the model.
+    public struct ReasonFragment {
+        public let key: String
+        public let args: [String]
+        init(_ key: String, _ args: [String] = []) {
+            self.key = key
+            self.args = args
+        }
+    }
+
+    public let reasonFragments: [ReasonFragment]
+
+    /// The reason, localized against the running app's string tables
+    /// (falls back to Italian where a key is missing).
+    public var reason: String {
+        reasonFragments.map { fragment in
+            String(format: NSLocalizedString(fragment.key, comment: ""),
+                   arguments: fragment.args)
+        }.joined(separator: " ")
+    }
+
+    init(kind: Kind, reasonFragments: [ReasonFragment]) {
+        self.kind = kind
+        self.reasonFragments = reasonFragments
+    }
 
     /// `recovery` should be passed as nil when there's no real data behind it
     /// (e.g. overall == 0 because the watch wasn't worn at night) — a missing
@@ -371,51 +399,55 @@ public struct DailyRecommendation {
 
         // Already trained today → the job is recovery, not more prescriptions.
         if hasWorkedOutToday {
-            var reason = "Oggi hai già dato."
+            var fragments = [ReasonFragment("Oggi hai già dato.")]
             if let goal = weeklyWorkoutGoal, goal > 0 {
-                reason += workoutsThisWeek >= goal
-                    ? " Obiettivo settimanale completato: \(workoutsThisWeek) su \(goal) 🎯."
-                    : " Sei a \(workoutsThisWeek) su \(goal) questa settimana."
+                fragments.append(workoutsThisWeek >= goal
+                    ? ReasonFragment("Obiettivo settimanale completato: %@ su %@ 🎯.",
+                                     ["\(workoutsThisWeek)", "\(goal)"])
+                    : ReasonFragment("Sei a %@ su %@ questa settimana.",
+                                     ["\(workoutsThisWeek)", "\(goal)"]))
             }
-            reason += " Ora contano recupero, proteine e sonno."
-            return DailyRecommendation(kind: .done, reason: reason)
+            fragments.append(ReasonFragment("Ora contano recupero, proteine e sonno."))
+            return DailyRecommendation(kind: .done, reasonFragments: fragments)
         }
 
         if let l = usableLoad, l.status == .veryHigh {
-            return DailyRecommendation(kind: .rest,
-                reason: "Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento.")
+            return DailyRecommendation(kind: .rest, reasonFragments: [
+                ReasonFragment("Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento.")])
         }
         if let r = recovery, r.status == .poor {
-            return DailyRecommendation(kind: .rest,
-                reason: "Recupero basso (\(r.overall)/100): il corpo sta ancora recuperando.")
+            return DailyRecommendation(kind: .rest, reasonFragments: [
+                ReasonFragment("Recupero basso (%@/100): il corpo sta ancora recuperando.", ["\(r.overall)"])])
         }
         if let l = usableLoad, l.status == .high {
-            return DailyRecommendation(kind: .easy,
-                reason: "Stai caricando più del solito: meglio tenere bassa l'intensità.")
+            return DailyRecommendation(kind: .easy, reasonFragments: [
+                ReasonFragment("Stai caricando più del solito: meglio tenere bassa l'intensità.")])
         }
         if let r = recovery, r.status == .fair {
-            return DailyRecommendation(kind: .easy,
-                reason: "Recupero parziale (\(r.overall)/100): un'attività leggera è la scelta giusta.")
+            return DailyRecommendation(kind: .easy, reasonFragments: [
+                ReasonFragment("Recupero parziale (%@/100): un'attività leggera è la scelta giusta.", ["\(r.overall)"])])
         }
 
         // From here on recovery is good (or unknown) and load is optimal/low.
         if let days = daysSinceLast, days >= 3 {
-            return DailyRecommendation(kind: .push,
-                reason: "Sono \(days) giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere.")
+            return DailyRecommendation(kind: .push, reasonFragments: [
+                ReasonFragment("Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere.", ["\(days)"])])
         }
         if let goal = weeklyWorkoutGoal, goal > 0, workoutsThisWeek == goal - 1 {
-            return DailyRecommendation(kind: .push,
-                reason: "Te ne manca uno solo per l'obiettivo settimanale (\(workoutsThisWeek) su \(goal)): giornata giusta per chiuderlo.")
+            return DailyRecommendation(kind: .push, reasonFragments: [
+                ReasonFragment("Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo.",
+                               ["\(workoutsThisWeek)", "\(goal)"])])
         }
         if let l = usableLoad, l.status == .low, recovery == nil || recovery!.overall >= 60 {
-            return DailyRecommendation(kind: .push,
-                reason: "Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso.")
+            return DailyRecommendation(kind: .push, reasonFragments: [
+                ReasonFragment("Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso.")])
         }
 
-        var reason = "Recupero e carico in equilibrio: continua con il tuo ritmo abituale."
+        var fragments = [ReasonFragment("Recupero e carico in equilibrio: continua con il tuo ritmo abituale.")]
         if let goal = weeklyWorkoutGoal, goal > 0 {
-            reason += " Questa settimana: \(workoutsThisWeek) su \(goal) allenamenti."
+            fragments.append(ReasonFragment("Questa settimana: %@ su %@ allenamenti.",
+                                            ["\(workoutsThisWeek)", "\(goal)"]))
         }
-        return DailyRecommendation(kind: .maintain, reason: reason)
+        return DailyRecommendation(kind: .maintain, reasonFragments: fragments)
     }
 }

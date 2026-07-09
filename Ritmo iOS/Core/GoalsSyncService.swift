@@ -1,4 +1,5 @@
 import WatchConnectivity
+import SwiftData
 import RitmoCore
 
 /// Pushes user goals + the excluded-workout set to the paired Apple Watch over
@@ -36,6 +37,17 @@ final class GoalsSyncService: NSObject {
     func sendTrainingLoad(_ load: TrainingLoad) {
         latestTrainingLoad = try? JSONEncoder().encode(load)
         transmit()
+    }
+
+    /// Recompute-and-push in one step — the pattern every mutation site needs
+    /// (delete, RPE change, import, manual log). One definition instead of a
+    /// copy of the fetch in each view.
+    @MainActor
+    func sendTrainingLoad(recomputingFrom context: ModelContext) {
+        let fresh = (try? context.fetch(
+            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
+        )) ?? []
+        sendTrainingLoad(TrainingLoad.compute(from: fresh))
     }
 
     private func transmit() {

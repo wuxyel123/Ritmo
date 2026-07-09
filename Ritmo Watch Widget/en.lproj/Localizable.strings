@@ -1,0 +1,14 @@
+// Ritmo Watch Widget — Italian source keys → en values
+
+"Score giornaliero, passi, calorie e sonno." = "Daily score, steps, calories and sleep.";
+"Ritmo Anelli" = "Ritmo Rings";
+"Calorie attive, passi e sonno — anelli o valori." = "Active calories, steps and sleep — rings or values.";
+"Giorni dall'allenamento" = "Days since workout";
+"Giorni dall'ultimo allenamento — spunta verde se ti sei già allenato oggi." = "Days since your last workout — green check if you already trained today.";
+"Allenato oggi ✓" = "Trained today ✓";
+"%lldg dall'allenamento" = "%lldd since workout";
+"Nessun allenamento" = "No workouts";
+"oggi" = "today";
+"giorno" = "day";
+"giorni" = "days";
+"Score %lld · %lldk passi" = "Score %lld · %lldk steps";

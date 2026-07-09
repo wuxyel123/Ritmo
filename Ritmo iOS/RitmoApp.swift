@@ -77,10 +77,7 @@ struct ContentView: View {
             await HevySyncCoordinator.enrichNewWorkouts(into: ctx)
         }
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
-        let fresh = (try? ctx.fetch(
-            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
-        )) ?? []
-        GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
+        GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: ctx)
     }
 
     var body: some View {

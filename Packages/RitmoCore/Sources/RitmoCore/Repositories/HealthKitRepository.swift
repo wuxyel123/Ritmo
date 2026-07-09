@@ -96,7 +96,7 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Sleep Quality (App Group UserDefaults)
 
-    private static let appGroupID = "group.alessandrodiscalzi.com.ritmo"
+    private nonisolated static let appGroupID = "group.alessandrodiscalzi.com.ritmo"
 
     public func saveSleepQuality(_ quality: SleepQuality, for date: Date = .now) {
         guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return }
@@ -624,7 +624,7 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Importa allenamenti da Apple Health in SwiftData
 
-    private static let excludedWorkoutsKey = "excludedWorkoutUUIDs"
+    private nonisolated static let excludedWorkoutsKey = "excludedWorkoutUUIDs"
 
     /// HealthKit-workout UUIDs the user removed in-app, so import never re-adds them.
     /// Static + nonisolated so the watch's WatchConnectivity receiver can apply an
@@ -649,7 +649,7 @@ public final class HealthKitRepository: ObservableObject {
 
     public func excludedWorkoutUUIDs() -> Set<String> { Self.excludedWorkoutUUIDs() }
 
-    private static let trainingLoadKey = "trainingLoadFromPhone"
+    private nonisolated static let trainingLoadKey = "trainingLoadFromPhone"
 
     /// Caches the iPhone-computed TrainingLoad so the Watch can show the SAME
     /// number instead of recomputing from its own local HealthKit import —
@@ -691,18 +691,11 @@ public final class HealthKitRepository: ObservableObject {
         }
     }
 
-    /// Two time ranges are the "same" real-world workout if they overlap by more
-    /// than half of the shorter one's duration. Catches auto-detected + manually
-    /// started entries for the same session, which HealthKit gives different
-    /// UUIDs — so UUID-only dedup misses them and they show up as duplicates.
+    /// Catches auto-detected + manually started entries for the same session,
+    /// which HealthKit gives different UUIDs — so UUID-only dedup misses them.
+    /// Shared with the Hevy merge (`workoutRangesOverlapSignificantly`).
     private func overlapsSignificantly(_ aStart: Date, _ aEnd: Date, _ bStart: Date, _ bEnd: Date) -> Bool {
-        let overlapStart = max(aStart, bStart)
-        let overlapEnd = min(aEnd, bEnd)
-        guard overlapEnd > overlapStart else { return false }
-        let overlap = overlapEnd.timeIntervalSince(overlapStart)
-        let shorter = min(aEnd.timeIntervalSince(aStart), bEnd.timeIntervalSince(bStart))
-        guard shorter > 60 else { return overlap > 0 }
-        return overlap / shorter > 0.5
+        workoutRangesOverlapSignificantly(aStart, aEnd, bStart, bEnd)
     }
 
     /// True if `a` should be kept over `b` when both represent the same workout:
@@ -1031,8 +1024,6 @@ public final class HealthKitRepository: ObservableObject {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
         let interval = DateComponents(day: 1)
         let localStore = store
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withFullDate]
 
         return await withCheckedContinuation { cont in
             let q = HKStatisticsCollectionQuery(
@@ -1043,6 +1034,10 @@ public final class HealthKitRepository: ObservableObject {
                 intervalComponents: interval
             )
             q.initialResultsHandler = { _, collection, _ in
+                // Built inside the handler: ISO8601DateFormatter is not
+                // Sendable, so it can't be captured across the actor hop.
+                let fmt = ISO8601DateFormatter()
+                fmt.formatOptions = [.withFullDate]
                 var result = Set<String>()
                 collection?.enumerateStatistics(from: start, to: end) { stat, _ in
                     if let sum = stat.sumQuantity(), sum.doubleValue(for: .count()) > 100 {

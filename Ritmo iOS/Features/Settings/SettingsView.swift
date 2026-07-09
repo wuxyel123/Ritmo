@@ -654,13 +654,15 @@ struct HevySettingsView: View {
             do {
                 let result = try await service.importAll(into: modelContext,
                                                          stopWhenAllKnown: !fullHistory) { done, total in
-                    hevyProgress = "Importazione… \(done) di ~\(total)"
+                    hevyProgress = String(format: NSLocalizedString("Importazione… %@ di ~%@", comment: ""),
+                                          "\(done)", "\(total)")
                 }
-                hevyResult = "Importati \(result.imported) allenamenti, \(result.mergedIntoExisting) arricchiti, \(result.updated) corretti, \(result.skipped) già presenti."
+                hevyResult = String(format: NSLocalizedString("Importati %@ allenamenti, %@ arricchiti, %@ corretti, %@ già presenti.", comment: ""),
+                                    "\(result.imported)", "\(result.mergedIntoExisting)",
+                                    "\(result.updated)", "\(result.skipped)")
                 hevyLastSyncTimestamp = Date.now.timeIntervalSince1970
                 // The imported history changes the load baseline everywhere.
-                let fresh = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
-                GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
+                GoalsSyncService.shared.sendTrainingLoad(recomputingFrom: modelContext)
             } catch {
                 hevyResult = error.localizedDescription
             }

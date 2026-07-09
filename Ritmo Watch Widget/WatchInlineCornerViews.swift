@@ -15,7 +15,7 @@ struct WatchCornerView: View {
 
     var body: some View {
         Gauge(value: Double(entry.snapshot.dayScore), in: 0...100) {
-            Text("FS").font(.system(size: 8, weight: .bold))
+            Text("R").font(.system(size: 8, weight: .bold))
         } currentValueLabel: {
             Text("\(entry.snapshot.dayScore)")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
