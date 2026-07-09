@@ -50,7 +50,7 @@ struct WatchHomeView: View {
                             .frame(width: 28, height: 28)
                             .background(planColor(plan.kind).opacity(0.2), in: Circle())
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(plan.kind.title)
+                            Text(LocalizedStringKey(plan.kind.title))
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(planColor(plan.kind))
                             Text(plan.reason)
@@ -155,7 +155,11 @@ struct WatchHomeView: View {
     /// from the iPhone-synced TrainingLoad (ground truth), nil until synced.
     private var dailyPlan: DailyRecommendation? {
         let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
-        return DailyRecommendation.compute(recovery: usableRecovery, load: vm.trainingLoad)
+        return DailyRecommendation.compute(recovery: usableRecovery,
+                                           load: vm.trainingLoad,
+                                           hasWorkedOutToday: vm.snapshot.hasWorkedOutToday,
+                                           sessions: sessions,
+                                           weeklyWorkoutGoal: goals.weeklyWorkouts)
     }
 
     private func planColor(_ kind: DailyRecommendation.Kind) -> Color {
@@ -164,6 +168,7 @@ struct WatchHomeView: View {
         case .maintain: return .cyan
         case .easy:     return .orange
         case .rest:     return .red
+        case .done:     return .teal
         }
     }
 

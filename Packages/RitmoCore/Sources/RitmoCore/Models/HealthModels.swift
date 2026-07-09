@@ -108,19 +108,24 @@ public struct SleepSession: Identifiable, Codable {
     public let stages: [SleepStage]
     /// Minutes the bedtime deviated from recent averages; nil = no history (no consistency penalty)
     public let bedtimeDeviationMinutes: Double?
+    /// User-reported night wake-ups (manual logging only — watch-tracked
+    /// nights have real awake stages instead). nil = not reported.
+    public let manualWakeCount: Int?
 
     public init(
         id: UUID = UUID(),
         startTime: Date,
         endTime: Date,
         stages: [SleepStage] = [],
-        bedtimeDeviationMinutes: Double? = nil
+        bedtimeDeviationMinutes: Double? = nil,
+        manualWakeCount: Int? = nil
     ) {
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
         self.stages = stages
         self.bedtimeDeviationMinutes = bedtimeDeviationMinutes
+        self.manualWakeCount = manualWakeCount
     }
 
     public var totalHours: Double {
@@ -149,8 +154,17 @@ public struct SleepSession: Identifiable, Codable {
         // 0% awake = 10 pts, 15%+ awake = 0 pts. WASO of 15-30 min in an 8h
         // night is normal/healthy, and HealthKit's staging tends to flag
         // brief motion blips as "awake" — the old 5% cutoff (~24 min) zeroed
-        // this out for essentially normal sleep.
-        let continuityScore  = max(0.0, 1.0 - (awakeH / total) / 0.15) * 10
+        // this out for essentially normal sleep. Manually logged nights have
+        // no awake stages: fall back to the user-reported wake count (one
+        // brief wake is normal, each additional one costs 15%).
+        let continuityScore: Double
+        if awakeH > 0 {
+            continuityScore = max(0.0, 1.0 - (awakeH / total) / 0.15) * 10
+        } else if let wakes = manualWakeCount, wakes > 0 {
+            continuityScore = max(0.0, 1.0 - Double(max(0, wakes - 1)) * 0.15) * 10
+        } else {
+            continuityScore = 10
+        }
         let consistencyScore: Double
         if let dev = bedtimeDeviationMinutes {
             // ≤30 min deviation = 10 pts, 90+ min deviation = 0 pts (ordinary

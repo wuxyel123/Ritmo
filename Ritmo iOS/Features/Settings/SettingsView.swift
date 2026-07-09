@@ -46,6 +46,7 @@ struct SettingsTabView: View {
 
     @AppStorage("autoMacro") private var autoMacroRaw: String = AutoMacro.carbs.rawValue
     @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
+    @AppStorage("hevyConnected") private var hevyConnected = false
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -92,11 +93,11 @@ struct SettingsTabView: View {
                         Label("Peso corporeo (da Apple Salute)", systemImage: "scalemass.fill")
                             .font(.subheadline)
                         Spacer()
-                        Text(String(format: "%.1f kg", bodyWeightKg))
+                        Text(String(format: "%.2f kg", bodyWeightKg))
                             .font(.subheadline.bold()).foregroundStyle(RitmoTheme.accent)
                     }
                 } header: { Text("Corpo") } footer: {
-                    Text("Usato per calcolare i macro in modalità 'g per kg corporeo'.")
+                    Text("Media degli ultimi 7 giorni da Apple Salute — usata per i macro in modalità 'g per kg corporeo'.")
                 }
 
                 // MARK: Calories
@@ -196,6 +197,27 @@ struct SettingsTabView: View {
                                  format: "%.0f kcal", color: .red, onChange: saveGoals)
                 } header: { Text("Movimento") }
 
+                // MARK: Integrations
+                Section {
+                    NavigationLink {
+                        HevySettingsView()
+                    } label: {
+                        HStack {
+                            Label("Hevy", systemImage: "link")
+                            Spacer()
+                            if hevyConnected {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text("Collegato").font(.caption)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                            } else {
+                                Text("Non collegato").font(.caption)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                            }
+                        }
+                    }
+                } header: { Text("Integrazioni") }
+
                 // MARK: Notifications
                 Section {
                     Toggle(isOn: $weeklyRecapNotification) {
@@ -246,8 +268,15 @@ struct SettingsTabView: View {
             .animation(.spring(response: 0.3), value: showToast)
         }
         .task {
-            if let metric = await healthRepo.fetchLatestBodyMetric(),
-               let w = metric.weightKg { bodyWeightKg = w }
+            // Daily weigh-ins fluctuate: use the 7-day average, falling back
+            // to the latest sample when there's no recent history.
+            let history = await healthRepo.fetchBodyWeightHistoryPoints(days: 7)
+            if !history.isEmpty {
+                bodyWeightKg = history.map(\.value).reduce(0, +) / Double(history.count)
+            } else if let metric = await healthRepo.fetchLatestBodyMetric(),
+                      let w = metric.weightKg {
+                bodyWeightKg = w
+            }
             loadGoals()
         }
     }
@@ -494,6 +523,149 @@ private struct AutoMacroSelector: View {
                 .buttonStyle(.plain)
                 .animation(.spring(response: 0.2), value: selected)
             }
+        }
+    }
+}
+
+// MARK: - Hevy settings (submenu)
+
+struct HevySettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @AppStorage("hevyApiKey") private var hevyApiKey = ""
+    @AppStorage("hevyConnected") private var hevyConnected = false
+    @AppStorage("hevyLastSync") private var hevyLastSyncTimestamp: Double = 0
+    @State private var hevyImporting = false
+    @State private var hevyProgress = ""
+    @State private var hevyResult: String?
+
+    var body: some View {
+        Form {
+            Section {
+                if hevyConnected {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Text("Hevy collegato").font(.subheadline.bold())
+                        Spacer()
+                        if hevyLastSyncTimestamp > 0 {
+                            Text(Date(timeIntervalSince1970: hevyLastSyncTimestamp),
+                                 format: .relative(presentation: .named))
+                                .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                        }
+                    }
+                    if hevyImporting {
+                        HStack {
+                            ProgressView().padding(.trailing, 6)
+                            Text(hevyProgress.isEmpty ? "Importazione…" : hevyProgress)
+                        }
+                    } else {
+                        Button {
+                            importFromHevy(fullHistory: false)
+                        } label: {
+                            Label("Sincronizza ora (nuovi allenamenti)", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        Button {
+                            importFromHevy(fullHistory: true)
+                        } label: {
+                            Label("Importa storico completo", systemImage: "clock.arrow.circlepath")
+                        }
+                    }
+                    if let hevyResult {
+                        Text(hevyResult).font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    Button(role: .destructive) {
+                        hevyApiKey = ""
+                        hevyConnected = false
+                        hevyLastSyncTimestamp = 0
+                        hevyResult = nil
+                    } label: {
+                        Label("Rimuovi collegamento", systemImage: "xmark.circle")
+                    }
+                    .disabled(hevyImporting)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Come collegare Hevy", systemImage: "info.circle")
+                            .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
+                        Text("La chiave si crea SOLO dalla versione web: vai su hevy.com dal browser, accedi, apri Impostazioni → Developer (serve Hevy Pro) e genera la API key. Incollala qui sotto: il collegamento resta attivo finché non lo rimuovi.")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                        Text("E il webhook che vedi su quella pagina? Manda una notifica a un server quando salvi un allenamento — ma Ritmo non ha server, e per leggere i dati servirebbe comunque la chiave. Qui la chiave fa entrambe le cose: importa lo storico e completa i nuovi allenamenti appena compaiono.")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    .padding(.vertical, 2)
+                    SecureField("Chiave API Hevy", text: $hevyApiKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button {
+                        connectHevy()
+                    } label: {
+                        HStack {
+                            if hevyImporting {
+                                ProgressView().padding(.trailing, 6)
+                                Text(hevyProgress.isEmpty ? "Importazione…" : hevyProgress)
+                            } else {
+                                Label("Collega Hevy", systemImage: "link")
+                            }
+                        }
+                    }
+                    .disabled(hevyApiKey.trimmingCharacters(in: .whitespaces).isEmpty || hevyImporting)
+                    if let hevyResult {
+                        Text(hevyResult).font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                }
+            } footer: {
+                if hevyConnected {
+                    Text("Ritmo completa da solo i nuovi allenamenti: quando ne compare uno da Apple Salute, scarica da Hevy serie, pesi e titolo sulla stessa voce — mai un doppione. «Sincronizza ora» forza subito quel controllo; «Importa storico completo» ripassa tutta la cronologia per recuperare quelli vecchi.")
+                } else {
+                    Text("Una volta collegato, quando un nuovo allenamento compare da Apple Salute Ritmo lo completa da solo con i dati Hevy — serie, pesi e ripetizioni. L'allenamento resta uno solo: la voce di Apple Salute viene arricchita, non duplicata.")
+                }
+            }
+        }
+        .navigationTitle("Hevy")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    /// First-time connection: validates the key, marks the integration as
+    /// connected (persists until removed), then runs the full first import.
+    private func connectHevy() {
+        hevyImporting = true
+        hevyResult = nil
+        let service = HevyService(apiKey: hevyApiKey.trimmingCharacters(in: .whitespaces))
+        Task { @MainActor in
+            do {
+                try await service.validate()
+                hevyConnected = true
+                hevyImporting = false
+                importFromHevy(fullHistory: true)
+            } catch {
+                hevyResult = error.localizedDescription
+                hevyImporting = false
+            }
+        }
+    }
+
+    /// fullHistory walks every page (old workouts); otherwise it's the fast
+    /// incremental check that stops at the first fully-known page.
+    private func importFromHevy(fullHistory: Bool) {
+        hevyImporting = true
+        hevyResult = nil
+        let service = HevyService(apiKey: hevyApiKey.trimmingCharacters(in: .whitespaces))
+        Task { @MainActor in
+            do {
+                let result = try await service.importAll(into: modelContext,
+                                                         stopWhenAllKnown: !fullHistory) { done, total in
+                    hevyProgress = "Importazione… \(done) di ~\(total)"
+                }
+                hevyResult = "Importati \(result.imported) allenamenti, \(result.mergedIntoExisting) arricchiti, \(result.updated) corretti, \(result.skipped) già presenti."
+                hevyLastSyncTimestamp = Date.now.timeIntervalSince1970
+                // The imported history changes the load baseline everywhere.
+                let fresh = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
+                GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
+            } catch {
+                hevyResult = error.localizedDescription
+            }
+            hevyImporting = false
+            hevyProgress = ""
         }
     }
 }

@@ -9,7 +9,6 @@ struct WorkoutListView: View {
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @State private var isSyncing = false
     @State private var pendingDelete: WorkoutSession?
-    @State private var showingManualLog = false
 
     var body: some View {
         NavigationStack {
@@ -49,27 +48,33 @@ struct WorkoutListView: View {
                                 isPresented: Binding(get: { pendingDelete != nil },
                                                      set: { if !$0 { pendingDelete = nil } }),
                                 presenting: pendingDelete) { session in
-                Button("Rimuovi solo dall'app", role: .destructive) {
-                    remove(session, alsoFromHealth: false)
-                }
-                Button("Elimina anche da Apple Salute", role: .destructive) {
-                    remove(session, alsoFromHealth: true)
-                }
-                Button("Annulla", role: .cancel) { pendingDelete = nil }
-            } message: { _ in
-                Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
-            }
-            .navigationTitle("Allenamenti")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button { showingManualLog = true } label: {
-                        Image(systemName: "plus")
+                if session.source == .manual {
+                    Button("Elimina allenamento", role: .destructive) {
+                        remove(session, alsoFromHealth: true)
+                    }
+                } else if session.source == .hevy {
+                    Button("Elimina allenamento", role: .destructive) {
+                        remove(session, alsoFromHealth: false)
+                    }
+                } else {
+                    Button("Rimuovi solo dall'app", role: .destructive) {
+                        remove(session, alsoFromHealth: false)
+                    }
+                    Button("Elimina anche da Apple Salute", role: .destructive) {
+                        remove(session, alsoFromHealth: true)
                     }
                 }
+                Button("Annulla", role: .cancel) { pendingDelete = nil }
+            } message: { session in
+                if session.source == .manual {
+                    Text("L'allenamento verrà eliminato anche da Apple Salute.")
+                } else if session.source == .hevy {
+                    Text("L'allenamento importato da Hevy verrà rimosso dall'app.")
+                } else {
+                    Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
+                }
             }
-            .sheet(isPresented: $showingManualLog) {
-                ManualWorkoutLogView(onSaved: { pushTrainingLoad() })
-            }
+            .navigationTitle("Allenamenti")
             .task { await syncHealthKit() }
             .refreshable { await syncHealthKit() }
         }
@@ -77,13 +82,16 @@ struct WorkoutListView: View {
 
     private func remove(_ session: WorkoutSession, alsoFromHealth: Bool) {
         let uuid = session.hkWorkoutUUID
+        // App-authored workouts always take their HealthKit record with them —
+        // Ritmo owns it, and leaving it behind would ghost-count the workout.
+        let deleteFromHealth = alsoFromHealth || session.source == .manual
         pendingDelete = nil
         // Remove locally FIRST so it disappears immediately, regardless of the
         // HealthKit outcome (Apple-owned workouts can't be deleted by us).
         healthRepo.deleteWorkout(session, in: modelContext)   // exclude + local delete
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
         pushTrainingLoad()
-        if alsoFromHealth, let uuid {
+        if deleteFromHealth, let uuid {
             Task { _ = await healthRepo.deleteHealthKitWorkout(uuid: uuid) }
         }
     }
@@ -97,13 +105,18 @@ struct WorkoutListView: View {
         GoalsSyncService.shared.sendTrainingLoad(TrainingLoad.compute(from: fresh))
     }
 
+    /// HealthKit first; only when it inserted NEW workouts does the Hevy API
+    /// get asked, to complete those sessions with sets/title (never duplicate).
     private func syncHealthKit() async {
         guard !isSyncing else { return }
         isSyncing = true
         defer { isSyncing = false }
-        await healthRepo.importHealthKitWorkouts(into: modelContext)
+        if await healthRepo.importHealthKitWorkouts(into: modelContext) > 0 {
+            await HevySyncCoordinator.enrichNewWorkouts(into: modelContext)
+        }
         pushTrainingLoad()
     }
+
 }
 
 // MARK: - Training Load Card
@@ -160,10 +173,17 @@ struct TrainingLoadCard: View {
 struct TrainingLoadDetailView: View {
     let sessions: [WorkoutSession]
 
-    private var load: TrainingLoad { TrainingLoad.compute(from: sessions) }
+    // Every aggregate below is a full pass over the whole session store; as
+    // computed properties they re-ran on EVERY body evaluation (history alone
+    // was read several times per pass) — the lag when opening this screen.
+    // Computed once instead, right after the push animation starts.
+    @State private var load: TrainingLoad?
+    @State private var history: [TrainingLoadPoint] = []
+    @State private var categoryLoads: [CategoryLoad] = []
+    @State private var daily: [(date: Date, load: Int)] = []
 
-    private var color: Color {
-        switch load.status {
+    private func statusColor(_ status: TrainingLoadStatus) -> Color {
+        switch status {
         case .low:      return .blue
         case .optimal:  return .green
         case .high:     return .orange
@@ -171,21 +191,20 @@ struct TrainingLoadDetailView: View {
         }
     }
 
-    private var statusExplanation: String {
-        switch load.status {
+    // Data only, per explicit user preference: state which band the ratio is
+    // in, no advice ("valuta una giornata più leggera") or judgment.
+    private func statusExplanation(_ status: TrainingLoadStatus) -> String {
+        switch status {
         case .low:
-            return "Il carico degli ultimi 7 giorni è sotto la tua media di 4 settimane. C'è spazio per allenarti di più, se vuoi progredire."
+            return "Il carico degli ultimi 7 giorni è sotto l'80% della tua media di 4 settimane."
         case .optimal:
-            return "Il carico è in linea con la tua media: un buon equilibrio tra stimolo e recupero."
+            return "Il carico degli ultimi 7 giorni è tra l'80% e il 130% della tua media di 4 settimane."
         case .high:
-            return "Stai caricando più del solito. Va bene per brevi periodi — cura sonno e recupero."
+            return "Il carico degli ultimi 7 giorni è tra il 130% e il 150% della tua media di 4 settimane."
         case .veryHigh:
-            return "Carico molto più alto della norma: rischio di sovrallenamento. Valuta una giornata più leggera."
+            return "Il carico degli ultimi 7 giorni è oltre il 150% della tua media di 4 settimane."
         }
     }
-
-    private var history: [TrainingLoadPoint] { TrainingLoad.history(from: sessions) }
-    private var categoryLoads: [CategoryLoad] { TrainingLoad.loadByCategory(from: sessions) }
 
     private func categoryColor(_ c: WorkoutCategory) -> Color {
         switch c {
@@ -209,7 +228,31 @@ struct TrainingLoadDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: RitmoTheme.gap) {
+            if let load {
+                content(load)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 120)
+            }
+        }
+        .navigationTitle("Carico allenamento")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .task {
+            guard load == nil else { return }
+            history = TrainingLoad.history(from: sessions)
+            categoryLoads = TrainingLoad.loadByCategory(from: sessions)
+            daily = dailyLoad(days: 14)
+            load = TrainingLoad.compute(from: sessions)   // last: flips the view
+        }
+    }
+
+    @ViewBuilder
+    private func content(_ load: TrainingLoad) -> some View {
+        let color = statusColor(load.status)
+        VStack(alignment: .leading, spacing: RitmoTheme.gap) {
 
                 // MARK: Header
                 FitCard {
@@ -235,7 +278,7 @@ struct TrainingLoadDetailView: View {
                                 }
                             }
                         }
-                        Text(statusExplanation).font(.subheadline).foregroundStyle(.secondary)
+                        Text(statusExplanation(load.status)).font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
 
@@ -243,7 +286,7 @@ struct TrainingLoadDetailView: View {
                 FitCard {
                     VStack(alignment: .leading, spacing: 10) {
                         SectionHeader(title: "Carico giornaliero")
-                        Chart(dailyLoad(days: 14), id: \.date) { item in
+                        Chart(daily, id: \.date) { item in
                             BarMark(x: .value("Giorno", item.date, unit: .day),
                                     y: .value("Carico", item.load),
                                     width: .fixed(10))
@@ -353,12 +396,7 @@ struct TrainingLoadDetailView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-            }
-            .padding(RitmoTheme.pagePadding)
         }
-        .navigationTitle("Carico allenamento")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .padding(RitmoTheme.pagePadding)
     }
 }

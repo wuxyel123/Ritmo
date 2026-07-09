@@ -101,7 +101,12 @@ public struct ExerciseDataPoint: Identifiable {
 }
 
 // MARK: - InsightsService
-/// Genera insight e correlazioni cross-source
+/// Genera insight e correlazioni cross-source.
+///
+/// REGOLA DI TONO (richiesta esplicita dell'utente): gli insight riportano
+/// SOLO i dati — niente consigli, giudizi o lezioni ("aggiungi trazioni",
+/// "rischio infortuni", "continua così"). Se il volume push supera il pull,
+/// il testo dice quello e basta, con i numeri.
 public final class InsightsService {
 
     public init() {}
@@ -145,9 +150,9 @@ public final class InsightsService {
             if ratio > 1.5 {
                 insights.append(FitInsight(
                     id: UUID(),
-                    title: "Troppo Push, poco Pull",
-                    messageKey: "In 14 giorni hai fatto %@%% più volume push che pull. Rischio infortuni alla spalla. Aggiungi rematori o trazioni.",
-                    messageArgs: ["\(Int(ratio * 100))"],
+                    title: "Volume push maggiore del pull",
+                    messageKey: "Ultimi 14 giorni: il volume push è il %@%% del volume pull (%@ kg contro %@ kg).",
+                    messageArgs: ["\(Int(ratio * 100))", "\(Int(pushVolume))", "\(Int(pullVolume))"],
                     type: .warning,
                     priority: .high,
                     category: .workout,
@@ -156,8 +161,9 @@ public final class InsightsService {
             } else if ratio < 0.7 {
                 insights.append(FitInsight(
                     id: UUID(),
-                    title: "Pull dominante",
-                    messageKey: "Hai più volume pull che push. Bilancia con più esercizi per petto e spalle.",
+                    title: "Volume pull maggiore del push",
+                    messageKey: "Ultimi 14 giorni: il volume pull è il %@%% del volume push (%@ kg contro %@ kg).",
+                    messageArgs: ["\(Int(100 / ratio))", "\(Int(pullVolume))", "\(Int(pushVolume))"],
                     type: .suggestion,
                     priority: .medium,
                     category: .workout,
@@ -172,8 +178,10 @@ public final class InsightsService {
         if upperVolume > 0 && legVolume < upperVolume * 0.2 {
             insights.append(FitInsight(
                 id: UUID(),
-                title: "Skip leg day detected 🦵",
-                messageKey: "Nelle ultime 2 settimane hai allenato le gambe molto meno del busto. Le gambe sono il motore della forza totale.",
+                title: "Volume gambe inferiore al busto",
+                messageKey: "Ultime 2 settimane: volume gambe %@ kg, busto %@ kg (%@%% del busto).",
+                messageArgs: ["\(Int(legVolume))", "\(Int(upperVolume))",
+                              "\(Int(legVolume / upperVolume * 100))"],
                 type: .warning,
                 priority: .high,
                 category: .workout,
@@ -193,8 +201,8 @@ public final class InsightsService {
         case .veryHigh:
             return [FitInsight(
                 id: UUID(),
-                title: "Carico di allenamento molto alto",
-                messageKey: "Il tuo carico degli ultimi 7 giorni è al %@%% della tua media di 4 settimane. Rischio di sovrallenamento: valuta una giornata più leggera.",
+                title: "Carico oltre il 150% della media",
+                messageKey: "Il carico degli ultimi 7 giorni è al %@%% della tua media di 4 settimane.",
                 messageArgs: ["\(pct)"],
                 type: .warning,
                 priority: .high,
@@ -204,8 +212,8 @@ public final class InsightsService {
         case .high:
             return [FitInsight(
                 id: UUID(),
-                title: "Carico di allenamento elevato",
-                messageKey: "Stai caricando più del solito (%@%% della tua media di 4 settimane). Va bene per brevi periodi — cura sonno e recupero.",
+                title: "Carico tra il 130% e il 150% della media",
+                messageKey: "Il carico degli ultimi 7 giorni è al %@%% della tua media di 4 settimane.",
                 messageArgs: ["\(pct)"],
                 type: .suggestion,
                 priority: .medium,
@@ -215,8 +223,8 @@ public final class InsightsService {
         case .low:
             return [FitInsight(
                 id: UUID(),
-                title: "Margine per allenarti di più",
-                messageKey: "Il tuo carico è al %@%% della tua media di 4 settimane. C'è spazio per progredire, se vuoi.",
+                title: "Carico sotto l'80% della media",
+                messageKey: "Il carico degli ultimi 7 giorni è al %@%% della tua media di 4 settimane.",
                 messageArgs: ["\(pct)"],
                 type: .tip,
                 priority: .low,
@@ -238,8 +246,8 @@ public final class InsightsService {
         if avgSleep < 6.5 && !sessions.isEmpty {
             insights.append(FitInsight(
                 id: UUID(),
-                title: "Recupero insufficiente",
-                messageKey: "Stai dormendo in media %@h. Con meno di 7h il testosterone cala del 10-15%% e i progressi rallentano.",
+                title: "Sonno medio sotto le 6,5 ore",
+                messageKey: "Stai dormendo in media %@h a notte.",
                 messageArgs: [String(format: "%.1f", avgSleep)],
                 type: .warning,
                 priority: .high,
@@ -263,8 +271,8 @@ public final class InsightsService {
         if avgProtein < goals.dailyProteinG * 0.8 {
             insights.append(FitInsight(
                 id: UUID(),
-                title: "Proteine insufficienti",
-                messageKey: "Media settimanale (%@ giorni tracciati): %@g su %@g obiettivo. Con meno proteine perdi massa muscolare anche con l'allenamento.",
+                title: "Proteine sotto l'obiettivo",
+                messageKey: "Media settimanale (%@ giorni tracciati): %@g di proteine su %@g di obiettivo.",
                 messageArgs: ["\(last7.count)", "\(Int(avgProtein))", "\(Int(goals.dailyProteinG))"],
                 type: .warning,
                 priority: .high,
@@ -277,7 +285,7 @@ public final class InsightsService {
         if avgWater < goals.dailyWaterMl * 0.7 {
             insights.append(FitInsight(
                 id: UUID(),
-                title: "Idratazione bassa",
+                title: "Acqua sotto l'obiettivo",
                 messageKey: "Bevi in media %@L al giorno. L'obiettivo è %@L.",
                 messageArgs: [String(format: "%.1f", avgWater / 1000), String(format: "%.1f", goals.dailyWaterMl / 1000)],
                 type: .suggestion,
@@ -323,8 +331,8 @@ public final class InsightsService {
         if workoutProtein > restProtein * 1.3 {
             return [FitInsight(
                 id: UUID(),
-                title: "Proteine nei giorni di riposo",
-                messageKey: "Mangi %@g in meno di proteine nei giorni senza allenamento. Il muscolo si ricostruisce anche a riposo — mantieni l'apporto costante.",
+                title: "Meno proteine nei giorni di riposo",
+                messageKey: "Nei giorni senza allenamento assumi in media %@g di proteine in meno rispetto ai giorni di allenamento.",
                 messageArgs: ["\(Int(workoutProtein - restProtein))"],
                 type: .tip,
                 priority: .medium,
@@ -343,8 +351,8 @@ public final class InsightsService {
         // Very short last night
         if let last = sorted.first, last.totalHours < 5 {
             insights.append(FitInsight(
-                title: "Notte molto corta",
-                messageKey: "Hai dormito solo %@h la scorsa notte. Considera attività leggera e rimanda allenamenti intensi.",
+                title: "Notte sotto le 5 ore",
+                messageKey: "Hai dormito %@h la scorsa notte.",
                 messageArgs: [String(format: "%.1f", last.totalHours)],
                 type: .warning, priority: .high, category: .recovery, icon: "⚠️"
             ))
@@ -362,8 +370,8 @@ public final class InsightsService {
             let stdDev = sqrt(bedtimes.map { pow($0 - mean, 2) }.reduce(0, +) / Double(bedtimes.count))
             if stdDev > 45 {
                 insights.append(FitInsight(
-                    title: "Orario di sonno irregolare",
-                    messageKey: "Il tuo orario di addormentamento varia di ±%@ minuti. La regolarità è il fattore più importante per la qualità del sonno.",
+                    title: "Orario di sonno variabile",
+                    messageKey: "Il tuo orario di addormentamento varia in media di ±%@ minuti.",
                     messageArgs: ["\(Int(stdDev))"],
                     type: .warning, priority: .medium, category: .recovery, icon: "🕐"
                 ))
@@ -379,16 +387,16 @@ public final class InsightsService {
 
             if deepPct > 0 && deepPct < 10 {
                 insights.append(FitInsight(
-                    title: "Poco sonno profondo",
-                    messageKey: "Il tuo sonno profondo medio è %@%% del totale (obiettivo ≥15%%). Il deep sleep è fondamentale per il recupero muscolare.",
+                    title: "Sonno profondo sotto il 15%",
+                    messageKey: "Il tuo sonno profondo medio è il %@%% del totale (riferimento ≥15%%).",
                     messageArgs: ["\(Int(deepPct))"],
                     type: .suggestion, priority: .medium, category: .recovery, icon: "💤"
                 ))
             }
             if remPct > 0 && remPct < 15 {
                 insights.append(FitInsight(
-                    title: "REM insufficiente",
-                    messageKey: "Il tuo sonno REM medio è %@%% del totale (obiettivo ≥20%%). Il REM consolida la memoria e regola il recupero emotivo.",
+                    title: "Sonno REM sotto il 20%",
+                    messageKey: "Il tuo sonno REM medio è il %@%% del totale (riferimento ≥20%%).",
                     messageArgs: ["\(Int(remPct))"],
                     type: .suggestion, priority: .medium, category: .recovery, icon: "🧠"
                 ))
@@ -402,8 +410,8 @@ public final class InsightsService {
             let priorAvg  = sorted.dropFirst(3).prefix(4).map { $0.totalHours }.reduce(0, +) / priorCount
             if recentAvg >= 7 && recentAvg > priorAvg + 0.5 {
                 insights.append(FitInsight(
-                    title: "Il tuo sonno sta migliorando",
-                    messageKey: "Nelle ultime 3 notti hai dormito in media %@h, più dei giorni precedenti. Continua così!",
+                    title: "Sonno in aumento",
+                    messageKey: "Nelle ultime 3 notti hai dormito in media %@h, più della media delle notti precedenti.",
                     messageArgs: [String(format: "%.1f", recentAvg)],
                     type: .positive, priority: .low, category: .recovery, icon: "🌙"
                 ))
@@ -447,8 +455,8 @@ public final class InsightsService {
         if diff > 8 {
             return [FitInsight(
                 id: UUID(),
-                title: "Il sonno migliora le tue performance",
-                messageKey: "Con 7.5h+ di sonno il tuo volume di allenamento è %@%% più alto. Dormire è parte dell'allenamento.",
+                title: "Volume più alto dopo 7,5h+ di sonno",
+                messageKey: "Nei giorni dopo almeno 7,5 ore di sonno il tuo volume di allenamento è in media il %@%% più alto.",
                 messageArgs: ["\(Int(diff))"],
                 type: .positive,
                 priority: .low,

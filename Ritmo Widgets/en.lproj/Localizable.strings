@@ -34,3 +34,7 @@
 
 // Macro cell goal format (su = "of" as in "of goal")
 "su %lld%@" = "of %lld%@";
+
+// ── Added 2026-07-03: post-localization features ──
+"%lld/%lld serie" = "%lld/%lld sets";
+"%lld di %lld serie completate" = "%lld of %lld sets completed";

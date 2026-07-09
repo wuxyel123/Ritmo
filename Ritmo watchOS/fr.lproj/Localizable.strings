@@ -23,3 +23,45 @@
 // Log
 "Acqua aggiunta!" = "Eau ajoutée !";
 "Sonno salvato!" = "Sommeil enregistré !";
+
+// ── Added 2026-07-03: post-localization features ──
+"Giornata per spingere" = "Journée pour pousser";
+"Mantieni il ritmo" = "Garde le rythme";
+"Giornata leggera" = "Journée légère";
+"Meglio riposare" = "Mieux vaut se reposer";
+"Allenamento fatto" = "Séance faite";
+"Inizia allenamento" = "Démarrer la séance";
+"Da routine" = "Depuis une routine";
+"Libero" = "Libre";
+"Forza" = "Force";
+"Corsa" = "Course";
+"Camminata" = "Marche";
+"Ciclismo" = "Vélo";
+"Esercizi" = "Exercices";
+"Nuovo esercizio" = "Nouvel exercice";
+"Crea" = "Créer";
+"Com'è andata?" = "Comment ça s'est passé ?";
+"Scarta allenamento" = "Abandonner la séance";
+"%lld serie fatte" = "%lld séries faites";
+"%lld esercizi" = "%lld exercices";
+"Durata" = "Durée";
+"Sonno profondo" = "Sommeil profond";
+"Continuità" = "Continuité";
+"Regolarità" = "Régularité";
+"In pausa" = "En pause";
+"Allenamento in corso →" = "Séance en cours →";
+"Esercizio" = "Exercice";
+"Serie" = "Série";
+"Nome" = "Nom";
+"Gruppo" = "Groupe";
+"Misura" = "Mesure";
+"Fatta ✓" = "Faite ✓";
+"Riapri serie" = "Rouvrir la série";
+"Salva senza RPE" = "Enregistrer sans RPE";
+"RPE — sforzo percepito" = "RPE — effort perçu";
+"Tocca un valore, poi ruota la corona" = "Touche une valeur, puis tourne la couronne";
+"Ruota la corona per regolare" = "Tourne la couronne pour régler";
+"Scorri a destra per gli esercizi →" = "Balaye à droite pour les exercices →";
+"Avvio…" = "Démarrage…";
+"%lld/%lld serie" = "%lld/%lld séries";
+"Profondo" = "Profond";

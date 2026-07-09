@@ -16,6 +16,11 @@ public final class WorkoutSession {
     public var hkWorkoutUUID: String?
     /// User-provided Rate of Perceived Exertion (1–10). Overrides the auto effort estimate.
     public var userRPE: Int?
+    /// Hevy workout id when imported via the Hevy API (idempotency key).
+    public var hevyID: String?
+    /// Name of the app that recorded the workout in HealthKit (e.g. "Hevy",
+    /// "WHOOP", the watch) — shown as the source badge, Fitness-style.
+    public var sourceAppName: String?
 
     @Relationship(deleteRule: .cascade)
     public var sets: [WorkoutSet]
@@ -114,6 +119,9 @@ public final class Exercise {
     public var name: String
     public var muscleGroup: MuscleGroup
     public var exerciseType: ExerciseType
+    /// Secondary muscle groups (raw values — [String] keeps the SwiftData
+    /// lightweight migration trivial). Use `secondaryMuscleGroups`.
+    public var secondaryGroupsRaw: [String] = []
 
     @Relationship(inverse: \WorkoutSet.exercise)
     public var sets: [WorkoutSet]
@@ -122,13 +130,20 @@ public final class Exercise {
         id: UUID = UUID(),
         name: String,
         muscleGroup: MuscleGroup = .other,
-        exerciseType: ExerciseType = .weightReps
+        exerciseType: ExerciseType = .weightReps,
+        secondaryMuscleGroups: [MuscleGroup] = []
     ) {
         self.id = id
         self.name = name
         self.muscleGroup = muscleGroup
         self.exerciseType = exerciseType
+        self.secondaryGroupsRaw = secondaryMuscleGroups.map(\.rawValue)
         self.sets = []
+    }
+
+    public var secondaryMuscleGroups: [MuscleGroup] {
+        get { secondaryGroupsRaw.compactMap { MuscleGroup(rawValue: $0) } }
+        set { secondaryGroupsRaw = newValue.map(\.rawValue) }
     }
 }
 
@@ -231,6 +246,7 @@ extension UserGoals {
 public enum DataSource: String, Codable {
     case healthKit = "Apple Health"
     case manual = "Manuale"
+    case hevy = "Hevy"
 }
 
 public enum SetType: String, Codable, CaseIterable {
@@ -271,13 +287,17 @@ public enum MuscleGroup: String, Codable, CaseIterable, Hashable {
     case chest = "Petto"
     case back = "Schiena"
     case shoulders = "Spalle"
+    case traps = "Trapezi"
     case biceps = "Bicipiti"
     case triceps = "Tricipiti"
     case forearms = "Avambracci"
     case core = "Core"
+    case lowerBack = "Lombari"
     case quads = "Quadricipiti"
     case hamstrings = "Femorali"
     case glutes = "Glutei"
+    case abductors = "Abduttori"
+    case adductors = "Adduttori"
     case calves = "Polpacci"
     case fullBody = "Full Body"
     case cardio = "Cardio"
@@ -288,13 +308,17 @@ public enum MuscleGroup: String, Codable, CaseIterable, Hashable {
         case .chest: return "❤️"
         case .back: return "🏋️"
         case .shoulders: return "🔝"
+        case .traps: return "🔺"
         case .biceps: return "💪"
         case .triceps: return "💪"
         case .forearms: return "🤜"
         case .core: return "⭕"
+        case .lowerBack: return "🧱"
         case .quads: return "🦵"
         case .hamstrings: return "🦵"
         case .glutes: return "🍑"
+        case .abductors: return "↔️"
+        case .adductors: return "↕️"
         case .calves: return "🦶"
         case .fullBody: return "🧍"
         case .cardio: return "❤️‍🔥"
@@ -306,10 +330,10 @@ public enum MuscleGroup: String, Codable, CaseIterable, Hashable {
         switch self {
         case .chest: return "heart.fill"
         case .back: return "figure.strengthtraining.traditional"
-        case .shoulders: return "arrow.up.circle.fill"
+        case .shoulders, .traps: return "arrow.up.circle.fill"
         case .biceps, .triceps, .forearms: return "hand.raised.fill"
-        case .core: return "circle.fill"
-        case .quads, .hamstrings, .glutes, .calves: return "figure.run"
+        case .core, .lowerBack: return "circle.fill"
+        case .quads, .hamstrings, .glutes, .calves, .abductors, .adductors: return "figure.run"
         case .fullBody: return "person.fill"
         case .cardio: return "heart.circle.fill"
         case .other: return "questionmark.circle"

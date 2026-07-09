@@ -93,7 +93,7 @@ struct HealthView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 SectionHeader(title: "Composizione corporea")
                                 HStack(spacing: 0) {
-                                    HeartMetric(value: metric.weightKg.map { String(format: "%.1f", $0) } ?? "--",
+                                    HeartMetric(value: metric.weightKg.map { String(format: "%.2f", $0) } ?? "--",
                                                 label: "Peso", unit: "kg", color: .primary, icon: "scalemass.fill")
                                     HeartMetric(value: metric.bodyFatPercentage.map { String(format: "%.1f", $0) } ?? "--",
                                                 label: "Grasso corp.", unit: "%", color: .orange, icon: "chart.pie.fill")
@@ -152,7 +152,7 @@ struct HealthView: View {
                             title: "Peso corporeo",
                             points: vm.weightHistory.map { ChartPoint(date: $0.date, value: $0.value) },
                             goal: nil, color: .primary, unit: "kg", chartUnit: .day, chartType: .line,
-                            yDomain: wLo...wHi
+                            yDomain: wLo...wHi, decimals: 2
                         )
                     }
                 }

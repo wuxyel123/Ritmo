@@ -10,7 +10,7 @@ struct WorkoutRow: View {
             HStack {
                 Text(LocalizedStringKey(session.title)).font(.headline)
                 Spacer()
-                SourceBadge(source: session.source)
+                SourceBadge(source: session.source, appName: session.sourceAppName)
             }
             Text(session.startTime, format: .dateTime.day().month().year())
                 .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
@@ -56,7 +56,7 @@ struct HealthKitWorkoutRow: View {
             HStack {
                 Label(LocalizedStringKey(session.title), systemImage: activitySymbol).font(.headline)
                 Spacer()
-                SourceBadge(source: .healthKit)
+                SourceBadge(source: .healthKit, appName: session.sourceAppName)
             }
             Text(session.startTime, format: .dateTime.day().month().year())
                 .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
@@ -86,15 +86,33 @@ struct HealthKitWorkoutRow: View {
 
 struct SourceBadge: View {
     let source: DataSource
-    var color: Color { source == .healthKit ? .red : .gray }
-    var icon: String {
+    /// Recording app from HealthKit's source revision (e.g. "Hevy", "WHOOP",
+    /// the watch's name) — Fitness-style attribution. Real third-party app
+    /// icons aren't accessible via public API, so name + glyph it is.
+    var appName: String? = nil
+
+    private var isWatch: Bool {
+        appName.map { $0.localizedCaseInsensitiveContains("watch") } ?? false
+    }
+
+    var color: Color {
+        if appName != nil { return source == .healthKit ? .red : .blue }
         switch source {
-        case .healthKit: return "heart.fill"
-        case .manual: return "pencil.circle.fill"
+        case .healthKit: return .red
+        case .manual:    return .gray
+        case .hevy:      return .blue
+        }
+    }
+    var icon: String {
+        if isWatch { return "applewatch" }
+        switch source {
+        case .healthKit: return appName == nil ? "heart.fill" : "app.badge.fill"
+        case .manual:    return "pencil.circle.fill"
+        case .hevy:      return "square.and.arrow.down.fill"
         }
     }
     var body: some View {
-        Label(LocalizedStringKey(source.rawValue), systemImage: icon)
+        Label(LocalizedStringKey(appName ?? source.rawValue), systemImage: icon)
             .font(.caption2.bold())
             .padding(.horizontal, 6).padding(.vertical, 3)
             .background(color.opacity(0.12), in: Capsule())

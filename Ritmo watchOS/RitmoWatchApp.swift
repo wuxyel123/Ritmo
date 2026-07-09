@@ -21,17 +21,18 @@ struct WatchTabView: View {
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @StateObject private var vm = WatchViewModel()
     @Environment(\.scenePhase) private var scenePhase
+    @State private var selectedTab = 0
 
     private var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
     var body: some View {
-        TabView {
-            WatchHomeView(goals: goals, sessions: sessions)      // 1 — score + breakdown
-            WatchMacroGoalsView(goals: goals)                    // 2 — nutrition
-            WatchWorkoutView(goals: goals, sessions: sessions)   // 3 — workout
-            WatchSleepView(goals: goals, sessions: sessions)     // 4 — sleep
-            WatchHealthView()                                    // 5 — salute (HR, HRV, SpO₂)
-            WatchWaterView(goals: goals, sessions: sessions)     // 6 — water
+        TabView(selection: $selectedTab) {
+            WatchHomeView(goals: goals, sessions: sessions).tag(0)      // score + breakdown
+            WatchMacroGoalsView(goals: goals).tag(1)                    // nutrition
+            WatchWorkoutView(goals: goals, sessions: sessions).tag(2)   // workout
+            WatchSleepView(goals: goals, sessions: sessions).tag(3)     // sleep
+            WatchHealthView().tag(4)                                    // salute (HR, HRV, SpO₂)
+            WatchWaterView(goals: goals, sessions: sessions).tag(5)     // water
         }
         #if os(watchOS)
         .tabViewStyle(.page)

@@ -56,33 +56,23 @@ struct RecoveryView: View {
                         Task { await vm.reload(healthRepo: healthRepo, days: p.days) }
                     }
 
-                    // MARK: Sleep history chart
+                    // MARK: Sleep history chart — interactive (tap/drag to
+                    // inspect a night, expandable), 12h axis; values clamped
+                    // so an outlier night can't draw past the plot area.
                     if !vm.sleepHistory.isEmpty {
-                        FitCard {
-                            VStack(alignment: .leading, spacing: 10) {
-                                SectionHeader(title: "Ore di sonno")
-                                Chart(vm.sleepHistory) { s in
-                                    BarMark(x: .value("Notte", s.startTime, unit: .day),
-                                            y: .value("Ore", s.totalHours),
-                                            width: .fixed(12))
-                                        .foregroundStyle(s.totalHours >= 7 ? RitmoTheme.sleep : .orange)
-                                        .cornerRadius(4)
-                                    RuleMark(y: .value("Obiettivo", 8))
-                                        .foregroundStyle(RitmoTheme.sleep.opacity(0.5))
-                                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
-                                        .annotation(position: .trailing, alignment: .center) {
-                                            Text("8h").font(.system(size: 8)).foregroundStyle(RitmoTheme.sleep)
-                                        }
-                                }
-                                .frame(height: 110)
-                                .chartYScale(domain: 0...12)
-                                .chartXAxis {
-                                    AxisMarks(values: .stride(by: .day)) {
-                                        AxisValueLabel(format: .dateTime.weekday(.narrow))
-                                    }
-                                }
-                            }
-                        }
+                        InteractiveDateChart(
+                            title: "Ore di sonno",
+                            points: vm.sleepHistory.map {
+                                ChartPoint(date: $0.startTime, value: min($0.totalHours, 12))
+                            },
+                            goal: 8,
+                            color: RitmoTheme.sleep,
+                            unit: "h",
+                            chartUnit: .day,
+                            chartType: .bar,
+                            yDomain: 0...12,
+                            decimals: 1
+                        )
                     }
                 }
                 .padding(RitmoTheme.pagePadding)

@@ -23,3 +23,45 @@
 // Log
 "Acqua aggiunta!" = "Wasser hinzugefügt!";
 "Sonno salvato!" = "Schlaf gespeichert!";
+
+// ── Added 2026-07-03: post-localization features ──
+"Giornata per spingere" = "Tag zum Gasgeben";
+"Mantieni il ritmo" = "Halte den Rhythmus";
+"Giornata leggera" = "Lockerer Tag";
+"Meglio riposare" = "Lieber ausruhen";
+"Allenamento fatto" = "Training erledigt";
+"Inizia allenamento" = "Workout starten";
+"Da routine" = "Aus Routine";
+"Libero" = "Frei";
+"Forza" = "Kraft";
+"Corsa" = "Laufen";
+"Camminata" = "Gehen";
+"Ciclismo" = "Radfahren";
+"Esercizi" = "Übungen";
+"Nuovo esercizio" = "Neue Übung";
+"Crea" = "Erstellen";
+"Com'è andata?" = "Wie lief's?";
+"Scarta allenamento" = "Workout verwerfen";
+"%lld serie fatte" = "%lld Sätze geschafft";
+"%lld esercizi" = "%lld Übungen";
+"Durata" = "Dauer";
+"Sonno profondo" = "Tiefschlaf";
+"Continuità" = "Kontinuität";
+"Regolarità" = "Regelmäßigkeit";
+"In pausa" = "Pausiert";
+"Allenamento in corso →" = "Workout läuft →";
+"Esercizio" = "Übung";
+"Serie" = "Satz";
+"Nome" = "Name";
+"Gruppo" = "Gruppe";
+"Misura" = "Messung";
+"Fatta ✓" = "Fertig ✓";
+"Riapri serie" = "Satz wieder öffnen";
+"Salva senza RPE" = "Ohne RPE sichern";
+"RPE — sforzo percepito" = "RPE — gefühlte Anstrengung";
+"Tocca un valore, poi ruota la corona" = "Tippe einen Wert an, dann drehe die Krone";
+"Ruota la corona per regolare" = "Krone drehen zum Einstellen";
+"Scorri a destra per gli esercizi →" = "Nach rechts wischen für Übungen →";
+"Avvio…" = "Startet…";
+"%lld/%lld serie" = "%lld/%lld Sätze";
+"Profondo" = "Tief";

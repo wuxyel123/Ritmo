@@ -62,6 +62,7 @@ struct WorkoutDetailView: View {
     @State private var hrData: WorkoutHeartRateData?
     @State private var routeLocations: [CLLocation] = []
     @State private var routeSegments: [RouteSegment] = []
+    @State private var weekLoad: TrainingLoad?
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
     @State private var showingDeleteDialog = false
@@ -127,6 +128,11 @@ struct WorkoutDetailView: View {
 
                 // MARK: Training load context — this workout vs the 7-day total
                 workoutLoadCard
+
+                // MARK: Set metrics (sets from Hevy or manual logging)
+                if !session.sets.isEmpty {
+                    setMetricsCard
+                }
 
                 // MARK: RPE (perceived effort)
                 rpeCard
@@ -239,7 +245,6 @@ struct WorkoutDetailView: View {
                     FitCard {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text(sets.first?.exercise?.muscleGroup.sfSymbol ?? "dumbbell")
                                 Text(exerciseName).font(.subheadline.bold())
                                 Spacer()
                                 if let group = sets.first?.exercise?.muscleGroup {
@@ -303,13 +308,26 @@ struct WorkoutDetailView: View {
             ManualWorkoutLogView(existing: session, onSaved: { pushTrainingLoad() })
         }
         .confirmationDialog("Eliminare l'allenamento?", isPresented: $showingDeleteDialog) {
-            Button("Rimuovi solo dall'app", role: .destructive) { remove(alsoFromHealth: false) }
-            Button("Elimina anche da Apple Salute", role: .destructive) { remove(alsoFromHealth: true) }
+            if session.source == .manual {
+                Button("Elimina allenamento", role: .destructive) { remove(alsoFromHealth: true) }
+            } else if session.source == .hevy {
+                Button("Elimina allenamento", role: .destructive) { remove(alsoFromHealth: false) }
+            } else {
+                Button("Rimuovi solo dall'app", role: .destructive) { remove(alsoFromHealth: false) }
+                Button("Elimina anche da Apple Salute", role: .destructive) { remove(alsoFromHealth: true) }
+            }
             Button("Annulla", role: .cancel) {}
         } message: {
-            Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
+            if session.source == .manual {
+                Text("L'allenamento verrà eliminato anche da Apple Salute.")
+            } else if session.source == .hevy {
+                Text("L'allenamento importato da Hevy verrà rimosso dall'app.")
+            } else {
+                Text("«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo.")
+            }
         }
         .task {
+            weekLoad = TrainingLoad.compute(from: allSessions)
             guard session.source == .healthKit else { return }
             isLoadingHR = true
             async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime, end: session.endTime)
@@ -335,10 +353,136 @@ struct WorkoutDetailView: View {
         }
     }
 
+    // MARK: - Set metrics (volume, best set, e1RM… — numbers only sets can give)
+
+    private struct SetMetrics {
+        var totalVolume = 0.0                 // kg × reps over all sets
+        var totalReps = 0
+        var workingSets = 0                   // non-warmup
+        var warmupSets = 0
+        var bestSet: (name: String, weightKg: Double, reps: Int)?
+        var bestE1RM: (name: String, kg: Double)?
+        var avgSetRPE: Double?
+        var groupShares: [(group: MuscleGroup, share: Double)] = []
+    }
+
+    private var setMetrics: SetMetrics {
+        var m = SetMetrics()
+        var rpeSum = 0.0, rpeCount = 0
+        var groupVolume: [MuscleGroup: Double] = [:]
+        for set in session.sets {
+            let reps = set.reps ?? 0
+            let volume = set.weightKg * Double(reps)
+            m.totalVolume += volume
+            m.totalReps += reps
+            if set.setType == .warmup { m.warmupSets += 1 } else { m.workingSets += 1 }
+            if let rpe = set.rpe { rpeSum += rpe; rpeCount += 1 }
+            if volume > 0, let group = set.exercise?.muscleGroup {
+                groupVolume[group, default: 0] += volume
+            }
+            guard set.setType != .warmup, set.weightKg > 0, reps > 0 else { continue }
+            let name = set.exercise?.name ?? ""
+            if set.weightKg > (m.bestSet?.weightKg ?? 0) {
+                m.bestSet = (name, set.weightKg, reps)
+            }
+            // Epley loses meaning past ~12 reps, so those sets don't compete.
+            if reps <= 12 {
+                let e1rm = set.weightKg * (1 + Double(reps) / 30.0)
+                if e1rm > (m.bestE1RM?.kg ?? 0) { m.bestE1RM = (name, e1rm) }
+            }
+        }
+        if rpeCount > 0 { m.avgSetRPE = rpeSum / Double(rpeCount) }
+        let totalGroupVolume = max(groupVolume.values.reduce(0, +), 1)
+        m.groupShares = groupVolume.map { ($0.key, $0.value / totalGroupVolume) }
+            .sorted { $0.share > $1.share }
+        return m
+    }
+
+    private var setMetricsCard: some View {
+        let m = setMetrics
+        return FitCard {
+            VStack(alignment: .leading, spacing: 12) {
+                SectionHeader(title: "Statistiche serie")
+                HStack(spacing: 0) {
+                    if m.totalVolume > 0 {
+                        StatItem(value: volumeText(m.totalVolume), label: "volume (kg)", icon: "scalemass")
+                    }
+                    if m.totalReps > 0 {
+                        if m.totalVolume > 0 { Divider().frame(height: 40) }
+                        StatItem(value: "\(m.totalReps)", label: "ripetizioni", icon: "repeat")
+                    }
+                    if m.warmupSets > 0 {
+                        Divider().frame(height: 40)
+                        StatItem(value: "\(m.workingSets)", label: "serie effettive", icon: "flame.fill")
+                    }
+                    if let e1rm = m.bestE1RM {
+                        Divider().frame(height: 40)
+                        StatItem(value: String(format: "%.0f", e1rm.kg), label: "1RM stimato", icon: "trophy")
+                    }
+                }
+                if let best = m.bestSet {
+                    Divider()
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Miglior serie").font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text("\(fmtKg(best.weightKg)) kg × \(best.reps)").font(.subheadline.bold())
+                            Text(best.name).font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                        }
+                    }
+                }
+                if let rpe = m.avgSetRPE {
+                    HStack {
+                        Text("RPE medio serie").font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                        Spacer()
+                        Text(String(format: "%.1f", rpe)).font(.subheadline.bold())
+                    }
+                }
+                if m.groupShares.count > 1 {
+                    Divider()
+                    Text("Volume per gruppo muscolare").font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                    ForEach(m.groupShares.prefix(4), id: \.group) { item in
+                        HStack(spacing: 8) {
+                            Text(LocalizedStringKey(item.group.rawValue))
+                                .font(.caption2)
+                                .frame(width: 92, alignment: .leading)
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(muscleColor(item.group).opacity(0.15)).frame(height: 6)
+                                    Capsule().fill(muscleColor(item.group))
+                                        .frame(width: geo.size.width * CGFloat(item.share), height: 6)
+                                }
+                            }
+                            .frame(height: 6)
+                            Text("\(Int((item.share * 100).rounded()))%")
+                                .font(.caption2.bold())
+                                .frame(width: 36, alignment: .trailing)
+                                .foregroundStyle(muscleColor(item.group))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func volumeText(_ kg: Double) -> String {
+        kg >= 1000 ? String(format: "%.1fk", kg / 1000) : "\(Int(kg.rounded()))"
+    }
+
+    private func fmtKg(_ kg: Double) -> String {
+        kg.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(kg))" : String(format: "%.1f", kg)
+    }
+
     // MARK: - Training load (this workout vs the 7-day total)
 
+    // TrainingLoad.compute walks every stored session — computed once per
+    // appearance (.task) instead of on every body evaluation.
+    @ViewBuilder
     private var workoutLoadCard: some View {
-        let total = TrainingLoad.compute(from: allSessions)
+        if let total = weekLoad { loadContextCard(total) }
+    }
+
+    private func loadContextCard(_ total: TrainingLoad) -> some View {
         let thisLoad = session.loadValue
         let weekShare = total.acute > 0 ? min(thisLoad / Double(total.acute), 1.0) : 0
         let matched = total.matchedAverageLoad(for: session)
@@ -455,6 +599,7 @@ struct WorkoutDetailView: View {
     private func setRPE(_ value: Int?) {
         session.userRPE = value
         try? modelContext.save()
+        weekLoad = TrainingLoad.compute(from: allSessions)   // card shows live numbers
         pushTrainingLoad()
         guard let uuid = session.hkWorkoutUUID else { return }
         Task {
@@ -477,10 +622,12 @@ struct WorkoutDetailView: View {
 
     private func remove(alsoFromHealth: Bool) {
         let uuid = session.hkWorkoutUUID
+        // App-authored workouts always take their HealthKit record with them.
+        let deleteFromHealth = alsoFromHealth || session.source == .manual
         healthRepo.deleteWorkout(session, in: modelContext)   // exclude + local delete
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
         pushTrainingLoad()
-        if alsoFromHealth, let uuid {
+        if deleteFromHealth, let uuid {
             Task { _ = await healthRepo.deleteHealthKitWorkout(uuid: uuid) }
         }
         dismiss()

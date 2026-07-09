@@ -89,7 +89,7 @@ struct NutritionView: View {
                         macroChart("Carboidrati", \.carbs,          goals.dailyCarbsG,      "g",    RitmoTheme.carbs,    .bar)
                         macroChart("Grassi",    \.fat,              goals.dailyFatG,         "g",    RitmoTheme.fat,      .line)
                         macroChart("Fibre",     \.fiber,            goals.dailyFiberG,       "g",    RitmoTheme.fiber,    .bar)
-                        macroChart("Acqua",     { $0.waterMl/1000 }, goals.dailyWaterMl/1000,"L",    RitmoTheme.water,    .bar)
+                        macroChart("Acqua",     { $0.waterMl/1000 }, goals.dailyWaterMl/1000,"L",    RitmoTheme.water,    .bar, decimals: 1)
                     }
 
                     // Food tracker info
@@ -122,10 +122,12 @@ struct NutritionView: View {
 
     @ViewBuilder
     func macroChart(_ title: String, _ value: @escaping (NutritionDay) -> Double,
-                    _ goal: Double, _ unit: String, _ color: Color, _ type: ChartDisplayType) -> some View {
+                    _ goal: Double, _ unit: String, _ color: Color, _ type: ChartDisplayType,
+                    decimals: Int = 0) -> some View {
         let pts = vm.displayHistory.map { ChartPoint(date: $0.date, value: value($0)) }
         InteractiveDateChart(title: title, points: pts, goal: goal, color: color,
-                             unit: unit, chartUnit: period.chartUnit, chartType: type)
+                             unit: unit, chartUnit: period.chartUnit, chartType: type,
+                             decimals: decimals)
     }
 }
 

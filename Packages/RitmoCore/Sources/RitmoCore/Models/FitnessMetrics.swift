@@ -320,7 +320,7 @@ public struct RecoveryScore {
 
 public struct DailyRecommendation {
     public enum Kind: String {
-        case push, maintain, easy, rest
+        case push, maintain, easy, rest, done
 
         public var title: String {
             switch self {
@@ -328,6 +328,7 @@ public struct DailyRecommendation {
             case .maintain: return "Mantieni il ritmo"
             case .easy:     return "Giornata leggera"
             case .rest:     return "Meglio riposare"
+            case .done:     return "Allenamento fatto"
             }
         }
 
@@ -337,6 +338,7 @@ public struct DailyRecommendation {
             case .maintain: return "metronome.fill"
             case .easy:     return "figure.walk"
             case .rest:     return "moon.zzz.fill"
+            case .done:     return "checkmark.seal.fill"
             }
         }
     }
@@ -347,10 +349,37 @@ public struct DailyRecommendation {
     /// `recovery` should be passed as nil when there's no real data behind it
     /// (e.g. overall == 0 because the watch wasn't worn at night) — a missing
     /// input is degraded gracefully, a fake zero would force "rest" forever.
-    public static func compute(recovery: RecoveryScore?, load: TrainingLoad?) -> DailyRecommendation? {
+    /// The extra context (today's workout, session history, weekly goal) adds
+    /// the states a pure recovery/load model can't see: "already trained
+    /// today", "N days idle, come back", "one short of the weekly goal".
+    public static func compute(recovery: RecoveryScore?, load: TrainingLoad?,
+                               hasWorkedOutToday: Bool = false,
+                               sessions: [WorkoutSession] = [],
+                               weeklyWorkoutGoal: Int? = nil,
+                               now: Date = .now) -> DailyRecommendation? {
         // A load with no chronic baseline yet says nothing about overreaching.
         let usableLoad = (load?.chronic ?? 0) > 0 ? load : nil
-        guard recovery != nil || usableLoad != nil else { return nil }
+        guard recovery != nil || usableLoad != nil || hasWorkedOutToday else { return nil }
+
+        let calendar = Calendar.current
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let workoutsThisWeek = sessions.filter { $0.startTime >= weekStart && $0.startTime <= now }.count
+        let daysSinceLast: Int? = sessions.map(\.startTime).max().flatMap {
+            calendar.dateComponents([.day], from: calendar.startOfDay(for: $0),
+                                    to: calendar.startOfDay(for: now)).day
+        }
+
+        // Already trained today → the job is recovery, not more prescriptions.
+        if hasWorkedOutToday {
+            var reason = "Oggi hai già dato."
+            if let goal = weeklyWorkoutGoal, goal > 0 {
+                reason += workoutsThisWeek >= goal
+                    ? " Obiettivo settimanale completato: \(workoutsThisWeek) su \(goal) 🎯."
+                    : " Sei a \(workoutsThisWeek) su \(goal) questa settimana."
+            }
+            reason += " Ora contano recupero, proteine e sonno."
+            return DailyRecommendation(kind: .done, reason: reason)
+        }
 
         if let l = usableLoad, l.status == .veryHigh {
             return DailyRecommendation(kind: .rest,
@@ -368,11 +397,25 @@ public struct DailyRecommendation {
             return DailyRecommendation(kind: .easy,
                 reason: "Recupero parziale (\(r.overall)/100): un'attività leggera è la scelta giusta.")
         }
+
+        // From here on recovery is good (or unknown) and load is optimal/low.
+        if let days = daysSinceLast, days >= 3 {
+            return DailyRecommendation(kind: .push,
+                reason: "Sono \(days) giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere.")
+        }
+        if let goal = weeklyWorkoutGoal, goal > 0, workoutsThisWeek == goal - 1 {
+            return DailyRecommendation(kind: .push,
+                reason: "Te ne manca uno solo per l'obiettivo settimanale (\(workoutsThisWeek) su \(goal)): giornata giusta per chiuderlo.")
+        }
         if let l = usableLoad, l.status == .low, recovery == nil || recovery!.overall >= 60 {
             return DailyRecommendation(kind: .push,
                 reason: "Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso.")
         }
-        return DailyRecommendation(kind: .maintain,
-            reason: "Recupero e carico in equilibrio: continua con il tuo ritmo abituale.")
+
+        var reason = "Recupero e carico in equilibrio: continua con il tuo ritmo abituale."
+        if let goal = weeklyWorkoutGoal, goal > 0 {
+            reason += " Questa settimana: \(workoutsThisWeek) su \(goal) allenamenti."
+        }
+        return DailyRecommendation(kind: .maintain, reason: reason)
     }
 }

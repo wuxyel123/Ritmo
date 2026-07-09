@@ -28,6 +28,29 @@ struct RitmoApp: App {
     }
 }
 
+// MARK: - HevySyncCoordinator
+//
+// Completes Health-arrived workouts with Hevy's data. Hevy writes every
+// workout to Apple Health, so the HealthKit import is the arrival signal:
+// callers run the import FIRST and call this ONLY when it inserted something
+// new. The incremental API pull (stops at the first page of already-known
+// workouts, normally one request) then merges sets/title into those fresh
+// HealthKit sessions instead of creating parallel copies. No throttle —
+// a new workout in Health is exactly the moment to ask.
+enum HevySyncCoordinator {
+    @MainActor
+    static func enrichNewWorkouts(into context: ModelContext) async {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "hevyConnected"),
+              let key = defaults.string(forKey: "hevyApiKey"), !key.isEmpty else { return }
+
+        let service = HevyService(apiKey: key)
+        if (try? await service.importAll(into: context, stopWhenAllKnown: true) { _, _ in }) != nil {
+            defaults.set(Date.now.timeIntervalSince1970, forKey: "hevyLastSync")
+        }
+    }
+}
+
 // MARK: - ContentView
 struct ContentView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
@@ -44,12 +67,15 @@ struct ContentView: View {
         GoalsSyncService.shared.send(canonical)
     }
 
-    /// Re-imports HealthKit workouts (deduping stale/duplicate entries), then
+    /// Re-imports HealthKit workouts (deduping stale/duplicate entries); if
+    /// anything NEW arrived, completes it with Hevy's sets via the API. Then
     /// pushes the exclusion set + freshly computed training load to the Watch —
     /// the iPhone is the source of truth for both, so the two devices agree.
     private func syncWorkoutsToWatch() async {
         let ctx = RitmoStore.container.mainContext
-        await healthRepo.importHealthKitWorkouts(into: ctx)
+        if await healthRepo.importHealthKitWorkouts(into: ctx) > 0 {
+            await HevySyncCoordinator.enrichNewWorkouts(into: ctx)
+        }
         GoalsSyncService.shared.sendExcludedWorkouts(Array(HealthKitRepository.excludedWorkoutUUIDs()))
         let fresh = (try? ctx.fetch(
             FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])

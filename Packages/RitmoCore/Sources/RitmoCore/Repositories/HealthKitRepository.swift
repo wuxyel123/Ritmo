@@ -115,6 +115,24 @@ public final class HealthKitRepository: ObservableObject {
         return "sleepQuality-\(f.string(from: date))"
     }
 
+    /// Manually reported night wake-ups (per wake date) — manual sleep has no
+    /// awake stages, so this feeds the continuity part of the sleep score.
+    public func saveWakeCount(_ count: Int, for date: Date = .now) {
+        guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return }
+        defaults.set(count, forKey: wakeCountKey(for: date))
+    }
+
+    public func loadWakeCount(for date: Date = .now) -> Int? {
+        guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return nil }
+        return defaults.object(forKey: wakeCountKey(for: date)) as? Int
+    }
+
+    private func wakeCountKey(for date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return "sleepWakeCount-\(f.string(from: date))"
+    }
+
     // MARK: - Sleep Logging
 
     /// Writes sleep to Apple Health.
@@ -122,32 +140,30 @@ public final class HealthKitRepository: ObservableObject {
     /// stage samples (deep → REM → core) whose proportions reflect the quality rating,
     /// so Apple Health's sleep stages screen shows meaningful breakdown.
     /// On older OS or when quality is nil, writes a single asleepUnspecified sample.
+    /// `wakeCount` reported wake-ups become REAL 10-minute awake samples spread
+    /// evenly through the night (carved out of the sleep phases), so Apple
+    /// Health shows the interruptions and continuity scoring works from actual
+    /// stage data — no app-private bookkeeping needed.
     /// Quality is also persisted in the shared App Group for recovery score blending.
-    public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil) async throws {
+    public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil,
+                           wakeCount: Int = 0) async throws {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         guard end > start else { throw URLError(.badServerResponse) }
 
         let type = HKCategoryType(.sleepAnalysis)
         let total = end.timeIntervalSince(start)
 
+        // Asleep-phase timeline (deep → REM → core when quality is known).
+        var blocks: [(value: Int, start: Date, end: Date)]
         if #available(iOS 16.0, watchOS 9.0, *), let q = quality {
             let (deepFrac, remFrac) = q.sleepStageFractions
-            let deepDuration = total * deepFrac
-            let remDuration  = total * remFrac
-            let t1 = start.addingTimeInterval(deepDuration)
-            let t2 = t1.addingTimeInterval(remDuration)
-            let samples: [HKCategorySample] = [
-                HKCategorySample(type: type,
-                                 value: HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
-                                 start: start, end: t1),
-                HKCategorySample(type: type,
-                                 value: HKCategoryValueSleepAnalysis.asleepREM.rawValue,
-                                 start: t1, end: t2),
-                HKCategorySample(type: type,
-                                 value: HKCategoryValueSleepAnalysis.asleepCore.rawValue,
-                                 start: t2, end: end),
+            let t1 = start.addingTimeInterval(total * deepFrac)
+            let t2 = t1.addingTimeInterval(total * remFrac)
+            blocks = [
+                (HKCategoryValueSleepAnalysis.asleepDeep.rawValue, start, t1),
+                (HKCategoryValueSleepAnalysis.asleepREM.rawValue,  t1, t2),
+                (HKCategoryValueSleepAnalysis.asleepCore.rawValue, t2, end)
             ]
-            for s in samples { try await store.save(s) }
         } else {
             let value: Int
             if #available(iOS 16.0, watchOS 9.0, *) {
@@ -155,7 +171,41 @@ public final class HealthKitRepository: ObservableObject {
             } else {
                 value = HKCategoryValueSleepAnalysis.inBed.rawValue
             }
-            try await store.save(HKCategorySample(type: type, value: value, start: start, end: end))
+            blocks = [(value, start, end)]
+        }
+
+        // Carve a 10-minute awake window out of the timeline per reported
+        // wake-up: wake i sits at i/(N+1) of the night, so N wakes split the
+        // sleep into N+1 even stretches. Capped so each wake still has sleep
+        // around it on very short nights.
+        var awakeWindows: [(start: Date, end: Date)] = []
+        let wakeDuration: TimeInterval = 10 * 60
+        let n = min(max(wakeCount, 0), Int(total / (wakeDuration * 3)))
+        if n > 0 {
+            for i in 1...n {
+                let center = start.addingTimeInterval(total * Double(i) / Double(n + 1))
+                let ws = center.addingTimeInterval(-wakeDuration / 2)
+                let we = center.addingTimeInterval(wakeDuration / 2)
+                awakeWindows.append((ws, we))
+                var carved: [(value: Int, start: Date, end: Date)] = []
+                for b in blocks {
+                    if b.end <= ws || b.start >= we { carved.append(b); continue }
+                    if b.start < ws { carved.append((b.value, b.start, ws)) }
+                    if b.end > we { carved.append((b.value, we, b.end)) }
+                }
+                blocks = carved
+            }
+        }
+
+        for b in blocks where b.end > b.start {
+            try await store.save(HKCategorySample(type: type, value: b.value,
+                                                  start: b.start, end: b.end))
+        }
+        for w in awakeWindows {
+            try await store.save(HKCategorySample(
+                type: type,
+                value: HKCategoryValueSleepAnalysis.awake.rawValue,
+                start: w.start, end: w.end))
         }
 
         if let q = quality { saveSleepQuality(q, for: start) }
@@ -322,7 +372,9 @@ public final class HealthKitRepository: ObservableObject {
             let history = await fetchRecentBedtimes(before: date)
             deviation = bedtimeDeviation(start, against: history)
         }
-        return SleepSession(startTime: start, endTime: end, stages: stages, bedtimeDeviationMinutes: deviation)
+        return SleepSession(startTime: start, endTime: end, stages: stages,
+                            bedtimeDeviationMinutes: deviation,
+                            manualWakeCount: loadWakeCount(for: end))
     }
 
     /// Most-recent sleep session within the last `withinDays` days.
@@ -358,7 +410,8 @@ public final class HealthKitRepository: ObservableObject {
         return SleepSession(startTime: nightSamples.first!.startDate,
                             endTime: nightSamples.last!.endDate,
                             stages: stages,
-                            bedtimeDeviationMinutes: deviation)
+                            bedtimeDeviationMinutes: deviation,
+                            manualWakeCount: loadWakeCount(for: nightSamples.last!.endDate))
     }
 
     // MARK: - Allenamenti da HealthKit
@@ -663,12 +716,16 @@ public final class HealthKitRepository: ObservableObject {
         return a.activeCalories >= b.activeCalories
     }
 
-    public func importHealthKitWorkouts(into modelContext: ModelContext) async {
-        guard HKHealthStore.isHealthDataAvailable() else { return }
+    /// Returns how many NEW sessions were inserted from HealthKit — the
+    /// signal callers use to trigger the Hevy enrichment (a workout arriving
+    /// from Health is the only moment worth asking Hevy's API for its data).
+    @discardableResult
+    public func importHealthKitWorkouts(into modelContext: ModelContext) async -> Int {
+        guard HKHealthStore.isHealthDataAvailable() else { return 0 }
         let windowDays = 90
         let hkWorkouts = await fetchWorkouts(days: windowDays)
         // Don't reconcile on an empty fetch — could be a transient/unauthorized read.
-        guard !hkWorkouts.isEmpty else { return }
+        guard !hkWorkouts.isEmpty else { return 0 }
         let cutoff = Calendar.current.date(byAdding: .day, value: -windowDays, to: .now) ?? .distantPast
 
         let excluded = excludedWorkoutUUIDs()
@@ -676,6 +733,7 @@ public final class HealthKitRepository: ObservableObject {
 
         let allExisting = (try? modelContext.fetch(FetchDescriptor<WorkoutSession>())) ?? []
         var changed = false
+        var insertedCount = 0
         var removed = Set<PersistentIdentifier>()
 
         // Reflect deletions: drop local HK sessions (within window) that are no
@@ -713,11 +771,43 @@ public final class HealthKitRepository: ObservableObject {
                 }
             }
         }
+        // Heal Hevy/HealthKit duplicate pairs: earlier sync orders could leave
+        // both a standalone .hevy session (from the API) and a .healthKit one
+        // (Hevy also writes every workout to Apple Health). The Health record
+        // is canonical — it carries the HK UUID (deletions, exclusions, rings)
+        // plus calories — so it absorbs the API data and the extra row goes.
+        let hevyStandalones = allExisting.filter {
+            !removed.contains($0.persistentModelID) && $0.source == .hevy
+        }
+        let healthTwins = allExisting.filter {
+            !removed.contains($0.persistentModelID) && $0.source == .healthKit
+        }
+        for hevySession in hevyStandalones {
+            guard let twin = healthTwins.first(where: {
+                !removed.contains($0.persistentModelID) &&
+                overlapsSignificantly($0.startTime, $0.endTime,
+                                      hevySession.startTime, hevySession.endTime)
+            }) else { continue }
+            if twin.hevyID == nil { twin.hevyID = hevySession.hevyID }
+            twin.title = hevySession.title
+            if twin.sourceAppName == nil { twin.sourceAppName = "Hevy" }
+            if twin.sets.isEmpty {
+                let orphanSets = hevySession.sets
+                for set in orphanSets { set.session = twin }
+            }
+            modelContext.delete(hevySession)
+            removed.insert(hevySession.persistentModelID)
+        }
         if !removed.isEmpty { changed = true }
 
         var existingByUUID: [String: WorkoutSession] = [:]
         var acceptedRanges: [(start: Date, end: Date)] = []
-        for s in allExisting where s.source == .healthKit && !removed.contains(s.persistentModelID) {
+        // ALL surviving local sessions count here, not just imported ones:
+        // manual sessions carrying a hkWorkoutUUID are app-authored workouts we
+        // saved to HealthKit ourselves (never re-import those), and manual
+        // sessions without one still block overlapping imports — e.g. the user
+        // hand-logged what the watch also recorded.
+        for s in allExisting where !removed.contains(s.persistentModelID) {
             if let uuid = s.hkWorkoutUUID { existingByUUID[uuid] = s }
             acceptedRanges.append((s.startTime, s.endTime))
         }
@@ -743,6 +833,10 @@ public final class HealthKitRepository: ObservableObject {
             if let session = existingByUUID[uuid] {
                 if let e = effort, session.userRPE != e {
                     session.userRPE = e
+                    changed = true
+                }
+                if session.sourceAppName == nil {
+                    session.sourceAppName = hkWorkout.sourceRevision.source.name
                     changed = true
                 }
                 continue
@@ -778,11 +872,40 @@ public final class HealthKitRepository: ObservableObject {
                 hkWorkoutUUID: uuid,
                 userRPE: effort
             )
+            session.sourceAppName = hkWorkout.sourceRevision.source.name
             modelContext.insert(session)
             acceptedRanges.append((hkWorkout.startDate, hkWorkout.endDate))
             changed = true
+            insertedCount += 1
         }
         if changed { try? modelContext.save() }
+        return insertedCount
+    }
+
+    // MARK: - Manual workout → HealthKit
+
+    /// Saves an app-authored (manually logged) workout to Apple Health, so it
+    /// counts like any other workout: day score, rings, watch list. Returns
+    /// the new HKWorkout's UUID — stored on the local session so the import
+    /// pipeline recognizes it as already-present instead of duplicating it.
+    /// No energy/HR samples are attached: a retrospectively logged gym session
+    /// has no trustworthy calorie number, and the workout itself is the point.
+    public func saveManualWorkout(start: Date, end: Date,
+                                  activityType: Int = 50 /* traditionalStrengthTraining */) async -> String? {
+        guard HKHealthStore.isHealthDataAvailable(), end > start else { return nil }
+        let config = HKWorkoutConfiguration()
+        config.activityType = HKWorkoutActivityType(rawValue: UInt(activityType)) ?? .traditionalStrengthTraining
+        config.locationType = .indoor
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: config, device: .local())
+        do {
+            try await builder.beginCollection(at: start)
+            try await builder.endCollection(at: end)
+            let workout = try await builder.finishWorkout()
+            return workout?.uuid.uuidString
+        } catch {
+            authError = error
+            return nil
+        }
     }
 
     // MARK: - Workout effort (RPE) ↔ HealthKit
@@ -1143,7 +1266,8 @@ public final class HealthKitRepository: ObservableObject {
         return SleepSession(startTime: sorted.first!.startDate,
                             endTime: sorted.last!.endDate,
                             stages: stages,
-                            bedtimeDeviationMinutes: bedtimeDeviation)
+                            bedtimeDeviationMinutes: bedtimeDeviation,
+                            manualWakeCount: loadWakeCount(for: sorted.last!.endDate))
     }
 
     // MARK: - Bedtime consistency helpers

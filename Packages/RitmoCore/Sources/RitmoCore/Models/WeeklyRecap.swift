@@ -18,6 +18,8 @@ public struct WeeklyRecap {
     public let avgSleepHours: Double      // 0 = no sleep data that week
     public let bestSessionTitle: String?  // highest-load workout of the week
     public let bestSessionLoad: Double
+    /// Local id of the best session, so the UI can link to its detail.
+    public let bestSessionID: UUID?
 
     /// Load change vs the previous week, as a percentage; nil when there's no
     /// previous-week baseline to compare against.
@@ -65,7 +67,8 @@ public struct WeeklyRecap {
             activeDays: activeDays,
             avgSleepHours: avgSleep,
             bestSessionTitle: best?.title,
-            bestSessionLoad: best?.loadValue ?? 0
+            bestSessionLoad: best?.loadValue ?? 0,
+            bestSessionID: best?.id
         )
     }
 }

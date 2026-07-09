@@ -63,11 +63,6 @@ extension GoalsSyncService: WCSessionDelegate {
         DispatchQueue.main.async { self.transmit() }
     }
 
-    // Re-push whenever the Watch becomes reachable (e.g. wrist raised)
-    func sessionReachabilityDidChange(_ session: WCSession) {
-        DispatchQueue.main.async { self.transmit() }
-    }
-
     func sessionDidBecomeInactive(_ session: WCSession) {}
     func sessionDidDeactivate(_ session: WCSession) { WCSession.default.activate() }
 }

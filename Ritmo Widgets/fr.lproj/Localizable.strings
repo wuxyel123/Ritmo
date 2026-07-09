@@ -34,3 +34,7 @@
 
 // Macro cell goal format
 "su %lld%@" = "sur %lld%@";
+
+// ── Added 2026-07-03: post-localization features ──
+"%lld/%lld serie" = "%lld/%lld séries";
+"%lld di %lld serie completate" = "%lld séries sur %lld terminées";

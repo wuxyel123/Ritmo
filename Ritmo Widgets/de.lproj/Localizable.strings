@@ -34,3 +34,7 @@
 
 // Macro cell goal format
 "su %lld%@" = "von %lld%@";
+
+// ── Added 2026-07-03: post-localization features ──
+"%lld/%lld serie" = "%lld/%lld Sätze";
+"%lld di %lld serie completate" = "%lld von %lld Sätzen geschafft";

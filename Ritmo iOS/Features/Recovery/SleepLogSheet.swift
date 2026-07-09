@@ -20,6 +20,7 @@ struct SleepLogView: View {
         return Calendar.current.date(from: c)!
     }()
     @State private var quality: SleepQuality = .buono
+    @State private var wakeCount = 0
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var saved = false
@@ -46,6 +47,22 @@ struct SleepLogView: View {
                         Text("L'ora di sveglia deve essere dopo l'addormentamento")
                             .foregroundStyle(.red)
                     }
+                }
+
+                Section {
+                    Stepper(value: $wakeCount, in: 0...10) {
+                        HStack {
+                            Text("Risvegli notturni")
+                            Spacer()
+                            Text("\(wakeCount)")
+                                .font(.headline)
+                                .foregroundStyle(wakeCount <= 1 ? .green
+                                                 : wakeCount <= 3 ? .orange : .red)
+                                .padding(.trailing, 8)
+                        }
+                    }
+                } footer: {
+                    Text("Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Un risveglio breve è normale.")
                 }
 
                 Section("Qualità") {
@@ -102,6 +119,14 @@ struct SleepLogView: View {
                 if let s = editing {
                     startTime = s.startTime
                     endTime   = s.endTime
+                    // Wakes are real awake stages now; older logs fall back
+                    // to the stored count.
+                    let stageWakes = s.stages.filter { $0.type == .awake }.count
+                    wakeCount = stageWakes > 0 ? stageWakes
+                        : (s.manualWakeCount ?? healthRepo.loadWakeCount(for: s.endTime) ?? 0)
+                    if let q = healthRepo.loadSleepQuality(for: s.endTime) {
+                        quality = q
+                    }
                 }
             }
         }
@@ -117,7 +142,9 @@ struct SleepLogView: View {
                 if let s = editing {
                     try await healthRepo.deleteSleepSamples(from: s.startTime, to: s.endTime)
                 }
-                try await healthRepo.writeSleep(start: startTime, end: endTime, quality: quality)
+                try await healthRepo.writeSleep(start: startTime, end: endTime,
+                                                quality: quality, wakeCount: wakeCount)
+                healthRepo.saveWakeCount(wakeCount, for: endTime)
                 saved = true
                 isSaving = false
                 onSaved?()

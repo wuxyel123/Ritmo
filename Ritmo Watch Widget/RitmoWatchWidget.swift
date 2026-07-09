@@ -157,10 +157,120 @@ struct RitmoRingsWidget: Widget {
     }
 }
 
+// MARK: - Days since last workout
+
+struct DaysSinceWorkoutEntry: TimelineEntry {
+    let date: Date
+    let daysSince: Int?          // nil = no workout on record
+    let workedOutToday: Bool
+}
+
+struct DaysSinceWorkoutProvider: TimelineProvider {
+    func placeholder(in context: Context) -> DaysSinceWorkoutEntry {
+        DaysSinceWorkoutEntry(date: .now, daysSince: 2, workedOutToday: false)
+    }
+    func getSnapshot(in context: Context, completion: @escaping (DaysSinceWorkoutEntry) -> Void) {
+        completion(load())
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<DaysSinceWorkoutEntry>) -> Void) {
+        // Refresh at the next midnight so the day count ticks over on its own.
+        let midnight = Calendar.current.startOfDay(for: .now).addingTimeInterval(24 * 3600)
+        completion(Timeline(entries: [load()], policy: .after(midnight)))
+    }
+
+    private func load() -> DaysSinceWorkoutEntry {
+        let defaults = UserDefaults(suiteName: "group.alessandrodiscalzi.com.ritmo")
+        let epoch = defaults?.double(forKey: "lastWorkoutDate") ?? 0
+        var days: Int? = nil
+        var today = false
+        if epoch > 0 {
+            let last = Date(timeIntervalSince1970: epoch)
+            let calendar = Calendar.current
+            days = calendar.dateComponents([.day],
+                                           from: calendar.startOfDay(for: last),
+                                           to: calendar.startOfDay(for: .now)).day ?? 0
+            today = calendar.isDateInToday(last)
+        }
+        // The snapshot flag also covers workouts imported on the phone side.
+        if let data = defaults?.data(forKey: "dailySnapshot"),
+           let snap = try? JSONDecoder().decode(DailySnapshot.self, from: data),
+           snap.hasWorkedOutToday, Calendar.current.isDateInToday(snap.date) {
+            today = true
+            days = 0
+        }
+        return DaysSinceWorkoutEntry(date: .now, daysSince: days, workedOutToday: today)
+    }
+}
+
+struct DaysSinceWorkoutView: View {
+    @Environment(\.widgetFamily) var family
+    let entry: DaysSinceWorkoutEntry
+
+    var body: some View {
+        switch family {
+        case .accessoryInline:
+            if entry.workedOutToday {
+                Label("Allenato oggi ✓", systemImage: "checkmark.seal.fill")
+            } else if let days = entry.daysSince {
+                Label("\(days)g dall'allenamento", systemImage: "dumbbell.fill")
+            } else {
+                Label("Nessun allenamento", systemImage: "dumbbell")
+            }
+        default:
+            ZStack {
+                if entry.workedOutToday {
+                    // Trained today → the "done" face.
+                    VStack(spacing: 1) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(.green)
+                        Text("oggi")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                } else if let days = entry.daysSince {
+                    // Days since the last workout.
+                    VStack(spacing: 0) {
+                        Text("\(days)")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(days >= 3 ? .orange : .primary)
+                        HStack(spacing: 2) {
+                            Image(systemName: "dumbbell.fill").font(.system(size: 8))
+                            Text(days == 1 ? "giorno" : "giorni")
+                                .font(.system(size: 8, weight: .semibold))
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Image(systemName: "dumbbell")
+                        .font(.system(size: 22))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+struct RitmoDaysSinceWorkoutWidget: Widget {
+    let kind = "RitmoDaysSinceWorkout"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: DaysSinceWorkoutProvider()) { entry in
+            DaysSinceWorkoutView(entry: entry)
+                .containerBackground(.background, for: .widget)
+        }
+        .configurationDisplayName("Giorni dall'allenamento")
+        .description("Giorni dall'ultimo allenamento — spunta verde se ti sei già allenato oggi.")
+        .supportedFamilies([.accessoryCircular, .accessoryInline])
+    }
+}
+
 @main
 struct RitmoWatchWidgetBundle: WidgetBundle {
     var body: some Widget {
         RitmoWatchWidget()
         RitmoRingsWidget()
+        RitmoDaysSinceWorkoutWidget()
     }
 }

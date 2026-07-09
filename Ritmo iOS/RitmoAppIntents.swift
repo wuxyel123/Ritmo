@@ -53,7 +53,10 @@ struct GetDayScoreIntent: AppIntent {
         let sessions = (try? context.fetch(FetchDescriptor<WorkoutSession>())) ?? []
         let load = sessions.isEmpty ? nil : TrainingLoad.compute(from: sessions)
         let plan = DailyRecommendation.compute(recovery: recovery.overall > 0 ? recovery : nil,
-                                               load: load)
+                                               load: load,
+                                               hasWorkedOutToday: snapshot.hasWorkedOutToday,
+                                               sessions: sessions,
+                                               weeklyWorkoutGoal: goals.weeklyWorkouts)
 
         if let plan {
             return .result(dialog: IntentDialog(

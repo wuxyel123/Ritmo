@@ -23,3 +23,45 @@
 // Log
 "Acqua aggiunta!" = "Water added!";
 "Sonno salvato!" = "Sleep saved!";
+
+// ── Added 2026-07-03: post-localization features ──
+"Giornata per spingere" = "Time to push";
+"Mantieni il ritmo" = "Keep the rhythm";
+"Giornata leggera" = "Easy day";
+"Meglio riposare" = "Better to rest";
+"Allenamento fatto" = "Workout done";
+"Inizia allenamento" = "Start workout";
+"Da routine" = "From routine";
+"Libero" = "Free";
+"Forza" = "Strength";
+"Corsa" = "Run";
+"Camminata" = "Walk";
+"Ciclismo" = "Cycling";
+"Esercizi" = "Exercises";
+"Nuovo esercizio" = "New exercise";
+"Crea" = "Create";
+"Com'è andata?" = "How did it go?";
+"Scarta allenamento" = "Discard workout";
+"%lld serie fatte" = "%lld sets done";
+"%lld esercizi" = "%lld exercises";
+"Durata" = "Duration";
+"Sonno profondo" = "Deep sleep";
+"Continuità" = "Continuity";
+"Regolarità" = "Consistency";
+"In pausa" = "Paused";
+"Allenamento in corso →" = "Workout in progress →";
+"Esercizio" = "Exercise";
+"Serie" = "Set";
+"Nome" = "Name";
+"Gruppo" = "Group";
+"Misura" = "Tracking";
+"Fatta ✓" = "Done ✓";
+"Riapri serie" = "Reopen set";
+"Salva senza RPE" = "Save without RPE";
+"RPE — sforzo percepito" = "RPE — perceived effort";
+"Tocca un valore, poi ruota la corona" = "Tap a value, then turn the crown";
+"Ruota la corona per regolare" = "Turn the crown to adjust";
+"Scorri a destra per gli esercizi →" = "Swipe right for exercises →";
+"Avvio…" = "Starting…";
+"%lld/%lld serie" = "%lld/%lld sets";
+"Profondo" = "Deep";

@@ -6,7 +6,6 @@ struct WatchWorkoutView: View {
     let sessions: [WorkoutSession]
     @EnvironmentObject private var vm: WatchViewModel
     @State private var isRefreshing = false
-    @State private var showingLiveWorkout = false
 
     private var todaySessions: [WorkoutSession] {
         let start = Calendar.current.startOfDay(for: .now)
@@ -64,24 +63,6 @@ struct WatchWorkoutView: View {
                     Text("Allenamento")
                         .font(.headline)
                         .frame(maxWidth: .infinity, alignment: .leading)
-
-                    // MARK: Start live workout
-                    Button {
-                        showingLiveWorkout = true
-                    } label: {
-                        Label("Inizia allenamento", systemImage: "play.fill")
-                            .font(.caption.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 9)
-                    }
-                    .buttonStyle(.plain)
-                    .background(Color.green.opacity(0.18), in: RoundedRectangle(cornerRadius: 10))
-                    .foregroundStyle(.green)
-                    .sheet(isPresented: $showingLiveWorkout) {
-                        WatchLiveWorkoutView(onFinished: {
-                            Task { await vm.load(goals: goals) }
-                        })
-                    }
 
                     // MARK: Training load
                     trainingLoadCard

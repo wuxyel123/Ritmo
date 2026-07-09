@@ -18,9 +18,16 @@ struct InteractiveDateChart: View {
     let chartUnit: Calendar.Component
     let chartType: ChartDisplayType
     var yDomain: ClosedRange<Double>? = nil
+    /// Decimal places for values/averages/goals (water in litres and body
+    /// weight need 1; steps/kcal stay at 0).
+    var decimals: Int = 0
 
     @State private var selectedPoint: ChartPoint?
     @State private var isExpanded = false
+
+    private func fmt(_ value: Double) -> String {
+        String(format: "%.\(decimals)f", value)
+    }
 
     var avg: Double {
         let nonZero = points.filter { $0.value > 0 }
@@ -36,16 +43,16 @@ struct InteractiveDateChart: View {
                     Spacer()
                     if let sel = selectedPoint {
                         VStack(alignment: .trailing, spacing: 0) {
-                            Text(String(format: "%.0f \(unit)", sel.value))
+                            Text("\(fmt(sel.value)) \(unit)")
                                 .font(.subheadline.bold()).foregroundStyle(color)
                             Text(sel.date, format: .dateTime.day().month())
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     } else {
                         VStack(alignment: .trailing, spacing: 0) {
-                            (Text("Media") + Text(": \(Int(avg)) \(unit)")).font(.caption).foregroundStyle(color)
+                            (Text("Media") + Text(": \(fmt(avg)) \(unit)")).font(.caption).foregroundStyle(color)
                             if let g = goal {
-                                (Text("Obiettivo") + Text(": \(Int(g)) \(unit)")).font(.caption2).foregroundStyle(.secondary)
+                                (Text("Obiettivo") + Text(": \(fmt(g)) \(unit)")).font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -62,7 +69,7 @@ struct InteractiveDateChart: View {
         .fullScreenCover(isPresented: $isExpanded) {
             ExpandedChartView(title: title, points: points, goal: goal,
                               color: color, unit: unit, chartUnit: chartUnit, chartType: chartType,
-                              yDomain: yDomain)
+                              yDomain: yDomain, decimals: decimals)
         }
     }
 
@@ -124,8 +131,13 @@ struct ExpandedChartView: View {
     let chartUnit: Calendar.Component
     let chartType: ChartDisplayType
     var yDomain: ClosedRange<Double>? = nil
+    var decimals: Int = 0
 
     @State private var selectedPoint: ChartPoint?
+
+    private func fmt(_ value: Double) -> String {
+        String(format: "%.\(decimals)f", value)
+    }
 
     var avg: Double {
         let nonZero = points.filter { $0.value > 0 }
@@ -142,7 +154,7 @@ struct ExpandedChartView: View {
                         VStack(alignment: .leading) {
                             Text(sel.date, format: .dateTime.weekday(.wide).day().month())
                                 .font(.subheadline.bold())
-                            Text(String(format: "%.0f %@", sel.value, unit))
+                            Text("\(fmt(sel.value)) \(unit)")
                                 .font(.title2.bold()).foregroundStyle(color)
                         }
                         Spacer()
@@ -161,13 +173,13 @@ struct ExpandedChartView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Media").font(.caption).foregroundStyle(.secondary)
-                            Text("\(Int(avg)) \(unit)").font(.title2.bold()).foregroundStyle(color)
+                            Text("\(fmt(avg)) \(unit)").font(.title2.bold()).foregroundStyle(color)
                         }
                         Spacer()
                         if let g = goal {
                             VStack(alignment: .trailing) {
                                 Text("Obiettivo").font(.caption).foregroundStyle(.secondary)
-                                Text("\(Int(g)) \(unit)").font(.headline)
+                                Text("\(fmt(g)) \(unit)").font(.headline)
                             }
                         }
                     }

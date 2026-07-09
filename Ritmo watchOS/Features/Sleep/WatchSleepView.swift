@@ -286,7 +286,7 @@ struct WatchSleepView: View {
 
     private func scoreLine(_ label: String, _ pts: Int, _ max: String) -> some View {
         HStack {
-            Text(label).font(.system(size: 9)).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(label)).font(.system(size: 9)).foregroundStyle(.secondary)
             Spacer()
             Text("\(pts)").font(.system(size: 9, weight: .bold))
             Text(max).font(.system(size: 9)).foregroundStyle(.secondary)

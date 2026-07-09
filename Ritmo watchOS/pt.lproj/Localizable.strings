@@ -23,3 +23,45 @@
 // Log
 "Acqua aggiunta!" = "Água adicionada!";
 "Sonno salvato!" = "Sono registrado!";
+
+// ── Added 2026-07-03: post-localization features ──
+"Giornata per spingere" = "Dia de acelerar";
+"Mantieni il ritmo" = "Mantém o ritmo";
+"Giornata leggera" = "Dia leve";
+"Meglio riposare" = "Melhor descansar";
+"Allenamento fatto" = "Treino feito";
+"Inizia allenamento" = "Iniciar treino";
+"Da routine" = "De rotina";
+"Libero" = "Livre";
+"Forza" = "Força";
+"Corsa" = "Corrida";
+"Camminata" = "Caminhada";
+"Ciclismo" = "Ciclismo";
+"Esercizi" = "Exercícios";
+"Nuovo esercizio" = "Novo exercício";
+"Crea" = "Criar";
+"Com'è andata?" = "Como correu?";
+"Scarta allenamento" = "Descartar treino";
+"%lld serie fatte" = "%lld séries feitas";
+"%lld esercizi" = "%lld exercícios";
+"Durata" = "Duração";
+"Sonno profondo" = "Sono profundo";
+"Continuità" = "Continuidade";
+"Regolarità" = "Regularidade";
+"In pausa" = "Em pausa";
+"Allenamento in corso →" = "Treino em curso →";
+"Esercizio" = "Exercício";
+"Serie" = "Série";
+"Nome" = "Nome";
+"Gruppo" = "Grupo";
+"Misura" = "Medição";
+"Fatta ✓" = "Feita ✓";
+"Riapri serie" = "Reabrir série";
+"Salva senza RPE" = "Guardar sem RPE";
+"RPE — sforzo percepito" = "RPE — esforço percebido";
+"Tocca un valore, poi ruota la corona" = "Toca num valor e roda a coroa";
+"Ruota la corona per regolare" = "Roda a coroa para ajustar";
+"Scorri a destra per gli esercizi →" = "Desliza para a direita para os exercícios →";
+"Avvio…" = "A iniciar…";
+"%lld/%lld serie" = "%lld/%lld séries";
+"Profondo" = "Profundo";

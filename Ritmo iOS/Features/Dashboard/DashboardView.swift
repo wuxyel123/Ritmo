@@ -24,7 +24,10 @@ struct DashboardView: View {
         guard isToday else { return nil }
         let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
         return DailyRecommendation.compute(recovery: usableRecovery,
-                                           load: sessions.isEmpty ? nil : trainingLoad)
+                                           load: sessions.isEmpty ? nil : trainingLoad,
+                                           hasWorkedOutToday: vm.snapshot.hasWorkedOutToday,
+                                           sessions: sessions,
+                                           weeklyWorkoutGoal: goals.weeklyWorkouts)
     }
 
     private func planColor(_ kind: DailyRecommendation.Kind) -> Color {
@@ -33,6 +36,7 @@ struct DashboardView: View {
         case .maintain: return RitmoTheme.accent
         case .easy:     return .orange
         case .rest:     return .red
+        case .done:     return .teal
         }
     }
 
@@ -330,12 +334,30 @@ struct DashboardView: View {
                                               delta: nil, deltaIsPercent: false)
                                 }
                                 if let best = recap.bestSessionTitle {
-                                    HStack(spacing: 5) {
-                                        Image(systemName: "trophy.fill")
-                                            .font(.caption2).foregroundStyle(.yellow)
-                                        Text("Allenamento top: ") .font(.caption)
-                                            .foregroundStyle(RitmoTheme.textSecondary)
-                                        + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                    if let bestSession = sessions.first(where: { $0.id == recap.bestSessionID }) {
+                                        NavigationLink {
+                                            WorkoutDetailView(session: bestSession)
+                                        } label: {
+                                            HStack(spacing: 5) {
+                                                Image(systemName: "trophy.fill")
+                                                    .font(.caption2).foregroundStyle(.yellow)
+                                                Text("Allenamento top: ").font(.caption)
+                                                    .foregroundStyle(RitmoTheme.textSecondary)
+                                                + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .font(.system(size: 9)).foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        HStack(spacing: 5) {
+                                            Image(systemName: "trophy.fill")
+                                                .font(.caption2).foregroundStyle(.yellow)
+                                            Text("Allenamento top: ").font(.caption)
+                                                .foregroundStyle(RitmoTheme.textSecondary)
+                                            + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                        }
                                     }
                                 }
                             }

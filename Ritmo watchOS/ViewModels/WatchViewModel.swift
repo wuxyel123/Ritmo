@@ -41,6 +41,14 @@ final class WatchViewModel: ObservableObject {
               let defaults = UserDefaults(suiteName: "group.alessandrodiscalzi.com.ritmo")
         else { return }
         defaults.set(data, forKey: "dailySnapshot")
+
+        // Last workout date, for the days-since complication.
+        let latest = (try? RitmoStore.container.mainContext.fetch(
+            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
+        ))?.first?.startTime
+        defaults.set(latest?.timeIntervalSince1970 ?? 0, forKey: "lastWorkoutDate")
+
         WidgetCenter.shared.reloadTimelines(ofKind: "RitmoWatchWidget")
+        WidgetCenter.shared.reloadTimelines(ofKind: "RitmoDaysSinceWorkout")
     }
 }

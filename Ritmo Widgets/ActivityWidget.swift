@@ -51,7 +51,7 @@ struct ActivitySmallView: View {
                         .foregroundStyle(.red)
                     Text("kcal").font(.caption2).foregroundStyle(.secondary)
                 }
-                Text("attivi").font(.caption2).foregroundStyle(.secondary)
+                Text("attive").font(.caption2).foregroundStyle(.secondary)
             }
 
             Spacer(minLength: 6)

@@ -9,12 +9,15 @@ import RitmoCore
 // load). Edits happen on local value types; SwiftData is only touched on save,
 // so cancelling never leaves half-written sets behind.
 //
-// Manual sessions are app-local by design: they are NOT written to Apple
-// Health, which keeps them out of the HealthKit import's dedup logic.
+// On save the workout is ALSO written to Apple Health (Ritmo owns the record
+// and stores its UUID on the session, so the importer never duplicates it) —
+// that's what makes it count for the day score, the rings, and the watch.
+// Sets/reps stay in the app's own store; HealthKit has no concept of them.
 
 struct ManualWorkoutLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var healthRepo: HealthKitRepository
 
     var existing: WorkoutSession? = nil
     var onSaved: (() -> Void)? = nil
@@ -30,6 +33,7 @@ struct ManualWorkoutLogView: View {
         let id = UUID()
         var exercise: Exercise
         var sets: [SetEntry]
+        var notes: String = ""
     }
 
     struct SetEntry: Identifiable {
@@ -91,9 +95,12 @@ struct ManualWorkoutLogView: View {
                             Label("Aggiungi serie", systemImage: "plus.circle")
                                 .font(.subheadline)
                         }
+                        TextField("Note esercizio", text: $entry.notes, axis: .vertical)
+                            .font(.caption)
+                            .lineLimit(1...3)
                     } header: {
                         HStack {
-                            Text("\(entry.exercise.muscleGroup.icon) \(entry.exercise.name)")
+                            Text(entry.exercise.name)
                             Spacer()
                             Button {
                                 entries.removeAll { $0.id == entry.id }
@@ -220,8 +227,10 @@ struct ManualWorkoutLogView: View {
                                  type: set.setType)
             if let i = ordered.firstIndex(where: { $0.exercise.id == exercise.id }) {
                 ordered[i].sets.append(entry)
+                if ordered[i].notes.isEmpty { ordered[i].notes = set.exerciseNotes }
             } else {
-                ordered.append(ExerciseEntry(exercise: exercise, sets: [entry]))
+                ordered.append(ExerciseEntry(exercise: exercise, sets: [entry],
+                                             notes: set.exerciseNotes))
             }
         }
         entries = ordered
@@ -255,7 +264,8 @@ struct ManualWorkoutLogView: View {
                                             setType: s.type,
                                             weightKg: isDuration ? 0 : s.weightKg,
                                             reps: isDuration ? nil : (s.reps > 0 ? s.reps : nil),
-                                            durationSeconds: isDuration ? s.seconds : nil)
+                                            durationSeconds: isDuration ? s.seconds : nil,
+                                            exerciseNotes: entry.notes.trimmingCharacters(in: .whitespaces))
                 modelContext.insert(workoutSet)
                 workoutSet.exercise = entry.exercise
                 workoutSet.session = session
@@ -264,7 +274,23 @@ struct ManualWorkoutLogView: View {
         }
 
         try? modelContext.save()
-        onSaved?()
+
+        // Mirror to Apple Health: replace the previous record on edit (times
+        // may have changed), then attach the RPE as a workout effort score.
+        let rpeValue = rpe
+        Task { @MainActor in
+            if let oldUUID = session.hkWorkoutUUID {
+                _ = await healthRepo.deleteHealthKitWorkout(uuid: oldUUID)
+                session.hkWorkoutUUID = nil
+            }
+            if let uuid = await healthRepo.saveManualWorkout(start: session.startTime,
+                                                             end: session.endTime) {
+                session.hkWorkoutUUID = uuid
+                await healthRepo.saveWorkoutEffort(rpe: rpeValue, forWorkoutUUID: uuid)
+            }
+            try? modelContext.save()
+            onSaved?()
+        }
         dismiss()
     }
 }
