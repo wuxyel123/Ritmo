@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AuthenticationServices
 import RitmoCore
 
 // MARK: - Macro Input Mode
@@ -48,6 +49,7 @@ struct SettingsTabView: View {
     @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
     @AppStorage("hevyConnected") private var hevyConnected = false
     @AppStorage("oplUsername") private var oplUsername = ""
+    @AppStorage("stravaRefreshToken") private var stravaRefreshToken = ""
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -227,6 +229,23 @@ struct SettingsTabView: View {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundStyle(.green)
                                 Text("Collegato").font(.caption)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                            }
+                        }
+                    }
+                    NavigationLink {
+                        StravaSettingsView()
+                    } label: {
+                        HStack {
+                            Label("Strava", systemImage: "figure.run.circle")
+                            Spacer()
+                            if !stravaRefreshToken.isEmpty {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text("Collegato").font(.caption)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                            } else {
+                                Text("Non collegato").font(.caption)
                                     .foregroundStyle(RitmoTheme.textSecondary)
                             }
                         }
@@ -815,6 +834,205 @@ struct PowerliftingSettingsView: View {
                 checkResult = error.localizedDescription
             }
             checking = false
+        }
+    }
+}
+
+// MARK: - Strava session (tokens + import, shared with the stats screen)
+
+enum StravaSession {
+    static var isConnected: Bool {
+        !(UserDefaults.standard.string(forKey: "stravaRefreshToken") ?? "").isEmpty
+    }
+
+    static func store(_ tokens: StravaTokens) {
+        let defaults = UserDefaults.standard
+        defaults.set(tokens.accessToken, forKey: "stravaAccessToken")
+        defaults.set(tokens.refreshToken, forKey: "stravaRefreshToken")
+        defaults.set(tokens.expiresAt, forKey: "stravaExpiresAt")
+    }
+
+    static func disconnect() {
+        let defaults = UserDefaults.standard
+        for key in ["stravaAccessToken", "stravaRefreshToken", "stravaExpiresAt", "stravaLastImport"] {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    /// Current access token, refreshed through the stored refresh token when
+    /// expired — Strava access tokens only live six hours.
+    @MainActor
+    static func validAccessToken() async throws -> String {
+        let defaults = UserDefaults.standard
+        guard let refresh = defaults.string(forKey: "stravaRefreshToken"), !refresh.isEmpty,
+              let clientID = defaults.string(forKey: "stravaClientID"), !clientID.isEmpty,
+              let clientSecret = defaults.string(forKey: "stravaClientSecret"), !clientSecret.isEmpty
+        else { throw StravaError.notConnected }
+
+        let tokens = StravaTokens(accessToken: defaults.string(forKey: "stravaAccessToken") ?? "",
+                                  refreshToken: refresh,
+                                  expiresAt: defaults.double(forKey: "stravaExpiresAt"))
+        if !tokens.isExpired, !tokens.accessToken.isEmpty { return tokens.accessToken }
+        let fresh = try await StravaService.refresh(tokens, clientID: clientID, clientSecret: clientSecret)
+        store(fresh)
+        return fresh.accessToken
+    }
+
+    /// Pulls race-tagged activities (incremental unless `full`) into the race
+    /// log. Returns how many were added.
+    @MainActor
+    static func importNewRaces(into context: ModelContext, full: Bool = false) async throws -> Int {
+        let token = try await validAccessToken()
+        let defaults = UserDefaults.standard
+        let lastImport = defaults.double(forKey: "stravaLastImport")
+        let after: Date? = (full || lastImport <= 0) ? nil : Date(timeIntervalSince1970: lastImport)
+        let activities = try await StravaService.fetchRaceActivities(accessToken: token, after: after)
+        let added = StravaService.importRaces(activities, into: context)
+        defaults.set(Date.now.timeIntervalSince1970, forKey: "stravaLastImport")
+        return added
+    }
+}
+
+// MARK: - Strava settings (user's own API app + OAuth)
+
+private final class WebAuthPresentationContext: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first ?? ASPresentationAnchor()
+    }
+}
+
+struct StravaSettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @AppStorage("stravaClientID") private var clientID = ""
+    @AppStorage("stravaClientSecret") private var clientSecret = ""
+    @AppStorage("stravaRefreshToken") private var refreshToken = ""
+
+    @State private var working = false
+    @State private var result: String?
+    @State private var authSession: ASWebAuthenticationSession?
+    private let presentationContext = WebAuthPresentationContext()
+
+    private var connected: Bool { !refreshToken.isEmpty }
+
+    var body: some View {
+        Form {
+            Section {
+                if connected {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Text("Strava collegato").font(.subheadline.bold())
+                    }
+                    Button {
+                        importRaces()
+                    } label: {
+                        HStack {
+                            if working {
+                                ProgressView().padding(.trailing, 6)
+                                Text("Importazione…")
+                            } else {
+                                Label("Importa gare ora", systemImage: "flag.checkered")
+                            }
+                        }
+                    }
+                    .disabled(working)
+                    Button(role: .destructive) {
+                        StravaSession.disconnect()
+                        refreshToken = ""
+                        result = nil
+                    } label: {
+                        Label("Rimuovi collegamento", systemImage: "xmark.circle")
+                    }
+                    .disabled(working)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Come collegare Strava", systemImage: "info.circle")
+                            .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
+                        Text("Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi localhost, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi.")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    .padding(.vertical, 2)
+                    TextField("Client ID", text: $clientID)
+                        .keyboardType(.numberPad)
+                    SecureField("Client Secret", text: $clientSecret)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button {
+                        connect()
+                    } label: {
+                        HStack {
+                            if working {
+                                ProgressView().padding(.trailing, 6)
+                                Text("Verifica…")
+                            } else {
+                                Label("Collega Strava", systemImage: "link")
+                            }
+                        }
+                    }
+                    .disabled(clientID.trimmingCharacters(in: .whitespaces).isEmpty
+                              || clientSecret.trimmingCharacters(in: .whitespaces).isEmpty
+                              || working)
+                }
+                if let result {
+                    Text(result).font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                }
+            } footer: {
+                Text("Vengono importate SOLO le attività segnate come gara su Strava (corsa e bici): gli allenamenti arrivano già da Apple Salute, importarli due volte creerebbe duplicati. Le gare compaiono in Allenamenti → Statistiche → Cardio.")
+            }
+        }
+        .navigationTitle("Strava")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    /// OAuth in a system web session; the callback carries the one-time code
+    /// exchanged (with the user's own client secret) for the token pair.
+    private func connect() {
+        guard let url = StravaService.authorizationURL(clientID: clientID.trimmingCharacters(in: .whitespaces)) else { return }
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "ritmo") { callbackURL, error in
+            guard error == nil,
+                  let callbackURL,
+                  let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
+                      .queryItems?.first(where: { $0.name == "code" })?.value
+            else {
+                Task { @MainActor in result = NSLocalizedString("Accesso annullato.", comment: "") }
+                return
+            }
+            Task { @MainActor in
+                working = true
+                do {
+                    let tokens = try await StravaService.exchangeCode(
+                        code,
+                        clientID: clientID.trimmingCharacters(in: .whitespaces),
+                        clientSecret: clientSecret.trimmingCharacters(in: .whitespaces))
+                    StravaSession.store(tokens)
+                    refreshToken = tokens.refreshToken
+                    result = nil
+                    importRaces(full: true)
+                } catch {
+                    result = error.localizedDescription
+                    working = false
+                }
+            }
+        }
+        session.presentationContextProvider = presentationContext
+        authSession = session
+        session.start()
+    }
+
+    private func importRaces(full: Bool = true) {
+        working = true
+        result = nil
+        Task { @MainActor in
+            do {
+                let added = try await StravaSession.importNewRaces(into: modelContext, full: full)
+                result = String(format: NSLocalizedString("Importate %@ gare.", comment: ""), "\(added)")
+            } catch {
+                result = error.localizedDescription
+            }
+            working = false
         }
     }
 }

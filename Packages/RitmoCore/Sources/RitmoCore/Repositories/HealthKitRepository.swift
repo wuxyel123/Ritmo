@@ -59,8 +59,9 @@ public final class HealthKitRepository: ObservableObject {
             // Allenamenti
             HKObjectType.workoutType(),
             HKSeriesType.workoutRoute(),
-            // Caratteristiche (sesso biologico → coefficienti punti IPF GL)
-            HKObjectType.characteristicType(forIdentifier: .biologicalSex)!
+            // Caratteristiche (sesso → coefficienti IPF GL; nascita → age-grading)
+            HKObjectType.characteristicType(forIdentifier: .biologicalSex)!,
+            HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
         ]
 
         var readTypesVar = readTypes
@@ -621,6 +622,14 @@ public final class HealthKitRepository: ObservableObject {
         case .male:   return false
         default:      return nil
         }
+    }
+
+    /// Age in whole years at `date`, from the Health profile's birth date —
+    /// the age-grading input. nil when unset/denied.
+    public func ageYears(at date: Date = .now) -> Int? {
+        guard let components = try? store.dateOfBirthComponents(),
+              let birthDate = Calendar.current.date(from: components) else { return nil }
+        return Calendar.current.dateComponents([.year], from: birthDate, to: date).year
     }
 
     public func fetchBodyFatHistoryPoints(days: Int) async -> [DateValuePoint] {

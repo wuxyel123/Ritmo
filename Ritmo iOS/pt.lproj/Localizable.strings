@@ -728,3 +728,41 @@
 // ── Windowed fatigue gate (2026-07-10)
 "Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Fizeste %@ sessões intensas nos últimos %@ dias: melhor um dia leve.";
 "Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Fizeste %@ sessões de esforço alto nos últimos %@ dias (RPE médio %@): melhor um dia leve.";
+
+// ── Cardio stats, race log, Strava (2026-07-10)
+"Palestra" = "Ginásio";
+"Personal best — Corsa" = "Recordes — Corrida";
+"Personal best — Bici" = "Recordes — Bicicleta";
+"Nessun personal best: servono attività alle distanze classiche o gare registrate." = "Sem recordes: são precisas atividades nas distâncias clássicas ou provas registadas.";
+"Mezza maratona" = "Meia maratona";
+"Maratona" = "Maratona";
+"gara" = "prova";
+"AG %@" = "AG %@";
+"Km settimanali" = "Km semanais";
+"Distanza per settimana, ultime 12 settimane" = "Distância por semana, últimas 12 semanas";
+"Corsa" = "Corrida";
+"Bici" = "Bicicleta";
+"Nuoto" = "Natação";
+"Triathlon" = "Triatlo";
+"Aggiungi gara" = "Adicionar prova";
+"Nessuna gara registrata" = "Sem provas registadas";
+"Collega Strava nelle Impostazioni per importare le gare automaticamente." = "Liga o Strava nas Definições para importar as tuas provas automaticamente.";
+"Nuova gara" = "Nova prova";
+"Nome gara" = "Nome da prova";
+"Data" = "Data";
+"Distanza" = "Distância";
+"Distanze standard" = "Distâncias padrão";
+"Tempo ufficiale" = "Tempo oficial";
+"Sport" = "Desporto";
+"Sprint" = "Sprint";
+"Olimpico" = "Olímpico";
+"Strava collegato" = "Strava ligado";
+"Come collegare Strava" = "Como ligar o Strava";
+"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi localhost, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Cria a TUA app API em strava.com/settings/api (grátis): define localhost como «Authorization Callback Domain» e cola aqui o Client ID e o Client Secret. A ligação abre o Strava para autorizar e permanece ativa até a removeres.";
+"Importa gare ora" = "Importar provas agora";
+"Collega Strava" = "Ligar Strava";
+"Importate %@ gare." = "%@ provas importadas.";
+"Accesso annullato." = "Acesso cancelado.";
+"Strava non collegato: apri Impostazioni → Strava e completa l'accesso." = "Strava não ligado: abre Definições → Strava e conclui o acesso.";
+"Strava ha risposto con un errore (HTTP %@)." = "O Strava respondeu com um erro (HTTP %@).";
+"Vengono importate SOLO le attività segnate come gara su Strava (corsa e bici): gli allenamenti arrivano già da Apple Salute, importarli due volte creerebbe duplicati. Le gare compaiono in Allenamenti → Statistiche → Cardio." = "SÓ são importadas as atividades marcadas como prova no Strava (corrida e bicicleta): o treino já chega do Apple Saúde, importá-lo duas vezes criaria duplicados. As provas aparecem em Treinos → Estatísticas → Cardio.";

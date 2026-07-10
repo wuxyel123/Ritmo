@@ -11,7 +11,8 @@ public enum RitmoStore {
             WorkoutSession.self,
             WorkoutSet.self,
             Exercise.self,
-            UserGoals.self
+            UserGoals.self,
+            RaceResult.self
         ])
 
         // CloudKit sync: i dati SwiftData vengono sincronizzati via iCloud
@@ -41,7 +42,8 @@ public enum RitmoStore {
             WorkoutSession.self,
             WorkoutSet.self,
             Exercise.self,
-            UserGoals.self
+            UserGoals.self,
+            RaceResult.self
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: schema, configurations: [config])

@@ -14,9 +14,15 @@ import RitmoCore
 // ONCE in .task into `stats` (the TrainingLoadDetailView lesson: computed
 // properties re-run per body evaluation and stutter the push animation).
 
+enum StatsSection {
+    case gym, cardio
+}
+
 struct WorkoutStatsView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
+    @Query(sort: \RaceResult.date, order: .reverse) private var races: [RaceResult]
     @Query private var storedGoals: [UserGoals]
     @AppStorage("oplUsername") private var oplUsername = ""
 
@@ -29,6 +35,11 @@ struct WorkoutStatsView: View {
         var density: [DateValuePoint] = []
         var exercises: [WorkoutStats.ExerciseSummary] = []
         var bodyWeights: [DateValuePoint] = []
+        // Cardio
+        var runPBs: [EnduranceStats.PersonalBest] = []
+        var ridePBs: [EnduranceStats.PersonalBest] = []
+        var weeklyRunKm: [WorkoutStats.WeekPoint] = []
+        var weeklyRideKm: [WorkoutStats.WeekPoint] = []
     }
 
     @State private var stats: Stats?
@@ -40,20 +51,38 @@ struct WorkoutStatsView: View {
     @State private var oplGLPoints: [DateValuePoint] = []   // selected event's series, oldest → newest
     @State private var oplMetricLabel = "punti IPF"          // "punti IPF" | "punti Dots" | "kg"
     @State private var oplError: String?
+    @State private var section: StatsSection = .gym
+    @State private var kmSport: EnduranceStats.Sport = .run
+    @State private var showingRaceEditor = false
+    @State private var stravaImportError: String?
 
     var body: some View {
         ScrollView {
             if let stats {
                 VStack(alignment: .leading, spacing: RitmoTheme.gap) {
-                    weeklySetsCard(stats)
-                    tonnageCard(stats)
-                    repRangeCard(stats)
-                    frequencyCard(stats)
-                    densityCard(stats)
-                    relativeStrengthCard(stats)
-                    compMaxCard(stats)
-                    oplCard
-                    exercisesCard(stats)
+                    Picker("Sezione", selection: $section) {
+                        Text("Palestra").tag(StatsSection.gym)
+                        Text("Cardio").tag(StatsSection.cardio)
+                    }
+                    .pickerStyle(.segmented)
+
+                    switch section {
+                    case .gym:
+                        weeklySetsCard(stats)
+                        tonnageCard(stats)
+                        repRangeCard(stats)
+                        frequencyCard(stats)
+                        densityCard(stats)
+                        relativeStrengthCard(stats)
+                        compMaxCard(stats)
+                        oplCard
+                        exercisesCard(stats)
+                    case .cardio:
+                        pbCard(stats, sport: .run)
+                        pbCard(stats, sport: .ride)
+                        weeklyKmCard(stats)
+                        racesCard
+                    }
                 }
                 .padding(RitmoTheme.pagePadding)
             } else {
@@ -62,6 +91,10 @@ struct WorkoutStatsView: View {
                     .padding(.top, 120)
             }
         }
+        .sheet(isPresented: $showingRaceEditor) {
+            RaceEditorView()
+        }
+        .onChange(of: races.count) { _, _ in recomputeCardio() }
         .navigationTitle("Statistiche")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -77,8 +110,22 @@ struct WorkoutStatsView: View {
             s.exercises = WorkoutStats.exerciseSummaries(from: sessions)
             s.groupsWithSets = s.frequency.map(\.group)
             s.bodyWeights = await healthRepo.fetchBodyWeightHistoryPoints(days: 365)
+            s.runPBs = EnduranceStats.personalBests(sport: .run, sessions: sessions, races: races)
+            s.ridePBs = EnduranceStats.personalBests(sport: .ride, sessions: sessions, races: races)
+            s.weeklyRunKm = EnduranceStats.weeklyDistanceKm(sport: .run, from: sessions)
+            s.weeklyRideKm = EnduranceStats.weeklyDistanceKm(sport: .ride, from: sessions)
             setsForFilter = s.weeklySetsAll
             stats = s
+            // Strava: pull any new race-tagged activities, then refresh PBs.
+            if StravaSession.isConnected {
+                do {
+                    if try await StravaSession.importNewRaces(into: modelContext) > 0 {
+                        recomputeCardio()
+                    }
+                } catch {
+                    stravaImportError = error.localizedDescription
+                }
+            }
             if !oplUsername.isEmpty {
                 do {
                     oplMeets = try await OpenPowerliftingService.fetchMeets(username: oplUsername)
@@ -513,6 +560,183 @@ struct WorkoutStatsView: View {
         kg.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(kg))" : String(format: "%.1f", kg)
     }
 
+    // MARK: - Cardio
+
+    /// PBs depend on sessions AND the race log — re-run after any race change
+    /// (add, delete, Strava import).
+    private func recomputeCardio() {
+        guard stats != nil else { return }
+        stats?.runPBs = EnduranceStats.personalBests(sport: .run, sessions: sessions, races: races)
+        stats?.ridePBs = EnduranceStats.personalBests(sport: .ride, sessions: sessions, races: races)
+    }
+
+    /// WMA age-grade % for a run at a canonical distance (needs birth date +
+    /// sex in the Health profile), nil otherwise.
+    private func ageGradePercent(_ gradingDistance: AgeGrading.Distance?,
+                                 seconds: Int, date: Date) -> Double? {
+        guard let gradingDistance, let age = healthRepo.ageYears(at: date) else { return nil }
+        return AgeGrading.percent(distance: gradingDistance,
+                                  timeSeconds: Double(seconds),
+                                  age: age,
+                                  isFemale: healthRepo.isFemale() ?? false)
+    }
+
+    @ViewBuilder
+    private func pbCard(_ s: Stats, sport: EnduranceStats.Sport) -> some View {
+        let pbs = sport == .run ? s.runPBs : s.ridePBs
+        FitCard {
+            VStack(alignment: .leading, spacing: 10) {
+                SectionHeader(title: sport == .run ? "Personal best — Corsa" : "Personal best — Bici")
+                if pbs.isEmpty {
+                    Text("Nessun personal best: servono attività alle distanze classiche o gare registrate.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    ForEach(pbs) { pb in
+                        HStack(alignment: .firstTextBaseline) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(LocalizedStringKey(pb.bucket.label)).font(.caption.bold())
+                                Text(pb.date, format: .dateTime.day().month(.abbreviated).year())
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            if pb.isRace {
+                                Text("gara")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(RitmoTheme.accent.opacity(0.12), in: Capsule())
+                                    .foregroundStyle(RitmoTheme.accent)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text(EnduranceStats.formatDuration(pb.durationSeconds))
+                                    .font(.subheadline.bold())
+                                HStack(spacing: 6) {
+                                    Text(sport == .run
+                                         ? EnduranceStats.formatPace(pb.paceSecondsPerKm) + "/km"
+                                         : String(format: "%.1f km/h", pb.speedKmH))
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                    if let grade = ageGradePercent(pb.bucket.gradingDistance,
+                                                                   seconds: pb.durationSeconds,
+                                                                   date: pb.date) {
+                                        Text(String(format: NSLocalizedString("AG %@", comment: ""),
+                                                    String(format: "%.1f%%", grade)))
+                                            .font(.caption2.bold()).foregroundStyle(.orange)
+                                    }
+                                }
+                            }
+                        }
+                        if pb.id != pbs.last?.id { Divider() }
+                    }
+                }
+            }
+        }
+    }
+
+    private func weeklyKmCard(_ s: Stats) -> some View {
+        FitCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    SectionHeader(title: "Km settimanali")
+                    Spacer()
+                    Menu {
+                        Button("Corsa") { kmSport = .run }
+                        Button("Bici") { kmSport = .ride }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(LocalizedStringKey(kmSport == .run ? "Corsa" : "Bici"))
+                            Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                        }
+                        .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
+                    }
+                }
+                Text("Distanza per settimana, ultime 12 settimane")
+                    .font(.caption2).foregroundStyle(.secondary)
+                SelectableStatChart(
+                    points: (kmSport == .run ? s.weeklyRunKm : s.weeklyRideKm)
+                        .map { DateValuePoint(date: $0.weekStart, value: $0.value) },
+                    isBar: true, weekly: true, barWidth: 12, xAxisWeekStride: 2,
+                    color: kmSport == .run ? .mint : .cyan, decimals: 1, unit: " km")
+            }
+        }
+    }
+
+    private var racesCard: some View {
+        FitCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    SectionHeader(title: "Gare")
+                    Spacer()
+                    Button { showingRaceEditor = true } label: {
+                        Label("Aggiungi gara", systemImage: "plus")
+                            .font(.caption.bold())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(RitmoTheme.accent)
+                }
+                if let stravaImportError {
+                    Text(stravaImportError).font(.caption2).foregroundStyle(.secondary)
+                }
+                if races.isEmpty {
+                    Text("Nessuna gara registrata")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if !StravaSession.isConnected {
+                        Text("Collega Strava nelle Impostazioni per importare le gare automaticamente.")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                } else {
+                    ForEach(races.prefix(5)) { race in
+                        raceRow(race)
+                        if race.id != races.prefix(5).last?.id { Divider() }
+                    }
+                    if races.count > 5 {
+                        NavigationLink {
+                            RaceListView()
+                        } label: {
+                            HStack {
+                                Text("Tutte le gare").font(.caption.bold())
+                                Spacer()
+                                Text("\(races.count)").font(.caption2).foregroundStyle(.secondary)
+                                Image(systemName: "chevron.right").font(.caption2)
+                            }
+                            .foregroundStyle(RitmoTheme.accent)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func raceRow(_ race: RaceResult) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Image(systemName: race.sport.sfSymbol)
+                .font(.caption).foregroundStyle(RitmoTheme.accent)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(race.name.isEmpty ? race.sport.displayName : race.name)
+                    .font(.caption.bold()).lineLimit(1)
+                Text("\(race.date, format: .dateTime.day().month(.abbreviated).year()) · \(fmtKg(race.distanceMeters / 1000)) km")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(EnduranceStats.formatDuration(race.durationSeconds))
+                    .font(.caption.bold())
+                if race.sport == .run,
+                   let grade = ageGradePercent(AgeGrading.Distance.match(meters: race.distanceMeters),
+                                               seconds: race.durationSeconds, date: race.date) {
+                    Text(String(format: NSLocalizedString("AG %@", comment: ""),
+                                String(format: "%.1f%%", grade)))
+                        .font(.caption2.bold()).foregroundStyle(.orange)
+                } else {
+                    Text(race.sport == .ride
+                         ? String(format: "%.1f km/h", race.speedKmH)
+                         : EnduranceStats.formatPace(race.paceSecondsPerKm) + "/km")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
     // MARK: Exercise browser preview
 
     private func exercisesCard(_ s: Stats) -> some View {
@@ -726,6 +950,156 @@ func eventLabel(_ code: String) -> String {
     case "D":   return "Solo Stacco"
     case "BD":  return "Panca + Stacco"
     default:    return code
+    }
+}
+
+// MARK: - RaceEditorView (manual race entry)
+
+struct RaceEditorView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var sport: RaceSport = .run
+    @State private var name = ""
+    @State private var date = Date.now
+    @State private var distanceKmText = ""
+    @State private var hoursText = ""
+    @State private var minutesText = ""
+    @State private var secondsText = ""
+
+    private var distanceMeters: Double {
+        (Double(distanceKmText.replacingOccurrences(of: ",", with: ".")) ?? 0) * 1000
+    }
+    private var totalSeconds: Int {
+        (Int(hoursText) ?? 0) * 3600 + (Int(minutesText) ?? 0) * 60 + (Int(secondsText) ?? 0)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Sport", selection: $sport) {
+                        ForEach(RaceSport.allCases, id: \.self) { s in
+                            Text(LocalizedStringKey(s.displayName)).tag(s)
+                        }
+                    }
+                    TextField("Nome gara", text: $name)
+                    DatePicker("Data", selection: $date, displayedComponents: .date)
+                } header: { Text("Gara") }
+
+                Section {
+                    HStack {
+                        TextField("0", text: $distanceKmText)
+                            .keyboardType(.decimalPad)
+                        Text("km").foregroundStyle(RitmoTheme.textSecondary)
+                        Menu {
+                            ForEach(presets, id: \.label) { preset in
+                                Button(preset.label) {
+                                    distanceKmText = String(format: "%.4g", preset.meters / 1000)
+                                }
+                            }
+                        } label: {
+                            Label("Distanze standard", systemImage: "list.bullet")
+                                .font(.caption)
+                        }
+                    }
+                } header: { Text("Distanza") }
+
+                Section {
+                    HStack(spacing: 8) {
+                        TextField("0", text: $hoursText).keyboardType(.numberPad)
+                        Text("h").foregroundStyle(RitmoTheme.textSecondary)
+                        TextField("0", text: $minutesText).keyboardType(.numberPad)
+                        Text("min").foregroundStyle(RitmoTheme.textSecondary)
+                        TextField("0", text: $secondsText).keyboardType(.numberPad)
+                        Text("s").foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                } header: { Text("Tempo ufficiale") }
+            }
+            .navigationTitle("Nuova gara")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annulla") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Salva") { save() }
+                        .disabled(distanceMeters <= 0 || totalSeconds <= 0)
+                }
+            }
+        }
+    }
+
+    private var presets: [(label: String, meters: Double)] {
+        switch sport {
+        case .run:
+            return [("5 km", 5_000), ("10 km", 10_000),
+                    ("Mezza maratona", 21_097.5), ("Maratona", 42_195)]
+        case .ride:
+            return [("25 km", 25_000), ("50 km", 50_000), ("100 km", 100_000)]
+        case .swim:
+            return [("1,5 km", 1_500), ("1,9 km", 1_900), ("3,8 km", 3_800)]
+        case .triathlon:
+            return [("Sprint", 25_750), ("Olimpico", 51_500),
+                    ("70.3", 113_000), ("Ironman", 226_000)]
+        case .other:
+            return []
+        }
+    }
+
+    private func save() {
+        modelContext.insert(RaceResult(date: date,
+                                       name: name.trimmingCharacters(in: .whitespaces),
+                                       sport: sport,
+                                       distanceMeters: distanceMeters,
+                                       durationSeconds: totalSeconds))
+        try? modelContext.save()
+        dismiss()
+    }
+}
+
+// MARK: - RaceListView (full race log, deletable)
+
+struct RaceListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \RaceResult.date, order: .reverse) private var races: [RaceResult]
+
+    var body: some View {
+        List {
+            ForEach(races) { race in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: race.sport.sfSymbol)
+                            .font(.caption).foregroundStyle(RitmoTheme.accent)
+                        Text(race.name.isEmpty ? race.sport.displayName : race.name)
+                            .font(.subheadline.bold()).lineLimit(1)
+                        Spacer()
+                        Text(EnduranceStats.formatDuration(race.durationSeconds))
+                            .font(.caption.bold())
+                    }
+                    HStack {
+                        Text("\(race.date, format: .dateTime.day().month(.abbreviated).year()) · \(String(format: "%.4g", race.distanceMeters / 1000)) km")
+                            .font(.caption2).foregroundStyle(.secondary)
+                        Spacer()
+                        if race.sourceRaw == "strava" {
+                            Text("Strava").font(.system(size: 9, weight: .bold))
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.15), in: Capsule())
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .onDelete { offsets in
+                for index in offsets { modelContext.delete(races[index]) }
+                try? modelContext.save()
+            }
+        }
+        .navigationTitle("Gare")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 
