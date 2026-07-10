@@ -151,9 +151,15 @@ struct WatchHomeView: View {
 
     // MARK: Helpers
 
-    /// Same rule as iOS: recovery 0 = no data behind it, pass nil. Load comes
-    /// from the iPhone-synced TrainingLoad (ground truth), nil until synced.
+    /// The iPhone-computed recommendation when it's from today (ground truth —
+    /// the watch's own store would reach a different verdict: no Hevy
+    /// standalones, different import timing). Local compute is only the
+    /// fallback for a watch that hasn't synced today.
     private var dailyPlan: DailyRecommendation? {
+        if let pushed = vm.phoneRecommendation,
+           Calendar.current.isDateInToday(pushed.computedOn) {
+            return pushed
+        }
         let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
         return DailyRecommendation.compute(recovery: usableRecovery,
                                            load: vm.trainingLoad,

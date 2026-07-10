@@ -17,12 +17,26 @@ struct WorkoutListView: View {
                     EmptyWorkoutView(onSync: { Task { await syncHealthKit() } })
                 } else {
                     List {
-                        NavigationLink {
-                            TrainingLoadDetailView(sessions: sessions)
-                        } label: {
+                        // Invisible NavigationLink under the card: keeps the tap
+                        // navigation but suppresses the List's default chevron —
+                        // the cards draw their own.
+                        ZStack {
+                            NavigationLink {
+                                TrainingLoadDetailView(sessions: sessions)
+                            } label: { EmptyView() }
+                            .opacity(0)
                             TrainingLoadCard(load: TrainingLoad.compute(from: sessions))
                         }
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden)
+                        ZStack {
+                            NavigationLink {
+                                WorkoutStatsView()
+                            } label: { EmptyView() }
+                            .opacity(0)
+                            StatsEntryCard()
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowSeparator(.hidden)
                         ForEach(sessions) { session in
                             NavigationLink(destination: WorkoutDetailView(session: session)) {
@@ -110,6 +124,30 @@ struct WorkoutListView: View {
 
 }
 
+// MARK: - Stats entry card
+
+struct StatsEntryCard: View {
+    var body: some View {
+        FitCard {
+            HStack(spacing: 12) {
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.title3)
+                    .foregroundStyle(RitmoTheme.accent)
+                    .frame(width: 38, height: 38)
+                    .background(RitmoTheme.accent.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Statistiche").font(.subheadline.bold())
+                    Text("Serie, tonnellaggio, frequenza e progressione esercizi")
+                        .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
 // MARK: - Training Load Card
 
 struct TrainingLoadCard: View {
@@ -128,6 +166,8 @@ struct TrainingLoadCard: View {
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(color.opacity(0.15), in: Capsule())
                         .foregroundStyle(color)
+                    Image(systemName: "chevron.right")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text("\(load.acute)")
@@ -165,6 +205,14 @@ struct TrainingLoadDetailView: View {
     @State private var history: [TrainingLoadPoint] = []
     @State private var categoryLoads: [CategoryLoad] = []
     @State private var daily: [(date: Date, load: Int)] = []
+    @State private var ratioSelection: Date?
+
+    private var selectedRatioPoint: TrainingLoadPoint? {
+        guard let ratioSelection else { return nil }
+        return history.min {
+            abs($0.date.timeIntervalSince(ratioSelection)) < abs($1.date.timeIntervalSince(ratioSelection))
+        }
+    }
 
     // Data only, per explicit user preference: state which band the ratio is
     // in, no advice ("valuta una giornata più leggera") or judgment.
@@ -263,19 +311,8 @@ struct TrainingLoadDetailView: View {
                 FitCard {
                     VStack(alignment: .leading, spacing: 10) {
                         SectionHeader(title: "Carico giornaliero")
-                        Chart(daily, id: \.date) { item in
-                            BarMark(x: .value("Giorno", item.date, unit: .day),
-                                    y: .value("Carico", item.load),
-                                    width: .fixed(10))
-                                .foregroundStyle(color.gradient)
-                                .cornerRadius(3)
-                        }
-                        .frame(height: 130)
-                        .chartXAxis {
-                            AxisMarks(values: .stride(by: .day, count: 2)) {
-                                AxisValueLabel(format: .dateTime.day())
-                            }
-                        }
+                        SelectableStatChart(points: daily.map { DateValuePoint(date: $0.date, value: Double($0.load)) },
+                                            isBar: true, barWidth: 10, color: color, height: 130)
                     }
                 }
 
@@ -312,8 +349,29 @@ struct TrainingLoadDetailView: View {
                                         .lineStyle(StrokeStyle(lineWidth: 2.5))
                                         .foregroundStyle(color)
                                 }
+                                if let sel = selectedRatioPoint {
+                                    RuleMark(x: .value("Selezione", sel.date))
+                                        .foregroundStyle(.secondary.opacity(0.4))
+                                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                                        .annotation(position: .top,
+                                                    overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                                            VStack(spacing: 1) {
+                                                Text("\(Int((sel.ratio * 100).rounded()))%")
+                                                    .font(.caption.bold())
+                                                    .foregroundStyle(loadStatusColor(sel.status))
+                                                Text(sel.date, format: .dateTime.day().month(.abbreviated))
+                                                    .font(.system(size: 9)).foregroundStyle(.secondary)
+                                            }
+                                            .padding(.horizontal, 8).padding(.vertical, 4)
+                                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
+                                        }
+                                    PointMark(x: .value("Selezione", sel.date),
+                                              y: .value("Rapporto", sel.ratio * 100))
+                                        .foregroundStyle(loadStatusColor(sel.status))
+                                }
                             }
                             .chartYScale(domain: 0...upperBound)
+                            .chartXSelection(value: $ratioSelection)
                             .frame(height: 140)
                             .chartXAxis {
                                 AxisMarks(values: .stride(by: .day, count: 14)) {

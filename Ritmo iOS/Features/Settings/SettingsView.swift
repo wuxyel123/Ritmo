@@ -47,6 +47,7 @@ struct SettingsTabView: View {
     @AppStorage("autoMacro") private var autoMacroRaw: String = AutoMacro.carbs.rawValue
     @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
     @AppStorage("hevyConnected") private var hevyConnected = false
+    @AppStorage("oplUsername") private var oplUsername = ""
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -212,6 +213,20 @@ struct SettingsTabView: View {
                                     .foregroundStyle(RitmoTheme.textSecondary)
                             } else {
                                 Text("Non collegato").font(.caption)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                            }
+                        }
+                    }
+                    NavigationLink {
+                        PowerliftingSettingsView()
+                    } label: {
+                        HStack {
+                            Label("Powerlifting", systemImage: "figure.strengthtraining.traditional")
+                            Spacer()
+                            if !oplUsername.isEmpty {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text("Collegato").font(.caption)
                                     .foregroundStyle(RitmoTheme.textSecondary)
                             }
                         }
@@ -668,6 +683,138 @@ struct HevySettingsView: View {
             }
             hevyImporting = false
             hevyProgress = ""
+        }
+    }
+}
+
+// MARK: - Powerlifting settings (comp 1RMs + OpenPowerlifting)
+
+struct PowerliftingSettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @AppStorage("oplUsername") private var oplUsername = ""
+
+    @State private var squatText = ""
+    @State private var benchText = ""
+    @State private var deadliftText = ""
+    @State private var usernameField = ""
+    @State private var checking = false
+    @State private var checkResult: String?
+    @State private var loaded = false
+
+    var body: some View {
+        Form {
+            // MARK: Competition 1RMs
+            Section {
+                maxRow("Squat", text: $squatText)
+                maxRow("Panca Piana", text: $benchText)
+                maxRow("Stacco da Terra", text: $deadliftText)
+            } header: { Text("Massimali gara (kg)") } footer: {
+                Text("I tuoi 1RM veri da gara: compaiono in Statistiche accanto alle stime e come riferimento nei grafici di progressione.")
+            }
+
+            // MARK: OpenPowerlifting
+            Section {
+                if oplUsername.isEmpty {
+                    TextField("username", text: $usernameField)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button {
+                        connect()
+                    } label: {
+                        HStack {
+                            if checking {
+                                ProgressView().padding(.trailing, 6)
+                                Text("Verifica…")
+                            } else {
+                                Label("Collega OpenPowerlifting", systemImage: "link")
+                            }
+                        }
+                    }
+                    .disabled(usernameField.trimmingCharacters(in: .whitespaces).isEmpty || checking)
+                } else {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Text(oplUsername).font(.subheadline.bold())
+                    }
+                    Button(role: .destructive) {
+                        oplUsername = ""
+                        usernameField = ""
+                        checkResult = nil
+                    } label: {
+                        Label("Rimuovi collegamento", systemImage: "xmark.circle")
+                    }
+                }
+                if let checkResult {
+                    Text(checkResult).font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                }
+            } header: { Text("OpenPowerlifting") } footer: {
+                Text("Profilo pubblico su openpowerlifting.org: lo username è l'ultima parte dell'URL della tua pagina atleta (openpowerlifting.org/u/tuonome). Le tue gare compaiono in Allenamenti → Statistiche.")
+            }
+        }
+        .navigationTitle("Powerlifting")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .onAppear(perform: loadMaxes)
+        .onChange(of: squatText) { _, _ in saveMaxes() }
+        .onChange(of: benchText) { _, _ in saveMaxes() }
+        .onChange(of: deadliftText) { _, _ in saveMaxes() }
+    }
+
+    private func maxRow(_ label: String, text: Binding<String>) -> some View {
+        HStack {
+            Text(LocalizedStringKey(label))
+            Spacer()
+            TextField("—", text: text)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 90)
+            Text("kg").foregroundStyle(RitmoTheme.textSecondary).font(.caption)
+        }
+    }
+
+    private func loadMaxes() {
+        guard !loaded else { return }
+        loaded = true
+        let goals = UserGoals.canonical(in: modelContext)
+        squatText = goals.compSquatKg > 0 ? fmt(goals.compSquatKg) : ""
+        benchText = goals.compBenchKg > 0 ? fmt(goals.compBenchKg) : ""
+        deadliftText = goals.compDeadliftKg > 0 ? fmt(goals.compDeadliftKg) : ""
+        usernameField = oplUsername
+    }
+
+    private func saveMaxes() {
+        guard loaded else { return }
+        let goals = UserGoals.canonical(in: modelContext)
+        goals.compSquatKg = parse(squatText)
+        goals.compBenchKg = parse(benchText)
+        goals.compDeadliftKg = parse(deadliftText)
+        try? modelContext.save()
+    }
+
+    /// Accepts the Italian decimal comma as well as the dot.
+    private func parse(_ text: String) -> Double {
+        Double(text.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+
+    private func fmt(_ kg: Double) -> String {
+        kg.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(kg))" : String(format: "%.1f", kg)
+    }
+
+    /// Validates the username against the live endpoint before storing it.
+    private func connect() {
+        checking = true
+        checkResult = nil
+        let candidate = usernameField.trimmingCharacters(in: .whitespaces).lowercased()
+        Task { @MainActor in
+            do {
+                let meets = try await OpenPowerliftingService.fetchMeets(username: candidate)
+                oplUsername = candidate
+                checkResult = String(format: NSLocalizedString("Trovate %@ gare.", comment: ""), "\(meets.count)")
+            } catch {
+                checkResult = error.localizedDescription
+            }
+            checking = false
         }
     }
 }

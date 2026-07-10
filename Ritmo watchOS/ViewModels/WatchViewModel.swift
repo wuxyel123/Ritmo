@@ -13,6 +13,8 @@ final class WatchViewModel: ObservableObject {
     /// iPhone-computed training load, when available (the source of truth —
     /// see HealthKitRepository.cacheTrainingLoad). Nil until the iPhone has synced.
     @Published var trainingLoad: TrainingLoad? = nil
+    /// iPhone-computed daily recommendation — same source-of-truth rule.
+    @Published var phoneRecommendation: DailyRecommendation? = nil
 
     private let healthRepo = HealthKitRepository()
 
@@ -33,6 +35,7 @@ final class WatchViewModel: ObservableObject {
         recovery      = await recoveryResult
         sleepSession  = sleepSessions.max(by: { $0.totalHours < $1.totalHours })
         trainingLoad  = HealthKitRepository.cachedTrainingLoad()
+        phoneRecommendation = HealthKitRepository.cachedDailyRecommendation()
         persistSnapshot(snapshot)
     }
 

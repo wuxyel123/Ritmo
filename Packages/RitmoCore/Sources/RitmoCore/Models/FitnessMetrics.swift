@@ -318,8 +318,8 @@ public struct RecoveryScore {
 // Either input can be missing (no sleep data, no workout history) — the
 // recommendation degrades to whatever is available, or nil if neither is.
 
-public struct DailyRecommendation {
-    public enum Kind: String {
+public struct DailyRecommendation: Codable {
+    public enum Kind: String, Codable {
         case push, maintain, easy, rest, done
 
         public var title: String {
@@ -348,8 +348,10 @@ public struct DailyRecommendation {
     /// One localizable sentence of the reason: `key` is the Italian source
     /// sentence (the lookup key in each app's Localizable.strings), `args`
     /// fill its %@ placeholders. Kept structured so the composed reason can
-    /// be localized at render time instead of baking Italian into the model.
-    public struct ReasonFragment {
+    /// be localized at render time instead of baking Italian into the model —
+    /// and Codable, so the iPhone-computed recommendation syncs to the watch
+    /// and localizes against the WATCH's own tables.
+    public struct ReasonFragment: Codable {
         public let key: String
         public let args: [String]
         init(_ key: String, _ args: [String] = []) {
@@ -360,6 +362,10 @@ public struct DailyRecommendation {
 
     public let reasonFragments: [ReasonFragment]
 
+    /// When this recommendation was computed — a recommendation is only valid
+    /// for its own day, so consumers of a synced copy must check this.
+    public let computedOn: Date
+
     /// The reason, localized against the running app's string tables
     /// (falls back to Italian where a key is missing).
     public var reason: String {
@@ -369,9 +375,10 @@ public struct DailyRecommendation {
         }.joined(separator: " ")
     }
 
-    init(kind: Kind, reasonFragments: [ReasonFragment]) {
+    init(kind: Kind, reasonFragments: [ReasonFragment], computedOn: Date = .now) {
         self.kind = kind
         self.reasonFragments = reasonFragments
+        self.computedOn = computedOn
     }
 
     /// `recovery` should be passed as nil when there's no real data behind it
@@ -428,7 +435,57 @@ public struct DailyRecommendation {
                 ReasonFragment("Recupero parziale (%@/100): un'attività leggera è la scelta giusta.", ["\(r.overall)"])])
         }
 
-        // From here on recovery is good (or unknown) and load is optimal/low.
+        // Fatigue gate: recovery scores lag accumulated work, so "push" must
+        // consider what was actually done recently, not recovery alone.
+        // NO consecutive-day requirement — a rest day between two heavy
+        // sessions doesn't erase their fatigue (that requirement is exactly
+        // why a Mon/Wed lifter kept seeing "push" on Thursday). Windows are
+        // calendar days, so an evening session doesn't age out mid-day.
+        let today = calendar.startOfDay(for: now)
+
+        // Tunables — deliberately forgiving; per the user, over-suggesting a
+        // light day beats missing one.
+        let hardWindowDays = 4           // "recent" = today + previous 3 days
+        let hardSessionFactor = 0.9      // avg ≥ 90% of the usual session load
+        let hardEffortThreshold = 7.5    // avg RPE across recent sessions
+        let compressedWeekShare = 0.45   // 3-day load ≥ 45% of the weekly norm
+
+        if let windowStart = calendar.date(byAdding: .day, value: -(hardWindowDays - 1), to: today) {
+            let recent = sessions.filter { $0.startTime >= windowStart }
+            if recent.count >= 2 {
+                let count = Double(recent.count)
+                let avgSessionLoad = recent.reduce(0.0) { $0 + $1.loadValue } / count
+                let avgEffort = recent.reduce(0.0) { $0 + Double($1.effortScore) } / count
+                if let l = usableLoad, l.averageLoad > 0,
+                   avgSessionLoad >= l.averageLoad * hardSessionFactor {
+                    return DailyRecommendation(kind: .easy, reasonFragments: [
+                        ReasonFragment("Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera.",
+                                       ["\(recent.count)", "\(hardWindowDays)"])])
+                }
+                // High RPE marks the block as hard even when its load stays
+                // under the baseline (short heavy sessions barely move load).
+                if avgEffort >= hardEffortThreshold {
+                    return DailyRecommendation(kind: .easy, reasonFragments: [
+                        ReasonFragment("Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera.",
+                                       ["\(recent.count)", "\(hardWindowDays)", String(format: "%.1f", avgEffort)])])
+                }
+            }
+        }
+        if let l = usableLoad, l.chronic > 0,
+           let shareWindowStart = calendar.date(byAdding: .day, value: -2, to: today) {
+            let recentLoad = sessions
+                .filter { $0.startTime >= shareWindowStart }
+                .reduce(0.0) { $0 + $1.loadValue }
+            let share = recentLoad / Double(l.chronic)
+            if share >= compressedWeekShare {
+                return DailyRecommendation(kind: .easy, reasonFragments: [
+                    ReasonFragment("Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera.",
+                                   ["\(Int((share * 100).rounded()))"])])
+            }
+        }
+
+        // From here on recovery is good (or unknown), load is optimal/low and
+        // recent work isn't stacked up — the only state where "push" fits.
         if let days = daysSinceLast, days >= 3 {
             return DailyRecommendation(kind: .push, reasonFragments: [
                 ReasonFragment("Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere.", ["\(days)"])])

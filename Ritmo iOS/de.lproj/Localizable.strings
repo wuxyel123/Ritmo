@@ -620,3 +620,111 @@
 "punteggio" = "Score";
 "sforzo /10" = "Anstrengung /10";
 "«Solo dall'app» lo nasconde ma resta in Apple Salute. «Elimina anche da Apple Salute» funziona solo per allenamenti creati da Ritmo." = "«Nur aus der App» blendet es aus, es bleibt aber in Apple Health. «Auch aus Apple Health löschen» funktioniert nur bei von Ritmo erstellten Workouts.";
+
+// ── Workout stats hub (2026-07-09)
+"Statistiche" = "Statistiken";
+"Serie, tonnellaggio, frequenza e progressione esercizi" = "Sätze, Tonnage, Frequenz und Übungs-Progression";
+"Serie settimanali" = "Wöchentliche Sätze";
+"Tutti i gruppi" = "Alle Gruppen";
+"Serie effettive per settimana (riscaldamento escluso)" = "Arbeitssätze pro Woche (ohne Aufwärmen)";
+"Tonnellaggio settimanale" = "Wöchentliche Tonnage";
+"Chili totali sollevati (peso × ripetizioni), ultime 12 settimane" = "Gesamt gehobene Kilos (Gewicht × Wiederholungen), letzte 12 Wochen";
+"Distribuzione ripetizioni" = "Wiederholungs-Verteilung";
+"Serie effettive per fascia di ripetizioni, ultimi 28 giorni" = "Arbeitssätze nach Wiederholungsbereich, letzte 28 Tage";
+"Nessuna serie nel periodo" = "Keine Sätze im Zeitraum";
+"1–5 (forza)" = "1–5 (Kraft)";
+"6–12 (ipertrofia)" = "6–12 (Hypertrophie)";
+"13+ (resistenza)" = "13+ (Ausdauer)";
+"%@ serie · %@" = "%@ Sätze · %@";
+"Frequenza per gruppo muscolare" = "Frequenz pro Muskelgruppe";
+"Giorni di allenamento per gruppo, ultimi 28 giorni" = "Trainingstage pro Gruppe, letzte 28 Tage";
+"%@×/settimana" = "%@×/Woche";
+"ogni %@ giorni" = "alle %@ Tage";
+"Densità di sessione" = "Einheits-Dichte";
+"kg al minuto per sessione, ultimi 90 giorni" = "kg pro Minute pro Einheit, letzte 90 Tage";
+"Servono più sessioni con serie registrate" = "Es braucht mehr Einheiten mit erfassten Sätzen";
+"Forza relativa" = "Relative Kraft";
+"1RM stimato ÷ peso corporeo (Epley, peso più vicino per data)" = "Geschätztes 1RM ÷ Körpergewicht (Epley, nächstgelegene Wiegung)";
+"Servono più sessioni con questo esercizio" = "Es braucht mehr Einheiten mit dieser Übung";
+"Progressione esercizi" = "Übungs-Progression";
+"Tutti gli esercizi" = "Alle Übungen";
+"%lld serie · %lld kg" = "%lld Sätze · %lld kg";
+"miglior serie" = "bester Satz";
+"sessioni" = "Einheiten";
+"1RM stimato (Epley)" = "Geschätztes 1RM (Epley)";
+"Migliore stima per sessione" = "Beste Schätzung pro Einheit";
+"Peso della serie migliore" = "Gewicht des besten Satzes";
+"Serie più pesante per sessione" = "Schwerster Satz pro Einheit";
+"Volume per sessione" = "Volumen pro Einheit";
+"peso × ripetizioni, tutte le serie dell'esercizio" = "Gewicht × Wiederholungen, alle Sätze der Übung";
+"Servono almeno due sessioni con questo esercizio per la progressione" = "Für die Progression braucht es mindestens zwei Einheiten mit dieser Übung";
+"recupero 1′" = "1′-Erholung";
+
+// ── IPF GL relative strength (2026-07-09)
+"Punti IPF GL — totale Squat + Panca Piana + Stacco (1RM stimati, bilanciere) rapportato al peso corporeo" = "IPF-GL-Punkte — Total aus Kniebeuge + Bankdrücken + Kreuzheben (geschätzte 1RM, Langhantel) bezogen auf das Körpergewicht";
+"punti IPF" = "IPF-Punkte";
+
+// ── Powerlifting: comp maxes + OpenPowerlifting (2026-07-09)
+"Massimali gara (kg)" = "Wettkampf-Bestleistungen (kg)";
+"I tuoi 1RM veri da gara: compaiono in Statistiche accanto alle stime e come riferimento nei grafici di progressione." = "Deine echten Wettkampf-1RM: Sie erscheinen in den Statistiken neben den Schätzungen und als Referenz in den Progressions-Diagrammen.";
+"Verifica…" = "Prüfe…";
+"Collega OpenPowerlifting" = "OpenPowerlifting verbinden";
+"Profilo pubblico su openpowerlifting.org: lo username è l'ultima parte dell'URL della tua pagina atleta (openpowerlifting.org/u/tuonome). Le tue gare compaiono in Allenamenti → Statistiche." = "Öffentliches Profil auf openpowerlifting.org: Der Username ist der letzte Teil der URL deiner Athletenseite (openpowerlifting.org/u/deinname). Deine Wettkämpfe erscheinen unter Workouts → Statistiken.";
+"Trovate %@ gare." = "%@ Wettkämpfe gefunden.";
+"Atleta non trovato su OpenPowerlifting: controlla lo username (quello nell'URL della tua pagina)." = "Athlet auf OpenPowerlifting nicht gefunden: Prüfe den Username (der aus der URL deiner Seite).";
+"OpenPowerlifting ha risposto con un errore (HTTP %@)." = "OpenPowerlifting hat mit einem Fehler geantwortet (HTTP %@).";
+"Nessuna gara trovata per questo atleta." = "Keine Wettkämpfe für diesen Athleten gefunden.";
+"Massimali gara" = "Wettkampf-Bestleistungen";
+"Totale" = "Total";
+"%@ punti IPF (peso attuale)" = "%@ IPF-Punkte (aktuelles Gewicht)";
+"Gare (OpenPowerlifting)" = "Wettkämpfe (OpenPowerlifting)";
+"gare" = "Wettkämpfe";
+"miglior totale (kg)" = "bestes Total (kg)";
+"migliori punti IPF" = "beste IPF-Punkte";
+"Tutte le gare" = "Alle Wettkämpfe";
+"Tot %@" = "Tot %@";
+"%@°" = "%@.";
+"Peso gara: %@ kg (classe %@)" = "Wettkampfgewicht: %@ kg (Klasse %@)";
+"1RM gara" = "Wettkampf-1RM";
+
+// ── Forza relativa: real data sources (2026-07-09)
+"Punti IPF GL delle tue gare (OpenPowerlifting)" = "IPF-GL-Punkte aus deinen Wettkämpfen (OpenPowerlifting)";
+"Punti IPF GL dai massimali gara inseriti, al peso corporeo attuale" = "IPF-GL-Punkte aus den eingetragenen Wettkampf-Bestleistungen, beim aktuellen Körpergewicht";
+"totale %@ kg · %@ kg BW" = "Total %@ kg · %@ kg KG";
+"Migliori alzate di gara (OpenPowerlifting)" = "Beste Wettkampf-Versuche (OpenPowerlifting)";
+"Massimali inseriti manualmente" = "Manuell eingetragene Bestleistungen";
+"%@ punti IPF" = "%@ IPF-Punkte";
+
+// ── OPL events, comp deltas, streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con carico al %@%% della media: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge bei einer Belastung von %@ %% deines Schnitts: Besser ein leichter Tag.";
+"Ti alleni da %@ giorni consecutivi: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge: Besser ein leichter Tag.";
+"Gara completa" = "Kompletter Wettkampf";
+"Solo Panca" = "Nur Bankdrücken";
+"Solo Squat" = "Nur Kniebeuge";
+"Solo Stacco" = "Nur Kreuzheben";
+"Panca + Stacco" = "Bankdrücken + Kreuzheben";
+"Migliori alzate di gara (OpenPowerlifting) · stima = 1RM dagli allenamenti" = "Beste Wettkampf-Versuche (OpenPowerlifting) · Schätzung = Trainings-1RM";
+"Massimali inseriti manualmente · stima = 1RM dagli allenamenti" = "Manuell eingetragene Bestleistungen · Schätzung = Trainings-1RM";
+"stima %@ (%@)" = "gesch. %@ (%@)";
+"Differenza stima − gara" = "Differenz Schätzung − Wettkampf";
+"gara %@ kg" = "Wettkampf %@ kg";
+
+// ── OPL per-event metric fallback (2026-07-10)
+"punti Dots" = "Dots-Punkte";
+"Punti Dots delle tue gare (OpenPowerlifting) — per le gare di singola alzata l'IPF GL non è definito" = "Dots-Punkte aus deinen Wettkämpfen (OpenPowerlifting) — IPF GL ist für Einzeldisziplinen nicht definiert";
+"Chili sollevati nelle tue gare (OpenPowerlifting)" = "Gehobene Kilos bei deinen Wettkämpfen (OpenPowerlifting)";
+"Nessun punteggio disponibile per questo tipo di gara" = "Für diese Wettkampfart ist kein Score verfügbar";
+
+// ── Intensity-aware push gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni sopra la tua media: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit Einheiten über deinem Schnitt: Besser ein leichter Tag.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "In den letzten 3 Tagen hast du %@ %% deiner durchschnittlichen Wochenbelastung angesammelt: Besser ein leichter Tag.";
+
+// ── RPE streak condition (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sforzo percepito alto (RPE medio %@): meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit hoher empfundener Anstrengung (Ø-RPE %@): Besser ein leichter Tag.";
+
+// ── Relaxed hard-streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni intense: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit intensiven Einheiten: Besser ein leichter Tag.";
+
+// ── Windowed fatigue gate (2026-07-10)
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Du hast %@ intensive Einheiten in den letzten %@ Tagen absolviert: Besser ein leichter Tag.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Du hast %@ Einheiten mit hoher Anstrengung in den letzten %@ Tagen absolviert (Ø-RPE %@): Besser ein leichter Tag.";

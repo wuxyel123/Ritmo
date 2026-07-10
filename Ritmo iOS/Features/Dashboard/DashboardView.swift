@@ -437,6 +437,12 @@ extension DashboardView {
     func refresh() {
         Task {
             await vm.refresh(for: selectedDate, healthRepo: healthRepo, modelContext: modelContext, goals: goals)
+            // Push today's recommendation to the watch: the phone's verdict is
+            // the one both devices show (the watch's own store would disagree —
+            // no Hevy standalones, different import timing).
+            if let plan = dailyPlan {
+                GoalsSyncService.shared.sendDailyRecommendation(plan)
+            }
         }
     }
 }

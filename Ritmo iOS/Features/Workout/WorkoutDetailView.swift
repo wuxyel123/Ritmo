@@ -63,6 +63,7 @@ struct WorkoutDetailView: View {
     @State private var routeLocations: [CLLocation] = []
     @State private var routeSegments: [RouteSegment] = []
     @State private var weekLoad: TrainingLoad?
+    @State private var hrRecovery: Int?
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
     @State private var showingDeleteDialog = false
@@ -148,6 +149,9 @@ struct WorkoutDetailView: View {
                                     HeartStatItem(value: "\(Int(hr.avgBPM))", label: "media", color: .red)
                                     HeartStatItem(value: "\(Int(hr.maxBPM))", label: "massima", color: .orange)
                                     HeartStatItem(value: "\(Int(hr.minBPM))", label: "minima", color: .blue)
+                                    if let hrRecovery {
+                                        HeartStatItem(value: "−\(hrRecovery)", label: "recupero 1′", color: .green)
+                                    }
                                 }
 
                                 if !hr.samples.isEmpty {
@@ -332,7 +336,9 @@ struct WorkoutDetailView: View {
             isLoadingHR = true
             async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime, end: session.endTime)
             async let locs = healthRepo.fetchWorkoutRoute(start: session.startTime, end: session.endTime)
+            async let recovery = healthRepo.fetchHeartRateRecovery(workoutEnd: session.endTime)
             let (fetchedHR, fetchedLocs) = await (hr, locs)
+            hrRecovery = await recovery
             hrData = fetchedHR
             routeLocations = fetchedLocs
             if let hr = fetchedHR, !fetchedLocs.isEmpty {

@@ -99,3 +99,21 @@
 "Ultimo allenamento" = "Letztes Workout";
 "Zone FC" = "HF-Zonen";
 "Sessione %lld" = "Einheit %lld";
+
+// ── OPL events, comp deltas, streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con carico al %@%% della media: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge bei einer Belastung von %@ %% deines Schnitts: Besser ein leichter Tag.";
+"Ti alleni da %@ giorni consecutivi: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge: Besser ein leichter Tag.";
+
+// ── Intensity-aware push gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni sopra la tua media: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit Einheiten über deinem Schnitt: Besser ein leichter Tag.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "In den letzten 3 Tagen hast du %@ %% deiner durchschnittlichen Wochenbelastung angesammelt: Besser ein leichter Tag.";
+
+// ── RPE streak condition (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sforzo percepito alto (RPE medio %@): meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit hoher empfundener Anstrengung (Ø-RPE %@): Besser ein leichter Tag.";
+
+// ── Relaxed hard-streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni intense: meglio una giornata leggera." = "Du trainierst seit %@ Tagen in Folge mit intensiven Einheiten: Besser ein leichter Tag.";
+
+// ── Windowed fatigue gate (2026-07-10)
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Du hast %@ intensive Einheiten in den letzten %@ Tagen absolviert: Besser ein leichter Tag.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Du hast %@ Einheiten mit hoher Anstrengung in den letzten %@ Tagen absolviert (Ø-RPE %@): Besser ein leichter Tag.";

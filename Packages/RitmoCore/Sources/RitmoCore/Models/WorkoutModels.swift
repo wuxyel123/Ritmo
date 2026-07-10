@@ -160,6 +160,11 @@ public final class UserGoals {
     public var weeklyWorkouts: Int
     public var dailySteps: Int
     public var dailyActiveCalories: Double
+    // Competition 1RMs (kg, 0 = not set) — the REAL maxes from meets, shown
+    // next to the Epley estimates. Defaulted → additive SwiftData migration.
+    public var compSquatKg: Double = 0
+    public var compBenchKg: Double = 0
+    public var compDeadliftKg: Double = 0
 
     public init(
         id: UUID = UUID(),
@@ -183,6 +188,17 @@ public final class UserGoals {
         self.weeklyWorkouts = weeklyWorkouts
         self.dailySteps = dailySteps
         self.dailyActiveCalories = dailyActiveCalories
+    }
+
+    /// Comp 1RM for one of the three competition lifts (nil when unset).
+    public func compMax(for lift: WorkoutStats.SBDLift) -> Double? {
+        let value: Double
+        switch lift {
+        case .squat:    value = compSquatKg
+        case .bench:    value = compBenchKg
+        case .deadlift: value = compDeadliftKg
+        }
+        return value > 0 ? value : nil
     }
 }
 

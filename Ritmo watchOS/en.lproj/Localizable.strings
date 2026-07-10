@@ -99,3 +99,21 @@
 "Ultimo allenamento" = "Last workout";
 "Zone FC" = "HR zones";
 "Sessione %lld" = "Session %lld";
+
+// ── OPL events, comp deltas, streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con carico al %@%% della media: meglio una giornata leggera." = "You've trained %@ days in a row with load at %@%% of your average: better to keep today light.";
+"Ti alleni da %@ giorni consecutivi: meglio una giornata leggera." = "You've trained %@ days in a row: better to keep today light.";
+
+// ── Intensity-aware push gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni sopra la tua media: meglio una giornata leggera." = "You've trained %@ days in a row with sessions above your average: better to keep today light.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "In the last 3 days you've accumulated %@%% of your average weekly load: better to keep today light.";
+
+// ── RPE streak condition (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sforzo percepito alto (RPE medio %@): meglio una giornata leggera." = "You've trained %@ days in a row at high perceived effort (average RPE %@): better to keep today light.";
+
+// ── Relaxed hard-streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni intense: meglio una giornata leggera." = "You've trained %@ days in a row with intense sessions: better to keep today light.";
+
+// ── Windowed fatigue gate (2026-07-10)
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "You've done %@ intense sessions in the last %@ days: better to keep today light.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "You've done %@ high-effort sessions in the last %@ days (average RPE %@): better to keep today light.";

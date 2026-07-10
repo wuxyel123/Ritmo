@@ -58,7 +58,9 @@ public final class HealthKitRepository: ObservableObject {
             HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
             // Allenamenti
             HKObjectType.workoutType(),
-            HKSeriesType.workoutRoute()
+            HKSeriesType.workoutRoute(),
+            // Caratteristiche (sesso biologico → coefficienti punti IPF GL)
+            HKObjectType.characteristicType(forIdentifier: .biologicalSex)!
         ]
 
         var readTypesVar = readTypes
@@ -471,10 +473,10 @@ public final class HealthKitRepository: ObservableObject {
         //   se non tracciata → 10 neutro, non penalizza
         let nutritionScore: Double
         if n.calories > 50 {
-            // Calories: two-sided adherence, full within ±7.5% of goal, → 0 at ±50%
-            // off (over-eating kills it too). Protein: floored — full credit AT or
-            // ABOVE goal (no penalty for extra protein), → 0 at half the goal.
-            // Calories gate the score; protein modulates 60–100% of it.
+            // Calories: two-sided adherence, full within ±5% of goal, → 0 at ±50%
+            // off (over-eating kills it too). Protein: floored — full credit from
+            // 7.5% below goal upward (no penalty for extra protein), → 0 at half
+            // the goal. Calories gate the score; protein modulates 60–100% of it.
             let calAdherence  = NutritionScale.adherence(value: n.calories, goal: goals.dailyCalories)
             let protAdherence = NutritionScale.flooredAdherence(value: n.protein, goal: goals.dailyProteinG)
             nutritionScore = calAdherence * (0.6 + 0.4 * protAdherence) * 20
@@ -610,6 +612,17 @@ public final class HealthKitRepository: ObservableObject {
         return metrics.compactMap { m in m.weightKg.map { DateValuePoint(date: m.date, value: $0) } }
     }
 
+    /// Biological sex from the Health profile — picks the IPF GL coefficient
+    /// set. nil when unset/denied (callers fall back to male coefficients).
+    public func isFemale() -> Bool? {
+        guard let sex = try? store.biologicalSex().biologicalSex else { return nil }
+        switch sex {
+        case .female: return true
+        case .male:   return false
+        default:      return nil
+        }
+    }
+
     public func fetchBodyFatHistoryPoints(days: Int) async -> [DateValuePoint] {
         guard let type = HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage) else { return [] }
         let startDate = Calendar.current.date(byAdding: .day, value: -days, to: .now)!
@@ -650,6 +663,22 @@ public final class HealthKitRepository: ObservableObject {
     public func excludedWorkoutUUIDs() -> Set<String> { Self.excludedWorkoutUUIDs() }
 
     private nonisolated static let trainingLoadKey = "trainingLoadFromPhone"
+    private nonisolated static let dailyRecommendationKey = "dailyRecommendationFromPhone"
+
+    /// Caches the iPhone-computed daily recommendation, same rationale as the
+    /// training load below: the watch's local store can differ (no Hevy
+    /// standalones, import timing), so recomputing there gives a DIFFERENT
+    /// verdict. Consumers must check `computedOn` — it's day-specific.
+    public nonisolated static func cacheDailyRecommendation(_ data: Data) {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return }
+        d.set(data, forKey: dailyRecommendationKey)
+    }
+
+    public nonisolated static func cachedDailyRecommendation() -> DailyRecommendation? {
+        guard let d = UserDefaults(suiteName: appGroupID),
+              let data = d.data(forKey: dailyRecommendationKey) else { return nil }
+        return try? JSONDecoder().decode(DailyRecommendation.self, from: data)
+    }
 
     /// Caches the iPhone-computed TrainingLoad so the Watch can show the SAME
     /// number instead of recomputing from its own local HealthKit import —
@@ -977,6 +1006,36 @@ public final class HealthKitRepository: ObservableObject {
         let unit = HKUnit(from: "count/min")
         let hrSamples = samples.map { HRSample(date: $0.startDate, bpm: $0.quantity.doubleValue(for: unit)) }
         return WorkoutHeartRateData(samples: hrSamples)
+    }
+
+    /// 1-minute heart-rate recovery: bpm at the workout's end minus bpm ~60s
+    /// later (the standard HRR₁ marker). Needs the watch still on the wrist
+    /// after the session — returns nil when the samples aren't there or the
+    /// drop isn't measurable (< 2 samples on either side).
+    public func fetchHeartRateRecovery(workoutEnd end: Date) async -> Int? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let windowStart = end.addingTimeInterval(-60)
+        let windowEnd = end.addingTimeInterval(90)
+        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: windowEnd)
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.quantitySample(type: type, predicate: predicate)],
+            sortDescriptors: [SortDescriptor(\.startDate)]
+        )
+        guard let samples = try? await descriptor.result(for: store), samples.count >= 4 else { return nil }
+        let unit = HKUnit(from: "count/min")
+
+        // Peak in the last minute of the workout vs the reading closest to +60s.
+        let endWindow = samples.filter { $0.startDate <= end }
+        let after = samples.filter { $0.startDate > end }
+        guard let peak = endWindow.map({ $0.quantity.doubleValue(for: unit) }).max(),
+              let minuteAfter = after.min(by: {
+                  abs($0.startDate.timeIntervalSince(end) - 60) < abs($1.startDate.timeIntervalSince(end) - 60)
+              })
+        else { return nil }
+        // Only meaningful when the +60s reading actually exists near the mark.
+        guard abs(minuteAfter.startDate.timeIntervalSince(end) - 60) <= 30 else { return nil }
+        let drop = peak - minuteAfter.quantity.doubleValue(for: unit)
+        return drop > 0 ? Int(drop.rounded()) : nil
     }
 
     // MARK: - Workout GPS route (returns lat/lon pairs)

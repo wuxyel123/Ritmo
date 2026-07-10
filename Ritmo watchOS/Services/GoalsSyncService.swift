@@ -35,6 +35,12 @@ final class GoalsSyncService: NSObject {
             HealthKitRepository.cacheTrainingLoad(data)
         }
 
+        // Daily recommendation: same rationale — the phone's verdict is the
+        // one displayed on both devices (day-checked at render time).
+        if let data = payload["dailyRecommendation"] as? Data {
+            HealthKitRepository.cacheDailyRecommendation(data)
+        }
+
         let goalsDict: [String: Any]?
         if let nested = payload["goals"] as? [String: Any] {
             goalsDict = nested
@@ -43,7 +49,8 @@ final class GoalsSyncService: NSObject {
         } else {
             goalsDict = nil
         }
-        guard goalsDict != nil || payload["excludedWorkouts"] != nil || payload["trainingLoad"] != nil else { return }
+        guard goalsDict != nil || payload["excludedWorkouts"] != nil
+                || payload["trainingLoad"] != nil || payload["dailyRecommendation"] != nil else { return }
 
         Task { @MainActor in
             let ctx = container.mainContext

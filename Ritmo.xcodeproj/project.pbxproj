@@ -61,6 +61,7 @@
 		DD000000000000000700AAAA /* WeeklyRecapNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000700AAAA /* WeeklyRecapNotifier.swift */; };
 		DD000000000000000701AAAA /* ManualWorkoutLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000701AAAA /* ManualWorkoutLogView.swift */; };
 		DD000000000000000702AAAA /* ExercisePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000702AAAA /* ExercisePickerView.swift */; };
+		DD000000000000000712AAAA /* WorkoutStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000712AAAA /* WorkoutStatsView.swift */; };
 		DD000000000000000703AAAA /* RitmoAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000703AAAA /* RitmoAppIntents.swift */; };
 		DD000000000000000312AAAA /* WatchHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000312AAAA /* WatchHealthView.swift */; };
 		DD000000000000000204AAAA /* GoalsSyncService.swift (iOS) in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000204AAAA /* GoalsSyncService.swift */; };
@@ -208,6 +209,7 @@
 		BB000000000000000700AAAA /* WeeklyRecapNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyRecapNotifier.swift; sourceTree = "<group>"; };
 		BB000000000000000701AAAA /* ManualWorkoutLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualWorkoutLogView.swift; sourceTree = "<group>"; };
 		BB000000000000000702AAAA /* ExercisePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerView.swift; sourceTree = "<group>"; };
+		BB000000000000000712AAAA /* WorkoutStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutStatsView.swift; sourceTree = "<group>"; };
 		BB000000000000000703AAAA /* RitmoAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitmoAppIntents.swift; sourceTree = "<group>"; };
 		BB000000000000000303AAAA /* WatchWaterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWaterView.swift; sourceTree = "<group>"; };
 		BB000000000000000309AAAA /* WatchSleepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSleepView.swift; sourceTree = "<group>"; };
@@ -367,6 +369,7 @@
 				BB000000000000000119AAAA /* WorkoutCharts.swift */,
 				BB000000000000000701AAAA /* ManualWorkoutLogView.swift */,
 				BB000000000000000702AAAA /* ExercisePickerView.swift */,
+				BB000000000000000712AAAA /* WorkoutStatsView.swift */,
 			);
 			path = Workout;
 			sourceTree = "<group>";
@@ -759,6 +762,7 @@
 				DD000000000000000700AAAA /* WeeklyRecapNotifier.swift in Sources */,
 				DD000000000000000701AAAA /* ManualWorkoutLogView.swift in Sources */,
 				DD000000000000000702AAAA /* ExercisePickerView.swift in Sources */,
+				DD000000000000000712AAAA /* WorkoutStatsView.swift in Sources */,
 				DD000000000000000703AAAA /* RitmoAppIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

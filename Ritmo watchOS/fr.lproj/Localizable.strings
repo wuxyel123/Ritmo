@@ -99,3 +99,21 @@
 "Ultimo allenamento" = "Dernière séance";
 "Zone FC" = "Zones FC";
 "Sessione %lld" = "Session %lld";
+
+// ── OPL events, comp deltas, streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con carico al %@%% della media: meglio una giornata leggera." = "Vous vous entraînez depuis %@ jours consécutifs avec une charge à %@ %% de la moyenne : mieux vaut une journée légère.";
+"Ti alleni da %@ giorni consecutivi: meglio una giornata leggera." = "Vous vous entraînez depuis %@ jours consécutifs : mieux vaut une journée légère.";
+
+// ── Intensity-aware push gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni sopra la tua media: meglio una giornata leggera." = "Vous vous entraînez depuis %@ jours consécutifs avec des séances au-dessus de votre moyenne : mieux vaut une journée légère.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "Sur les 3 derniers jours, vous avez accumulé %@ %% de votre charge hebdomadaire moyenne : mieux vaut une journée légère.";
+
+// ── RPE streak condition (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sforzo percepito alto (RPE medio %@): meglio una giornata leggera." = "Vous vous entraînez depuis %@ jours consécutifs à effort perçu élevé (RPE moyen %@) : mieux vaut une journée légère.";
+
+// ── Relaxed hard-streak gate (2026-07-10)
+"Ti alleni da %@ giorni consecutivi con sessioni intense: meglio una giornata leggera." = "Vous vous entraînez depuis %@ jours consécutifs avec des séances intenses : mieux vaut une journée légère.";
+
+// ── Windowed fatigue gate (2026-07-10)
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Vous avez fait %@ séances intenses au cours des %@ derniers jours : mieux vaut une journée légère.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Vous avez fait %@ séances à effort élevé au cours des %@ derniers jours (RPE moyen %@) : mieux vaut une journée légère.";
