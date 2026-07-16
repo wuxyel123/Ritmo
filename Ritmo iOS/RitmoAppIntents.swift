@@ -80,7 +80,11 @@ struct RitmoShortcuts: AppShortcutsProvider {
             phrases: [
                 "Registra acqua su \(.applicationName)",
                 "Aggiungi acqua su \(.applicationName)",
-                "Log water in \(.applicationName)"
+                "Log water in \(.applicationName)",
+                "Enregistre de l'eau sur \(.applicationName)",
+                "Registra agua en \(.applicationName)",
+                "Wasser eintragen in \(.applicationName)",
+                "Regista água no \(.applicationName)"
             ],
             shortTitle: "Registra acqua",
             systemImageName: "drop.fill"
@@ -90,7 +94,11 @@ struct RitmoShortcuts: AppShortcutsProvider {
             phrases: [
                 "Com'è il mio punteggio su \(.applicationName)",
                 "Punteggio di oggi su \(.applicationName)",
-                "What's my score in \(.applicationName)"
+                "What's my score in \(.applicationName)",
+                "Quel est mon score sur \(.applicationName)",
+                "Cuál es mi puntuación en \(.applicationName)",
+                "Wie ist mein Score in \(.applicationName)",
+                "Qual é a minha pontuação no \(.applicationName)"
             ],
             shortTitle: "Punteggio di oggi",
             systemImageName: "chart.bar.fill"

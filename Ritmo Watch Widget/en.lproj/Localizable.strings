@@ -12,3 +12,10 @@
 "giorno" = "day";
 "giorni" = "days";
 "Score %lld · %lldk passi" = "Score %lld · %lldk steps";
+
+// ── Meet countdown (2026-07-10)
+"Gara tra %@ giorni" = "Meet in %@ days";
+"Nessuna gara programmata" = "No meet scheduled";
+"giorni alla gara" = "days to the meet";
+"Conto alla rovescia gara" = "Meet countdown";
+"Giorni alla prossima gara programmata." = "Days to your next scheduled meet.";

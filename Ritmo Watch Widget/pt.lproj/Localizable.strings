@@ -12,3 +12,10 @@
 "giorno" = "dia";
 "giorni" = "dias";
 "Score %lld · %lldk passi" = "Score %lld · %lldk passos";
+
+// ── Meet countdown (2026-07-10)
+"Gara tra %@ giorni" = "Competição em %@ dias";
+"Nessuna gara programmata" = "Sem competição agendada";
+"giorni alla gara" = "dias para a competição";
+"Conto alla rovescia gara" = "Contagem para a competição";
+"Giorni alla prossima gara programmata." = "Dias até à tua próxima competição agendada.";

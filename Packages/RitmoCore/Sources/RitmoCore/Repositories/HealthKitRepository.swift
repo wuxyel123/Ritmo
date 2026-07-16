@@ -673,6 +673,21 @@ public final class HealthKitRepository: ObservableObject {
 
     private nonisolated static let trainingLoadKey = "trainingLoadFromPhone"
     private nonisolated static let dailyRecommendationKey = "dailyRecommendationFromPhone"
+    private nonisolated static let meetDateKey = "meetDateFromPhone"
+
+    /// Meet date in the app group, so widgets/complications can count down.
+    /// 0 clears it. On the watch it arrives via WatchConnectivity.
+    public nonisolated static func cacheMeetDate(_ epoch: Double) {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return }
+        if epoch > 0 { d.set(epoch, forKey: meetDateKey) }
+        else { d.removeObject(forKey: meetDateKey) }
+    }
+
+    public nonisolated static func cachedMeetDate() -> Date? {
+        guard let d = UserDefaults(suiteName: appGroupID) else { return nil }
+        let epoch = d.double(forKey: meetDateKey)
+        return epoch > 0 ? Date(timeIntervalSince1970: epoch) : nil
+    }
 
     /// Caches the iPhone-computed daily recommendation, same rationale as the
     /// training load below: the watch's local store can differ (no Hevy
@@ -1004,7 +1019,8 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Workout heart rate
 
-    public func fetchWorkoutHeartRate(start: Date, end: Date) async -> WorkoutHeartRateData? {
+    public func fetchWorkoutHeartRate(start: Date, end: Date,
+                                      maxHR: Double = 190) async -> WorkoutHeartRateData? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
         let descriptor = HKSampleQueryDescriptor(
@@ -1014,7 +1030,25 @@ public final class HealthKitRepository: ObservableObject {
         guard let samples = try? await descriptor.result(for: store), !samples.isEmpty else { return nil }
         let unit = HKUnit(from: "count/min")
         let hrSamples = samples.map { HRSample(date: $0.startDate, bpm: $0.quantity.doubleValue(for: unit)) }
-        return WorkoutHeartRateData(samples: hrSamples)
+        return WorkoutHeartRateData(samples: hrSamples, maxHR: maxHR)
+    }
+
+    /// Highest heart rate ever recorded in the window — replaces the fixed
+    /// 190 bpm assumption in the zone charts with the user's own max.
+    public func fetchMaxHeartRate(days: Int = 365) async -> Double? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: .now) ?? .distantPast
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
+        let localStore = store
+        return await withCheckedContinuation { cont in
+            let query = HKStatisticsQuery(quantityType: type,
+                                          quantitySamplePredicate: predicate,
+                                          options: .discreteMax) { _, stats, _ in
+                let bpm = stats?.maximumQuantity()?.doubleValue(for: HKUnit(from: "count/min"))
+                cont.resume(returning: bpm)
+            }
+            localStore.execute(query)
+        }
     }
 
     /// 1-minute heart-rate recovery: bpm at the workout's end minus bpm ~60s

@@ -133,6 +133,37 @@ public enum EnduranceStats {
         }
     }
 
+    // MARK: Riegel equivalent times
+
+    public struct EquivalentTime: Identifiable {
+        public let id = UUID()
+        public let bucket: DistanceBucket
+        public let seconds: Int
+        public let sourceLabel: String     // the PB it was predicted from (loc key)
+    }
+
+    /// Predicted times per canonical distance via the Riegel formula
+    /// (t₂ = t₁ × (d₂/d₁)^1.06), each derived from the PB at the CLOSEST
+    /// other distance — predictions degrade with distance ratio, so the
+    /// nearest anchor is the most defensible one.
+    public static func riegelEquivalents(from pbs: [PersonalBest],
+                                         sport: Sport = .run) -> [EquivalentTime] {
+        guard !pbs.isEmpty else { return [] }
+        return buckets(for: sport).compactMap { target in
+            let source = pbs
+                .filter { $0.bucket.meters != target.meters }
+                .min { a, b in
+                    abs(log(a.bucket.meters / target.meters)) < abs(log(b.bucket.meters / target.meters))
+                }
+            guard let source else { return nil }
+            let predicted = Double(source.durationSeconds)
+                * pow(target.meters / source.bucket.meters, 1.06)
+            return EquivalentTime(bucket: target,
+                                  seconds: Int(predicted.rounded()),
+                                  sourceLabel: source.bucket.label)
+        }
+    }
+
     /// h:mm:ss / mm:ss for race times.
     public static func formatDuration(_ seconds: Int) -> String {
         let h = seconds / 3600, m = (seconds % 3600) / 60, s = seconds % 60

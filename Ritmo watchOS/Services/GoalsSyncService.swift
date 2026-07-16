@@ -1,5 +1,6 @@
 import WatchConnectivity
 import SwiftData
+import WidgetKit
 import RitmoCore
 
 extension Notification.Name {
@@ -39,6 +40,12 @@ final class GoalsSyncService: NSObject {
         // one displayed on both devices (day-checked at render time).
         if let data = payload["dailyRecommendation"] as? Data {
             HealthKitRepository.cacheDailyRecommendation(data)
+        }
+
+        // Scheduled meet date → countdown complication.
+        if let meetEpoch = payload["meetDate"] as? Double {
+            HealthKitRepository.cacheMeetDate(meetEpoch)
+            WidgetCenter.shared.reloadTimelines(ofKind: "RitmoMeetCountdown")
         }
 
         let goalsDict: [String: Any]?

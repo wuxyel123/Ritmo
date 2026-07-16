@@ -41,3 +41,35 @@
 
 // ── Localization audit sweep (2026-07-09)
 "attive" = "ativas";
+
+// ── Oggi widget: recommendation keys (2026-07-10)
+"Giornata per spingere" = "Dia de acelerar";
+"Mantieni il ritmo" = "Mantém o ritmo";
+"Giornata leggera" = "Dia leve";
+"Meglio riposare" = "Melhor descansar";
+"Allenamento fatto" = "Treino feito";
+"Oggi hai già dato." = "Hoje já deste o teu contributo.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Objetivo semanal concluído: %@ de %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "Estás em %@ de %@ esta semana.";
+"Ora contano recupero, proteine e sonno." = "Agora contam a recuperação, as proteínas e o sono.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Carga muito acima da tua norma: uma pausa hoje reduz o risco de sobretreino.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Recuperação baixa (%@/100): o corpo ainda está a recuperar.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "Estás a carregar mais do que o habitual: melhor manter a intensidade baixa.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Recuperação parcial (%@/100): uma atividade leve é a escolha certa.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "Passaram %@ dias desde o último treino e estás recuperado: hoje é o dia certo para retomar.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Falta-te só um para o objetivo semanal (%@ de %@): bom dia para o fechar.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "Estás recuperado e a carga está abaixo da tua média: dia ideal para um treino intenso.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Recuperação e carga em equilíbrio: continua ao teu ritmo habitual.";
+"Questa settimana: %@ su %@ allenamenti." = "Esta semana: %@ de %@ treinos.";
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Fizeste %@ sessões intensas nos últimos %@ dias: melhor um dia leve.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Fizeste %@ sessões de esforço alto nos últimos %@ dias (RPE médio %@): melhor um dia leve.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "Nos últimos 3 dias acumulaste %@%% da tua carga semanal média: melhor um dia leve.";
+"Apri Ritmo per il consiglio di oggi" = "Abre o Ritmo para o conselho de hoje";
+"Consiglio del giorno e punteggio." = "Conselho do dia e pontuação.";
+
+// ── Meet countdown (2026-07-10)
+"Gara tra %@ giorni" = "Competição em %@ dias";
+"Nessuna gara programmata" = "Sem competição agendada";
+"giorni alla gara" = "dias para a competição";
+"Conto alla rovescia gara" = "Contagem para a competição";
+"Giorni alla prossima gara programmata." = "Dias até à tua próxima competição agendada.";

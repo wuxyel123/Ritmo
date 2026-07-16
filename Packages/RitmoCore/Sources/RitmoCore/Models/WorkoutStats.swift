@@ -249,6 +249,83 @@ public enum WorkoutStats {
         return total * 100 / denominator
     }
 
+    // MARK: PR timeline
+
+    public enum PREventKind {
+        case liftE1RM(kg: Double, previous: Double?)
+        case racePB(seconds: Int, previous: Int?)
+        case sessionTonnage(kg: Double, previous: Double?)
+    }
+
+    public struct PREvent: Identifiable {
+        public let id = UUID()
+        public let date: Date
+        public let name: String            // exercise name / bucket label (loc key)
+        public let raceName: String?
+        public let kind: PREventKind
+    }
+
+    /// Every time an all-time best moved, chronologically (newest first):
+    /// per-exercise e1RM records, race PBs per canonical distance, and the
+    /// biggest single-session tonnage. Pure data — a diary of bests.
+    public static func prTimeline(sessions: [WorkoutSession],
+                                  races: [RaceResult],
+                                  limit: Int = 60) -> [PREvent] {
+        var events: [PREvent] = []
+        let ascending = sessions.sorted { $0.startTime < $1.startTime }
+
+        // Lift e1RM records.
+        var bestE1RM: [String: Double] = [:]
+        for session in ascending {
+            var sessionBest: [String: Double] = [:]
+            for set in session.sets where set.setType != .warmup {
+                guard let name = set.exercise?.name, set.weightKg > 0,
+                      let reps = set.reps, (1...12).contains(reps) else { continue }
+                let e1rm = set.weightKg * (1 + Double(reps) / 30.0)
+                sessionBest[name] = max(sessionBest[name] ?? 0, e1rm)
+            }
+            for (name, e1rm) in sessionBest where e1rm > (bestE1RM[name] ?? 0) {
+                events.append(PREvent(date: session.startTime, name: name, raceName: nil,
+                                      kind: .liftE1RM(kg: e1rm, previous: bestE1RM[name])))
+                bestE1RM[name] = e1rm
+            }
+        }
+
+        // Session tonnage records.
+        var bestTonnage = 0.0
+        for session in ascending {
+            let volume = session.sets.reduce(0.0) { $0 + $1.weightKg * Double($1.reps ?? 0) }
+            if volume > bestTonnage, volume > 0 {
+                events.append(PREvent(date: session.startTime, name: "Volume in seduta",
+                                      raceName: nil,
+                                      kind: .sessionTonnage(kg: volume,
+                                                            previous: bestTonnage > 0 ? bestTonnage : nil)))
+                bestTonnage = volume
+            }
+        }
+
+        // Race PBs per sport + canonical distance.
+        for sport in EnduranceStats.Sport.allCases {
+            for bucket in EnduranceStats.buckets(for: sport) {
+                var best: Int?
+                for race in races.sorted(by: { $0.date < $1.date })
+                where race.sport == sport.raceSport
+                    && race.distanceMeters >= bucket.meters * 0.97
+                    && race.distanceMeters <= bucket.meters * 1.08
+                    && race.durationSeconds > 0 {
+                    if best == nil || race.durationSeconds < best! {
+                        events.append(PREvent(date: race.date, name: bucket.label,
+                                              raceName: race.name.isEmpty ? nil : race.name,
+                                              kind: .racePB(seconds: race.durationSeconds, previous: best)))
+                        best = race.durationSeconds
+                    }
+                }
+            }
+        }
+
+        return events.sorted { $0.date > $1.date }.prefix(limit).map { $0 }
+    }
+
     // MARK: Per-exercise volume history
 
     /// Volume per session for one exercise (oldest → newest) — the third

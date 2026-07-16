@@ -12,6 +12,9 @@ struct HealthView: View {
             ScrollView {
                 VStack(spacing: RitmoTheme.gap) {
 
+                    // MARK: Peso — tendenza
+                    WeightTrendCard()
+
                     // MARK: Cuore & HRV
                     FitCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -192,5 +195,57 @@ final class HealthViewModel: ObservableObject {
         hrvHistory    = await hrv
         rhrHistory    = await rhr
         weightHistory = await wt
+    }
+}
+
+// MARK: - WeightTrendCard (7-day smoothed + kg/week rate)
+
+struct WeightTrendCard: View {
+    @EnvironmentObject private var healthRepo: HealthKitRepository
+    @State private var average7: Double?
+    @State private var ratePerWeek: Double?
+
+    var body: some View {
+        Group {
+            if let average7 {
+                FitCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionHeader(title: "Peso — tendenza")
+                        HStack(alignment: .lastTextBaseline, spacing: 6) {
+                            Text(String(format: "%.2f", average7))
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .foregroundStyle(RitmoTheme.accent)
+                            Text("kg · media 7 giorni").font(.caption).foregroundStyle(.secondary)
+                            Spacer()
+                            if let ratePerWeek {
+                                Text(String(format: "%+.2f kg/sett.", ratePerWeek))
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(abs(ratePerWeek) < 0.05 ? Color.secondary
+                                                     : (ratePerWeek > 0 ? Color.orange : Color.cyan))
+                            }
+                        }
+                        Text("Variazione = media degli ultimi 7 giorni meno media dei 7 precedenti")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .task {
+            let points = await healthRepo.fetchBodyWeightHistoryPoints(days: 14)
+            guard !points.isEmpty else { return }
+            let calendar = Calendar.current
+            let split = calendar.date(byAdding: .day, value: -7, to: calendar.startOfDay(for: .now)) ?? .now
+            // Per-day averages first, so multiple same-day weigh-ins count once.
+            func weeklyAverage(_ subset: [DateValuePoint]) -> Double? {
+                guard !subset.isEmpty else { return nil }
+                let byDay = Dictionary(grouping: subset) { calendar.startOfDay(for: $0.date) }
+                let dayAverages = byDay.values.map { $0.map(\.value).reduce(0, +) / Double($0.count) }
+                return dayAverages.reduce(0, +) / Double(dayAverages.count)
+            }
+            let recent = weeklyAverage(points.filter { $0.date >= split })
+            let previous = weeklyAverage(points.filter { $0.date < split })
+            average7 = recent ?? previous
+            if let recent, let previous { ratePerWeek = recent - previous }
+        }
     }
 }

@@ -266,11 +266,92 @@ struct RitmoDaysSinceWorkoutWidget: Widget {
     }
 }
 
+// MARK: - Meet countdown complication
+
+struct MeetCountdownEntry: TimelineEntry {
+    let date: Date
+    let meetDate: Date?
+}
+
+struct MeetCountdownProvider: TimelineProvider {
+    func placeholder(in context: Context) -> MeetCountdownEntry {
+        MeetCountdownEntry(date: .now,
+                           meetDate: Calendar.current.date(byAdding: .day, value: 42, to: .now))
+    }
+    func getSnapshot(in context: Context, completion: @escaping (MeetCountdownEntry) -> Void) {
+        completion(MeetCountdownEntry(date: .now, meetDate: HealthKitRepository.cachedMeetDate()))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<MeetCountdownEntry>) -> Void) {
+        let entry = MeetCountdownEntry(date: .now, meetDate: HealthKitRepository.cachedMeetDate())
+        let midnight = Calendar.current.startOfDay(
+            for: Calendar.current.date(byAdding: .day, value: 1, to: .now)!)
+        completion(Timeline(entries: [entry], policy: .after(midnight)))
+    }
+}
+
+struct MeetCountdownComplicationView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: MeetCountdownEntry
+
+    private var daysToMeet: Int? {
+        guard let meetDate = entry.meetDate else { return nil }
+        let days = Calendar.current.dateComponents(
+            [.day],
+            from: Calendar.current.startOfDay(for: .now),
+            to: Calendar.current.startOfDay(for: meetDate)).day ?? -1
+        return days >= 0 ? days : nil
+    }
+
+    var body: some View {
+        Group {
+            switch family {
+            case .accessoryInline:
+                if let days = daysToMeet {
+                    Label {
+                        Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""), "\(days)"))
+                    } icon: {
+                        Image(systemName: "flag.checkered")
+                    }
+                } else {
+                    Label("Nessuna gara programmata", systemImage: "flag.checkered")
+                }
+            default:
+                VStack(spacing: 0) {
+                    Image(systemName: "flag.checkered").font(.system(size: 10))
+                    if let days = daysToMeet {
+                        Text("\(days)")
+                            .font(.system(size: 19, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                        Text("gg").font(.system(size: 8)).foregroundStyle(.secondary)
+                    } else {
+                        Text("—").font(.system(size: 17, weight: .bold))
+                    }
+                }
+            }
+        }
+        .containerBackground(.clear, for: .widget)
+    }
+}
+
+struct RitmoMeetCountdownWidget: Widget {
+    let kind = "RitmoMeetCountdown"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: MeetCountdownProvider()) { entry in
+            MeetCountdownComplicationView(entry: entry)
+        }
+        .configurationDisplayName("Conto alla rovescia gara")
+        .description("Giorni alla prossima gara programmata.")
+        .supportedFamilies([.accessoryCircular, .accessoryInline])
+    }
+}
+
 @main
 struct RitmoWatchWidgetBundle: WidgetBundle {
     var body: some Widget {
         RitmoWatchWidget()
         RitmoRingsWidget()
         RitmoDaysSinceWorkoutWidget()
+        RitmoMeetCountdownWidget()
     }
 }

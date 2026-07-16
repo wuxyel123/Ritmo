@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AuthenticationServices
+import WidgetKit
 import RitmoCore
 
 // MARK: - Macro Input Mode
@@ -46,10 +47,19 @@ struct SettingsTabView: View {
     @State private var showToast = false
 
     @AppStorage("autoMacro") private var autoMacroRaw: String = AutoMacro.carbs.rawValue
+    // The per-kg PREFERENCE persists separately from the resulting grams:
+    // goals only store grams, and back-deriving g/kg from grams ÷ current
+    // weight made the g/kg drift whenever the weight changed, instead of the
+    // grams following the weight (the whole point of per-kg mode).
+    @AppStorage("macroInputModeStored") private var storedInputModeRaw = ""
+    @AppStorage("macroProteinPerKg") private var storedProteinPerKg = 0.0
+    @AppStorage("macroFatPerKg") private var storedFatPerKg = 0.0
+    @AppStorage("macroCarbsPerKg") private var storedCarbsPerKg = 0.0
     @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
     @AppStorage("hevyConnected") private var hevyConnected = false
     @AppStorage("oplUsername") private var oplUsername = ""
     @AppStorage("stravaRefreshToken") private var stravaRefreshToken = ""
+    @State private var shareFile: ShareFile?
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -252,6 +262,22 @@ struct SettingsTabView: View {
                     }
                 } header: { Text("Integrazioni") }
 
+                // MARK: Export
+                Section {
+                    Button {
+                        shareFile = exportCSV(name: "ritmo-allenamenti.csv", content: workoutsCSV())
+                    } label: {
+                        Label("Esporta allenamenti (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                    Button {
+                        shareFile = exportCSV(name: "ritmo-gare.csv", content: racesCSV())
+                    } label: {
+                        Label("Esporta gare (CSV)", systemImage: "square.and.arrow.up")
+                    }
+                } header: { Text("Esporta dati") } footer: {
+                    Text("File CSV apribili con Numbers o Excel — una riga per serie (allenamenti) e per gara.")
+                }
+
                 // MARK: Notifications
                 Section {
                     Toggle(isOn: $weeklyRecapNotification) {
@@ -301,12 +327,20 @@ struct SettingsTabView: View {
             }
             .animation(.spring(response: 0.3), value: showToast)
         }
+        .sheet(item: $shareFile) { file in
+            ShareSheet(url: file.url)
+        }
         .task {
             // Daily weigh-ins fluctuate: use the 7-day average, falling back
-            // to the latest sample when there's no recent history.
+            // to the latest sample when there's no recent history. Averaged
+            // per DAY first, so weighing three times one morning doesn't make
+            // that day count triple.
             let history = await healthRepo.fetchBodyWeightHistoryPoints(days: 7)
             if !history.isEmpty {
-                bodyWeightKg = history.map(\.value).reduce(0, +) / Double(history.count)
+                let calendar = Calendar.current
+                let byDay = Dictionary(grouping: history) { calendar.startOfDay(for: $0.date) }
+                let dayAverages = byDay.values.map { $0.map(\.value).reduce(0, +) / Double($0.count) }
+                bodyWeightKg = dayAverages.reduce(0, +) / Double(dayAverages.count)
             } else if let metric = await healthRepo.fetchLatestBodyMetric(),
                       let w = metric.weightKg {
                 bodyWeightKg = w
@@ -352,10 +386,27 @@ struct SettingsTabView: View {
         steps      = Double(g.dailySteps)
         activeKcal = g.dailyActiveCalories
 
-        let pw = bodyWeightKg > 0 ? bodyWeightKg : 80
         proteinTotalG = g.dailyProteinG
         fatTotalG     = g.dailyFatG
         carbsTotalG   = g.dailyCarbsG
+
+        // Preferred path: the user's stored per-kg settings are the source of
+        // truth, and the gram goals are recomputed from them at the CURRENT
+        // body weight (which was fetched right before this call).
+        if let storedMode = MacroInputMode(rawValue: storedInputModeRaw) {
+            inputMode = storedMode
+            if storedMode == .perKg, storedProteinPerKg > 0, storedFatPerKg > 0, storedCarbsPerKg > 0 {
+                proteinPerKg = storedProteinPerKg
+                fatPerKg     = storedFatPerKg
+                carbsPerKg   = storedCarbsPerKg
+                saveGoals()   // grams follow the weight, not the other way round
+            }
+            return
+        }
+
+        // Legacy fallback (installs from before the per-kg preference was
+        // persisted): guess the mode by back-deriving g/kg from the grams.
+        let pw = bodyWeightKg > 0 ? bodyWeightKg : 80
         let ppkg = g.dailyProteinG / pw
         let fpkg = g.dailyFatG / pw
         let cpkg = g.dailyCarbsG / pw
@@ -381,6 +432,14 @@ struct SettingsTabView: View {
         g.dailyActiveCalories = activeKcal
         try? modelContext.save()
         GoalsSyncService.shared.send(g)
+
+        // Persist the per-kg preference itself — see loadGoals.
+        storedInputModeRaw = inputMode.rawValue
+        if inputMode == .perKg {
+            storedProteinPerKg = proteinPerKg
+            storedFatPerKg     = fatPerKg
+            storedCarbsPerKg   = carbsPerKg
+        }
     }
 
     private func flash(_ msg: String) {
@@ -390,6 +449,84 @@ struct SettingsTabView: View {
             withAnimation { showToast = false }
         }
     }
+
+    // MARK: - CSV export
+
+    private func exportCSV(name: String, content: String) -> ShareFile? {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        guard (try? content.write(to: url, atomically: true, encoding: .utf8)) != nil else { return nil }
+        return ShareFile(url: url)
+    }
+
+    private func csvField(_ value: String) -> String {
+        value.contains(",") || value.contains("\"") || value.contains("\n")
+            ? "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+            : value
+    }
+
+    /// One row per set; sessions without sets still get one row with the
+    /// session columns filled and the set columns empty.
+    private func workoutsCSV() -> String {
+        let formatter = ISO8601DateFormatter()
+        var lines = ["date,title,source,duration_min,rpe,calories,distance_m,exercise,set_index,set_type,weight_kg,reps"]
+        let sessions = (try? modelContext.fetch(
+            FetchDescriptor<WorkoutSession>(sortBy: [SortDescriptor(\.startTime, order: .reverse)])
+        )) ?? []
+        for session in sessions {
+            let base = [formatter.string(from: session.startTime),
+                        csvField(session.title),
+                        session.source.rawValue,
+                        "\(session.durationMinutes)",
+                        "\(session.effortScore)",
+                        String(format: "%.0f", session.activeCalories),
+                        String(format: "%.0f", session.distanceMeters)]
+            let sets = session.sets.sorted { $0.setIndex < $1.setIndex }
+            if sets.isEmpty {
+                lines.append((base + ["", "", "", "", ""]).joined(separator: ","))
+            } else {
+                for set in sets {
+                    lines.append((base + [csvField(set.exercise?.name ?? ""),
+                                          "\(set.setIndex)",
+                                          set.setType.rawValue,
+                                          String(format: "%.2f", set.weightKg),
+                                          set.reps.map { "\($0)" } ?? ""]).joined(separator: ","))
+                }
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func racesCSV() -> String {
+        let formatter = ISO8601DateFormatter()
+        var lines = ["date,name,sport,distance_m,duration_s,source"]
+        let races = (try? modelContext.fetch(
+            FetchDescriptor<RaceResult>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+        )) ?? []
+        for race in races {
+            lines.append([formatter.string(from: race.date),
+                          csvField(race.name),
+                          race.sportRaw,
+                          String(format: "%.0f", race.distanceMeters),
+                          "\(race.durationSeconds)",
+                          race.sourceRaw].joined(separator: ","))
+        }
+        return lines.joined(separator: "\n")
+    }
+}
+
+// MARK: - Share sheet plumbing
+
+struct ShareFile: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Smart Stepper
@@ -711,6 +848,7 @@ struct HevySettingsView: View {
 struct PowerliftingSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("oplUsername") private var oplUsername = ""
+    @AppStorage("meetDateEpoch") private var meetDateEpoch = 0.0
 
     @State private var squatText = ""
     @State private var benchText = ""
@@ -729,6 +867,27 @@ struct PowerliftingSettingsView: View {
                 maxRow("Stacco da Terra", text: $deadliftText)
             } header: { Text("Massimali gara (kg)") } footer: {
                 Text("I tuoi 1RM veri da gara: compaiono in Statistiche accanto alle stime e come riferimento nei grafici di progressione.")
+            }
+
+            // MARK: Next meet
+            Section {
+                Toggle("Gara programmata", isOn: Binding(
+                    get: { meetDateEpoch > 0 },
+                    set: { on in
+                        meetDateEpoch = on
+                            ? (Calendar.current.date(byAdding: .weekOfYear, value: 8, to: .now)?
+                                .timeIntervalSince1970 ?? 0)
+                            : 0
+                    }))
+                if meetDateEpoch > 0 {
+                    DatePicker("Data della gara",
+                               selection: Binding(
+                                   get: { Date(timeIntervalSince1970: meetDateEpoch) },
+                                   set: { meetDateEpoch = $0.timeIntervalSince1970 }),
+                               displayedComponents: .date)
+                }
+            } header: { Text("Prossima gara") } footer: {
+                Text("Il conto alla rovescia compare in Allenamenti → Statistiche.")
             }
 
             // MARK: OpenPowerlifting
@@ -774,6 +933,12 @@ struct PowerliftingSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .onChange(of: meetDateEpoch) { _, epoch in
+            // Widgets read the app group; the watch complication gets a push.
+            HealthKitRepository.cacheMeetDate(epoch)
+            GoalsSyncService.shared.sendMeetDate(epoch)
+            WidgetCenter.shared.reloadTimelines(ofKind: "RitmoMeetCountdown")
+        }
         .onAppear(perform: loadMaxes)
         .onChange(of: squatText) { _, _ in saveMaxes() }
         .onChange(of: benchText) { _, _ in saveMaxes() }

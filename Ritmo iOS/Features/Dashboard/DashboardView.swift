@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 import RitmoCore
 
 struct DashboardView: View {
@@ -20,6 +21,8 @@ struct DashboardView: View {
 
     /// Today-only actionable headline: recovery 0 means "no data" (watch not
     /// worn at night), not a real score, so it's passed as nil.
+    @AppStorage("meetDateEpoch") private var meetDateEpoch = 0.0
+
     private var dailyPlan: DailyRecommendation? {
         guard isToday else { return nil }
         let usableRecovery = vm.recovery.flatMap { $0.overall > 0 ? $0 : nil }
@@ -114,6 +117,34 @@ struct DashboardView: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                                 Spacer()
+                            }
+                        }
+                    }
+
+                    // MARK: Meet countdown (when a comp date is set)
+                    if isToday, meetDateEpoch > 0 {
+                        let meetDate = Date(timeIntervalSince1970: meetDateEpoch)
+                        let daysToMeet = Calendar.current.dateComponents(
+                            [.day],
+                            from: Calendar.current.startOfDay(for: .now),
+                            to: Calendar.current.startOfDay(for: meetDate)).day ?? -1
+                        if daysToMeet >= 0 {
+                            FitCard {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "flag.checkered")
+                                        .font(.title3)
+                                        .foregroundStyle(RitmoTheme.accent)
+                                        .frame(width: 42, height: 42)
+                                        .background(RitmoTheme.accent.opacity(0.15), in: Circle())
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""),
+                                                    "\(daysToMeet)"))
+                                            .font(.headline)
+                                        Text(meetDate, format: .dateTime.weekday(.wide).day().month().year())
+                                            .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
+                                    }
+                                    Spacer()
+                                }
                             }
                         }
                     }
@@ -439,9 +470,14 @@ extension DashboardView {
             await vm.refresh(for: selectedDate, healthRepo: healthRepo, modelContext: modelContext, goals: goals)
             // Push today's recommendation to the watch: the phone's verdict is
             // the one both devices show (the watch's own store would disagree —
-            // no Hevy standalones, different import timing).
+            // no Hevy standalones, different import timing). Also cached in the
+            // app group + widget reload, so the Oggi widget shows the same one.
             if let plan = dailyPlan {
                 GoalsSyncService.shared.sendDailyRecommendation(plan)
+                if let data = try? JSONEncoder().encode(plan) {
+                    HealthKitRepository.cacheDailyRecommendation(data)
+                }
+                WidgetCenter.shared.reloadTimelines(ofKind: "RitmoOggi")
             }
         }
     }

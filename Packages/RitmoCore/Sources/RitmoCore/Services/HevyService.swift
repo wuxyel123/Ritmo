@@ -123,6 +123,56 @@ public final class HevyService {
         _ = try await fetchPage(1)
     }
 
+    // MARK: Routines
+
+    public struct HevyRoutineDTO: Decodable, Identifiable, Sendable {
+        public let id: String
+        public let title: String
+        public let exercises: [RoutineExercise]?
+
+        public struct RoutineExercise: Decodable, Sendable {
+            public let title: String
+            public let sets: [RoutineSet]?
+            public struct RoutineSet: Decodable, Sendable {}
+        }
+
+        public var exerciseCount: Int { exercises?.count ?? 0 }
+        public var setCount: Int { exercises?.reduce(0) { $0 + ($1.sets?.count ?? 0) } ?? 0 }
+    }
+
+    private struct RoutinesPage: Decodable {
+        let page: Int
+        let pageCount: Int
+        let routines: [HevyRoutineDTO]
+    }
+
+    /// The user's Hevy routines (templates). Read-only: Ritmo shows when each
+    /// was last performed, it doesn't edit them.
+    public func fetchRoutines() async throws -> [HevyRoutineDTO] {
+        var all: [HevyRoutineDTO] = []
+        var page = 1
+        var pageCount = 1
+        while page <= pageCount {
+            var request = URLRequest(url: URL(string:
+                "https://api.hevyapp.com/v1/routines?page=\(page)&pageSize=10")!)
+            request.setValue(apiKey, forHTTPHeaderField: "api-key")
+            request.setValue("application/json", forHTTPHeaderField: "accept")
+
+            let (data, response): (Data, URLResponse)
+            do { (data, response) = try await URLSession.shared.data(for: request) }
+            catch { throw HevyError.network(error) }
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                throw http.statusCode == 401 || http.statusCode == 403
+                    ? HevyError.invalidKey : HevyError.http(http.statusCode)
+            }
+            let result = try decoder.decode(RoutinesPage.self, from: data)
+            all += result.routines
+            pageCount = result.pageCount
+            page += 1
+        }
+        return all
+    }
+
     /// Walks the user's Hevy history (newest first). With `stopWhenAllKnown`
     /// the walk ends at the first page made entirely of already-imported
     /// workouts — the incremental mode used by the automatic sync, which

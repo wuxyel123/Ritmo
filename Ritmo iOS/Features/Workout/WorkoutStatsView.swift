@@ -40,6 +40,17 @@ struct WorkoutStatsView: View {
         var ridePBs: [EnduranceStats.PersonalBest] = []
         var weeklyRunKm: [WorkoutStats.WeekPoint] = []
         var weeklyRideKm: [WorkoutStats.WeekPoint] = []
+        var runEquivalents: [EnduranceStats.EquivalentTime] = []
+        var loadRatioPct: Int?          // for the meet countdown card
+    }
+
+    struct RoutineRow: Identifiable {
+        let id = UUID()
+        let title: String
+        let exerciseCount: Int
+        let setCount: Int
+        let lastDone: Date?
+        let count30: Int
     }
 
     @State private var stats: Stats?
@@ -55,6 +66,11 @@ struct WorkoutStatsView: View {
     @State private var kmSport: EnduranceStats.Sport = .run
     @State private var showingRaceEditor = false
     @State private var stravaImportError: String?
+    @State private var showingCalculator = false
+    @State private var routineRows: [RoutineRow] = []
+    @AppStorage("meetDateEpoch") private var meetDateEpoch = 0.0
+    @AppStorage("hevyConnected") private var hevyConnected = false
+    @AppStorage("hevyApiKey") private var hevyApiKey = ""
 
     var body: some View {
         ScrollView {
@@ -66,8 +82,11 @@ struct WorkoutStatsView: View {
                     }
                     .pickerStyle(.segmented)
 
+                    recordsLinkCard
+
                     switch section {
                     case .gym:
+                        meetCountdownCard(stats)
                         weeklySetsCard(stats)
                         tonnageCard(stats)
                         repRangeCard(stats)
@@ -75,11 +94,14 @@ struct WorkoutStatsView: View {
                         densityCard(stats)
                         relativeStrengthCard(stats)
                         compMaxCard(stats)
+                        calculatorCard
+                        routinesCard
                         oplCard
                         exercisesCard(stats)
                     case .cardio:
                         pbCard(stats, sport: .run)
                         pbCard(stats, sport: .ride)
+                        riegelCard(stats)
                         weeklyKmCard(stats)
                         racesCard
                     }
@@ -93,6 +115,9 @@ struct WorkoutStatsView: View {
         }
         .sheet(isPresented: $showingRaceEditor) {
             RaceEditorView()
+        }
+        .sheet(isPresented: $showingCalculator) {
+            AttemptCalculatorView(maxes: resolvedCompMaxes())
         }
         .onChange(of: races.count) { _, _ in recomputeCardio() }
         .navigationTitle("Statistiche")
@@ -114,8 +139,23 @@ struct WorkoutStatsView: View {
             s.ridePBs = EnduranceStats.personalBests(sport: .ride, sessions: sessions, races: races)
             s.weeklyRunKm = EnduranceStats.weeklyDistanceKm(sport: .run, from: sessions)
             s.weeklyRideKm = EnduranceStats.weeklyDistanceKm(sport: .ride, from: sessions)
+            s.runEquivalents = EnduranceStats.riegelEquivalents(from: s.runPBs)
+            s.loadRatioPct = Int((TrainingLoad.compute(from: sessions).ratio * 100).rounded())
             setsForFilter = s.weeklySetsAll
             stats = s
+            // Hevy routines (read-only: templates + when each was last done).
+            if hevyConnected, !hevyApiKey.isEmpty,
+               let routines = try? await HevyService(apiKey: hevyApiKey).fetchRoutines() {
+                let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
+                routineRows = routines.map { routine in
+                    let matching = sessions.filter { $0.title == routine.title }
+                    return RoutineRow(title: routine.title,
+                                      exerciseCount: routine.exerciseCount,
+                                      setCount: routine.setCount,
+                                      lastDone: matching.map(\.startTime).max(),
+                                      count30: matching.filter { $0.startTime >= cutoff }.count)
+                }
+            }
             // Strava: pull any new race-tagged activities, then refresh PBs.
             if StravaSession.isConnected {
                 do {
@@ -560,6 +600,159 @@ struct WorkoutStatsView: View {
         kg.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(kg))" : String(format: "%.1f", kg)
     }
 
+    // MARK: - Records / meet countdown / calculator / routines
+
+    private var recordsLinkCard: some View {
+        NavigationLink {
+            RecordsTimelineView()
+        } label: {
+            FitCard {
+                HStack(spacing: 12) {
+                    Image(systemName: "trophy.fill")
+                        .font(.title3).foregroundStyle(.yellow)
+                        .frame(width: 38, height: 38)
+                        .background(Color.yellow.opacity(0.12), in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Record").font(.subheadline.bold())
+                        Text("Cronologia dei tuoi primati — palestra e gare")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func meetCountdownCard(_ s: Stats) -> some View {
+        if meetDateEpoch > 0 {
+            let meetDate = Date(timeIntervalSince1970: meetDateEpoch)
+            let days = Calendar.current.dateComponents(
+                [.day],
+                from: Calendar.current.startOfDay(for: .now),
+                to: Calendar.current.startOfDay(for: meetDate)).day ?? -1
+            if days >= 0 {
+                FitCard {
+                    HStack(spacing: 12) {
+                        Image(systemName: "flag.checkered")
+                            .font(.title3).foregroundStyle(RitmoTheme.accent)
+                            .frame(width: 38, height: 38)
+                            .background(RitmoTheme.accent.opacity(0.12), in: Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""), "\(days)"))
+                                .font(.subheadline.bold())
+                            Text(meetDate, format: .dateTime.weekday(.wide).day().month().year())
+                                .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                        }
+                        Spacer()
+                        if let pct = s.loadRatioPct {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("\(pct)%").font(.subheadline.bold())
+                                Text("carico vs media").font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var calculatorCard: some View {
+        Button { showingCalculator = true } label: {
+            FitCard {
+                HStack(spacing: 12) {
+                    Image(systemName: "function")
+                        .font(.title3).foregroundStyle(RitmoTheme.workout)
+                        .frame(width: 38, height: 38)
+                        .background(RitmoTheme.workout.opacity(0.12), in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Calcolatore gara").font(.subheadline.bold())
+                        Text("Tentativi e riscaldamento dal massimale")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Comp maxes with the usual priority (OPL best → manual) for the calculator.
+    private func resolvedCompMaxes() -> (squat: Double, bench: Double, deadlift: Double) {
+        if !oplMeets.isEmpty {
+            return (oplMeets.compactMap(\.bestSquatKg).max() ?? 0,
+                    oplMeets.compactMap(\.bestBenchKg).max() ?? 0,
+                    oplMeets.compactMap(\.bestDeadliftKg).max() ?? 0)
+        }
+        let goals = storedGoals.first
+        return (goals?.compSquatKg ?? 0, goals?.compBenchKg ?? 0, goals?.compDeadliftKg ?? 0)
+    }
+
+    @ViewBuilder
+    private var routinesCard: some View {
+        if !routineRows.isEmpty {
+            FitCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionHeader(title: "Routine Hevy")
+                    Text("Ultima esecuzione (allenamenti con lo stesso nome della routine)")
+                        .font(.caption2).foregroundStyle(.secondary)
+                    ForEach(routineRows.prefix(6)) { row in
+                        HStack(alignment: .firstTextBaseline) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(row.title).font(.caption.bold()).lineLimit(1)
+                                Text(String(format: NSLocalizedString("%@ esercizi · %@ serie", comment: ""),
+                                            "\(row.exerciseCount)", "\(row.setCount)"))
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 2) {
+                                if let last = row.lastDone {
+                                    Text(last, format: .relative(presentation: .named))
+                                        .font(.caption2.bold())
+                                } else {
+                                    Text("mai eseguita").font(.caption2).foregroundStyle(.secondary)
+                                }
+                                Text(String(format: NSLocalizedString("×%@ in 30gg", comment: ""),
+                                            "\(row.count30)"))
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
+                        if row.id != routineRows.prefix(6).last?.id { Divider() }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func riegelCard(_ s: Stats) -> some View {
+        if !s.runEquivalents.isEmpty {
+            FitCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionHeader(title: "Tempi equivalenti — Corsa")
+                    Text("Formula di Riegel (t × (d₂/d₁)^1,06) applicata al PB della distanza più vicina")
+                        .font(.caption2).foregroundStyle(.secondary)
+                    ForEach(s.runEquivalents) { equivalent in
+                        HStack {
+                            Text(LocalizedStringKey(equivalent.bucket.label)).font(.caption.bold())
+                            Spacer()
+                            Text(String(format: NSLocalizedString("da %@", comment: ""),
+                                        NSLocalizedString(equivalent.sourceLabel, comment: "")))
+                                .font(.caption2).foregroundStyle(.secondary)
+                            Text(EnduranceStats.formatDuration(equivalent.seconds))
+                                .font(.subheadline.bold())
+                                .frame(width: 76, alignment: .trailing)
+                        }
+                        if equivalent.id != s.runEquivalents.last?.id { Divider() }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Cardio
 
     /// PBs depend on sessions AND the race log — re-run after any race change
@@ -950,6 +1143,200 @@ func eventLabel(_ code: String) -> String {
     case "D":   return "Solo Stacco"
     case "BD":  return "Panca + Stacco"
     default:    return code
+    }
+}
+
+// MARK: - RecordsTimelineView (chronology of all-time bests)
+
+struct RecordsTimelineView: View {
+    @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
+    @Query(sort: \RaceResult.date, order: .reverse) private var races: [RaceResult]
+    @State private var events: [WorkoutStats.PREvent] = []
+    @State private var loaded = false
+
+    var body: some View {
+        Group {
+            if !loaded {
+                ProgressView().frame(maxWidth: .infinity)
+            } else if events.isEmpty {
+                Text("Nessun record ancora: i primati compaiono man mano che migliori.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .padding(RitmoTheme.pagePadding)
+            } else {
+                List(events) { event in
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: icon(for: event.kind))
+                            .font(.caption)
+                            .foregroundStyle(color(for: event.kind))
+                            .frame(width: 22)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(LocalizedStringKey(event.name)).font(.subheadline.bold()).lineLimit(1)
+                            HStack(spacing: 4) {
+                                Text(event.date, format: .dateTime.day().month(.abbreviated).year())
+                                if let raceName = event.raceName {
+                                    Text("· \(raceName)").lineLimit(1)
+                                }
+                            }
+                            .font(.caption2).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        valueView(for: event.kind)
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+        .navigationTitle("Record")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .task {
+            guard !loaded else { return }
+            events = WorkoutStats.prTimeline(sessions: sessions, races: races)
+            loaded = true
+        }
+    }
+
+    private func icon(for kind: WorkoutStats.PREventKind) -> String {
+        switch kind {
+        case .liftE1RM:       return "dumbbell.fill"
+        case .racePB:         return "flag.checkered"
+        case .sessionTonnage: return "scalemass.fill"
+        }
+    }
+
+    private func color(for kind: WorkoutStats.PREventKind) -> Color {
+        switch kind {
+        case .liftE1RM:       return RitmoTheme.workout
+        case .racePB:         return RitmoTheme.accent
+        case .sessionTonnage: return .orange
+        }
+    }
+
+    @ViewBuilder
+    private func valueView(for kind: WorkoutStats.PREventKind) -> some View {
+        switch kind {
+        case .liftE1RM(let kg, let previous):
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(String(format: "%.1f kg", kg)).font(.caption.bold())
+                if let previous {
+                    Text(String(format: "%+.1f", kg - previous))
+                        .font(.caption2).foregroundStyle(.green)
+                }
+            }
+        case .racePB(let seconds, let previous):
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(EnduranceStats.formatDuration(seconds)).font(.caption.bold())
+                if let previous {
+                    Text("−" + EnduranceStats.formatDuration(previous - seconds))
+                        .font(.caption2).foregroundStyle(.green)
+                }
+            }
+        case .sessionTonnage(let kg, let previous):
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(String(format: "%.0f kg", kg)).font(.caption.bold())
+                if let previous {
+                    Text(String(format: "%+.0f", kg - previous))
+                        .font(.caption2).foregroundStyle(.green)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - AttemptCalculatorView (meet attempts + warm-up ramp)
+
+struct AttemptCalculatorView: View {
+    let maxes: (squat: Double, bench: Double, deadlift: Double)
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var liftIndex = 0
+    @State private var maxText = ""
+
+    private var prefill: Double {
+        [maxes.squat, maxes.bench, maxes.deadlift][liftIndex]
+    }
+    private var oneRM: Double {
+        Double(maxText.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+
+    /// Everything plate-rounded to 2.5 kg — that's what exists on the bar.
+    private func rounded(_ kg: Double) -> Double { (kg / 2.5).rounded() * 2.5 }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Alzata", selection: $liftIndex) {
+                        Text("Squat").tag(0)
+                        Text("Panca Piana").tag(1)
+                        Text("Stacco da Terra").tag(2)
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: liftIndex) { _, _ in
+                        if prefill > 0 { maxText = String(format: "%.4g", prefill) }
+                    }
+                    HStack {
+                        Text("1RM")
+                        Spacer()
+                        TextField("—", text: $maxText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 90)
+                        Text("kg").foregroundStyle(RitmoTheme.textSecondary).font(.caption)
+                    }
+                } footer: {
+                    Text("Precompilato dal massimale gara (OpenPowerlifting o manuale); modificabile.")
+                }
+
+                if oneRM > 0 {
+                    Section {
+                        attemptRow("1° tentativo", pct: 0.91)
+                        attemptRow("2° tentativo", pct: 0.97)
+                        attemptRow("3° tentativo", pct: 1.01)
+                    } header: { Text("Tentativi") } footer: {
+                        Text("91% · 97% · 101% del massimale — arrotondati a 2,5 kg.")
+                    }
+
+                    Section {
+                        warmupRow("Bilanciere", kg: 20, reps: 10)
+                        warmupRow("40%", kg: rounded(oneRM * 0.4), reps: 5)
+                        warmupRow("55%", kg: rounded(oneRM * 0.55), reps: 4)
+                        warmupRow("70%", kg: rounded(oneRM * 0.7), reps: 3)
+                        warmupRow("80%", kg: rounded(oneRM * 0.8), reps: 2)
+                        warmupRow("87%", kg: rounded(oneRM * 0.87), reps: 1)
+                    } header: { Text("Riscaldamento") }
+                }
+            }
+            .navigationTitle("Calcolatore gara")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
+            .onAppear {
+                if maxText.isEmpty, prefill > 0 { maxText = String(format: "%.4g", prefill) }
+            }
+        }
+    }
+
+    private func attemptRow(_ label: String, pct: Double) -> some View {
+        HStack {
+            Text(LocalizedStringKey(label)).font(.subheadline)
+            Spacer()
+            Text(String(format: "%.4g kg", rounded(oneRM * pct)))
+                .font(.subheadline.bold()).foregroundStyle(RitmoTheme.workout)
+        }
+    }
+
+    private func warmupRow(_ label: String, kg: Double, reps: Int) -> some View {
+        HStack {
+            Text(LocalizedStringKey(label)).font(.caption)
+            Spacer()
+            Text(String(format: "%.4g kg × %d", kg, reps))
+                .font(.caption.bold())
+        }
     }
 }
 

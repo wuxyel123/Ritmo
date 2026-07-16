@@ -57,6 +57,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query private var storedGoals: [UserGoals]
     @State private var selectedTab = 0
+    @AppStorage("didShowWelcome") private var didShowWelcome = false
 
     private var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
@@ -65,6 +66,11 @@ struct ContentView: View {
         let canonical = UserGoals.canonical(in: ctx)
         try? ctx.save()
         GoalsSyncService.shared.send(canonical)
+        // Meet date rides along on every push: keeps the watch complication
+        // and the app-group cache in sync even after reinstalls.
+        let meetEpoch = UserDefaults.standard.double(forKey: "meetDateEpoch")
+        HealthKitRepository.cacheMeetDate(meetEpoch)
+        GoalsSyncService.shared.sendMeetDate(meetEpoch)
     }
 
     /// Re-imports HealthKit workouts (deduping stale/duplicate entries); if
@@ -104,6 +110,10 @@ struct ContentView: View {
                 .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(6)
         }
         .tint(RitmoTheme.accent)
+        .sheet(isPresented: Binding(get: { !didShowWelcome },
+                                    set: { if !$0 { didShowWelcome = true } })) {
+            WelcomeSheet()
+        }
         .task {
             pushGoals()
             await syncWorkoutsToWatch()
@@ -124,6 +134,60 @@ struct ContentView: View {
             case "insights":  selectedTab = 5
             case "workouts":  selectedTab = 1
             default:          selectedTab = 0
+            }
+        }
+    }
+}
+
+// MARK: - WelcomeSheet (first launch — what to grant and connect)
+
+struct WelcomeSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Spacer()
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Benvenuto in Ritmo").font(.largeTitle.bold())
+                Text("Il tuo hub di analisi per allenamento, recupero e nutrizione.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            welcomeRow(icon: "heart.fill", color: .red,
+                       title: "Apple Salute",
+                       text: "Concedi i permessi: allenamenti, sonno, cuore, nutrizione e peso arrivano da lì.")
+            welcomeRow(icon: "link", color: RitmoTheme.accent,
+                       title: "Hevy",
+                       text: "Collega la chiave API in Impostazioni: serie, pesi e ripetizioni completano gli allenamenti.")
+            welcomeRow(icon: "flag.checkered", color: .orange,
+                       title: "Gare",
+                       text: "OpenPowerlifting e Strava (in Impostazioni) portano dentro i tuoi risultati di gara.")
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Text("Continua")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(RitmoTheme.accent, in: RoundedRectangle(cornerRadius: 14))
+                    .foregroundStyle(.white)
+            }
+        }
+        .padding(28)
+    }
+
+    private func welcomeRow(icon: String, color: Color, title: String,
+                            text: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3).foregroundStyle(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.12), in: Circle())
+            VStack(alignment: .leading, spacing: 3) {
+                Text(LocalizedStringKey(title)).font(.subheadline.bold())
+                Text(LocalizedStringKey(text))
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

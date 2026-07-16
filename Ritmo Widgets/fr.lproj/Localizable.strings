@@ -41,3 +41,35 @@
 
 // ── Localization audit sweep (2026-07-09)
 "attive" = "actives";
+
+// ── Oggi widget: recommendation keys (2026-07-10)
+"Giornata per spingere" = "Journée pour pousser";
+"Mantieni il ritmo" = "Garde le rythme";
+"Giornata leggera" = "Journée légère";
+"Meglio riposare" = "Mieux vaut se reposer";
+"Allenamento fatto" = "Séance faite";
+"Oggi hai già dato." = "Vous avez déjà donné aujourd'hui.";
+"Obiettivo settimanale completato: %@ su %@ 🎯." = "Objectif hebdo atteint : %@ sur %@ 🎯.";
+"Sei a %@ su %@ questa settimana." = "Vous en êtes à %@ sur %@ cette semaine.";
+"Ora contano recupero, proteine e sonno." = "Place à la récupération, aux protéines et au sommeil.";
+"Carico molto sopra la tua norma: una pausa oggi riduce il rischio di sovrallenamento." = "Charge bien au-dessus de votre norme : une pause aujourd'hui réduit le risque de surentraînement.";
+"Recupero basso (%@/100): il corpo sta ancora recuperando." = "Récupération basse (%@/100) : le corps récupère encore.";
+"Stai caricando più del solito: meglio tenere bassa l'intensità." = "Vous chargez plus que d'habitude : mieux vaut garder une intensité basse.";
+"Recupero parziale (%@/100): un'attività leggera è la scelta giusta." = "Récupération partielle (%@/100) : une activité légère est le bon choix.";
+"Sono %@ giorni dall'ultimo allenamento e sei recuperato: oggi è il giorno giusto per riprendere." = "Cela fait %@ jours depuis votre dernière séance et vous êtes récupéré : c'est le jour idéal pour reprendre.";
+"Te ne manca uno solo per l'obiettivo settimanale (%@ su %@): giornata giusta per chiuderlo." = "Il n'en manque qu'une pour l'objectif hebdo (%@ sur %@) : bonne journée pour le boucler.";
+"Sei recuperato e il carico è sotto la tua media: giornata ideale per un allenamento intenso." = "Vous êtes récupéré et la charge est sous votre moyenne : journée idéale pour une séance intense.";
+"Recupero e carico in equilibrio: continua con il tuo ritmo abituale." = "Récupération et charge équilibrées : gardez votre rythme habituel.";
+"Questa settimana: %@ su %@ allenamenti." = "Cette semaine : %@ séances sur %@.";
+"Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Vous avez fait %@ séances intenses au cours des %@ derniers jours : mieux vaut une journée légère.";
+"Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Vous avez fait %@ séances à effort élevé au cours des %@ derniers jours (RPE moyen %@) : mieux vaut une journée légère.";
+"Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera." = "Sur les 3 derniers jours, vous avez accumulé %@ %% de votre charge hebdomadaire moyenne : mieux vaut une journée légère.";
+"Apri Ritmo per il consiglio di oggi" = "Ouvrez Ritmo pour le conseil du jour";
+"Consiglio del giorno e punteggio." = "Conseil du jour et score.";
+
+// ── Meet countdown (2026-07-10)
+"Gara tra %@ giorni" = "Compétition dans %@ jours";
+"Nessuna gara programmata" = "Aucune compétition prévue";
+"giorni alla gara" = "jours avant la compétition";
+"Conto alla rovescia gara" = "Compte à rebours compétition";
+"Giorni alla prossima gara programmata." = "Jours avant votre prochaine compétition prévue.";

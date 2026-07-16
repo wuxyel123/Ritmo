@@ -44,6 +44,10 @@ struct InsightsView: View {
                         // Insights sorted by priority
                         ForEach(vm.insights) { insight in InsightCard(insight: insight) }
 
+                        // Load / sleep / HRV on one time axis — raw series,
+                        // aligned so patterns are visible without any verdict.
+                        CorrelationCard()
+
                         // PR section
                         if !vm.topPRs.isEmpty {
                             FitCard {
@@ -138,5 +142,86 @@ final class InsightsViewModel: ObservableObject {
         let prs = prService.calculateAllPRs(from: sessions)
         topPRs = Array(prs.values).sorted { $0.estimatedOneRepMax > $1.estimatedOneRepMax }
         muscleVolume = prService.volumeByMuscleGroup(from: sessions, days: 7)
+    }
+}
+
+// MARK: - CorrelationCard (load · sleep · HRV, 30 days, shared time axis)
+
+struct CorrelationCard: View {
+    @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
+
+    @State private var loadDaily: [DateValuePoint] = []
+    @State private var sleepDaily: [DateValuePoint] = []
+    @State private var hrvDaily: [DateValuePoint] = []
+    @State private var loaded = false
+
+    var body: some View {
+        Group {
+            if loaded, !loadDaily.isEmpty || !sleepDaily.isEmpty || !hrvDaily.isEmpty {
+                FitCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        SectionHeader(title: "Carico · Sonno · HRV")
+                        Text("Ultimi 30 giorni sullo stesso asse temporale")
+                            .font(.caption2).foregroundStyle(.secondary)
+                        if !loadDaily.isEmpty {
+                            miniChart(title: "Carico", points: loadDaily,
+                                      color: RitmoTheme.workout, isBar: true, unit: "")
+                        }
+                        if !sleepDaily.isEmpty {
+                            miniChart(title: "Sonno (ore)", points: sleepDaily,
+                                      color: .indigo, isBar: false, unit: " h", decimals: 1)
+                        }
+                        if !hrvDaily.isEmpty {
+                            miniChart(title: "HRV (ms)", points: hrvDaily,
+                                      color: .green, isBar: false, unit: " ms")
+                        }
+                    }
+                }
+            }
+        }
+        .task {
+            guard !loaded else { return }
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: .now)
+
+            // Daily training load (session-RPE), zero-filled days included so
+            // the three charts share the same 30-day span.
+            var byDay: [Date: Double] = [:]
+            if let cutoff = calendar.date(byAdding: .day, value: -29, to: today) {
+                for session in sessions where session.startTime >= cutoff {
+                    byDay[calendar.startOfDay(for: session.startTime), default: 0] += session.loadValue
+                }
+                loadDaily = (0..<30).compactMap { offset in
+                    calendar.date(byAdding: .day, value: -29 + offset, to: today).map {
+                        DateValuePoint(date: $0, value: byDay[$0] ?? 0)
+                    }
+                }
+                if byDay.isEmpty { loadDaily = [] }
+            }
+
+            // Sleep hours per night (same per-day fetch the recovery tab uses).
+            var sleep: [DateValuePoint] = []
+            for offset in 0..<30 {
+                if let day = calendar.date(byAdding: .day, value: -offset, to: .now),
+                   let session = await healthRepo.fetchSleep(for: day) {
+                    sleep.append(DateValuePoint(date: calendar.startOfDay(for: day),
+                                                value: min(session.totalHours, 14)))
+                }
+            }
+            sleepDaily = sleep.sorted { $0.date < $1.date }
+
+            hrvDaily = await healthRepo.fetchHRVHistory(days: 30)
+            loaded = true
+        }
+    }
+
+    private func miniChart(title: String, points: [DateValuePoint], color: Color,
+                           isBar: Bool, unit: String, decimals: Int = 0) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(LocalizedStringKey(title)).font(.caption2.bold()).foregroundStyle(color)
+            SelectableStatChart(points: points, isBar: isBar, barWidth: 5,
+                                color: color, decimals: decimals, unit: unit, height: 70)
+        }
     }
 }

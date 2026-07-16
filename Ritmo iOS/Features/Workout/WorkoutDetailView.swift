@@ -64,6 +64,7 @@ struct WorkoutDetailView: View {
     @State private var routeSegments: [RouteSegment] = []
     @State private var weekLoad: TrainingLoad?
     @State private var hrRecovery: Int?
+    @State private var observedMaxHR: Double?
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
     @State private var showingDeleteDialog = false
@@ -183,7 +184,8 @@ struct WorkoutDetailView: View {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     SectionHeader(title: "Zone di frequenza cardiaca")
-                                    Text("Basate su FC max stimata 190 bpm")
+                                    Text(String(format: NSLocalizedString("Basate sulla tua FC max osservata: %@ bpm", comment: ""),
+                                                "\(Int(observedMaxHR ?? 190))"))
                                         .font(.caption2).foregroundStyle(.secondary)
                                     HRZonesChart(zones: hr.zones)
                                 }
@@ -334,7 +336,12 @@ struct WorkoutDetailView: View {
             weekLoad = TrainingLoad.compute(from: allSessions)
             guard session.source == .healthKit else { return }
             isLoadingHR = true
-            async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime, end: session.endTime)
+            // The user's own observed max HR personalizes the zones; the old
+            // fixed 190 stays only as fallback when no data exists.
+            let maxHR = await healthRepo.fetchMaxHeartRate() ?? 190
+            observedMaxHR = maxHR
+            async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime,
+                                                            end: session.endTime, maxHR: maxHR)
             async let locs = healthRepo.fetchWorkoutRoute(start: session.startTime, end: session.endTime)
             async let recovery = healthRepo.fetchHeartRateRecovery(workoutEnd: session.endTime)
             let (fetchedHR, fetchedLocs) = await (hr, locs)
@@ -342,7 +349,7 @@ struct WorkoutDetailView: View {
             hrData = fetchedHR
             routeLocations = fetchedLocs
             if let hr = fetchedHR, !fetchedLocs.isEmpty {
-                routeSegments = buildRouteSegments(locations: fetchedLocs, hrSamples: hr.samples, maxHR: 190)
+                routeSegments = buildRouteSegments(locations: fetchedLocs, hrSamples: hr.samples, maxHR: maxHR)
             } else if !fetchedLocs.isEmpty {
                 routeSegments = [RouteSegment(coordinates: fetchedLocs.map(\.coordinate), zone: 0)]
             }

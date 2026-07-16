@@ -13,6 +13,7 @@ final class GoalsSyncService: NSObject {
     private var latestExcluded: [String]?
     private var latestTrainingLoad: Data?
     private var latestRecommendation: Data?
+    private var latestMeetDate: Double?
 
     override init() {
         super.init()
@@ -48,6 +49,12 @@ final class GoalsSyncService: NSObject {
         transmit()
     }
 
+    /// Push the scheduled meet date (0 = cleared) for the watch complication.
+    func sendMeetDate(_ epoch: Double) {
+        latestMeetDate = epoch
+        transmit()
+    }
+
     /// Recompute-and-push in one step — the pattern every mutation site needs
     /// (delete, RPE change, import, manual log). One definition instead of a
     /// copy of the fetch in each view.
@@ -68,6 +75,7 @@ final class GoalsSyncService: NSObject {
         if let latestExcluded { payload["excludedWorkouts"] = latestExcluded }
         if let latestTrainingLoad { payload["trainingLoad"] = latestTrainingLoad }
         if let latestRecommendation { payload["dailyRecommendation"] = latestRecommendation }
+        if let latestMeetDate { payload["meetDate"] = latestMeetDate }
         guard !payload.isEmpty else { return }
         try? session.updateApplicationContext(payload)
         session.transferUserInfo(payload)
