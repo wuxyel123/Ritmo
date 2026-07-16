@@ -443,32 +443,32 @@ public struct DailyRecommendation: Codable {
         // calendar days, so an evening session doesn't age out mid-day.
         let today = calendar.startOfDay(for: now)
 
-        // Tunables — deliberately forgiving; per the user, over-suggesting a
-        // light day beats missing one.
-        let hardWindowDays = 4           // "recent" = today + previous 3 days
-        let hardSessionFactor = 0.9      // avg ≥ 90% of the usual session load
-        let hardEffortThreshold = 7.5    // avg RPE across recent sessions
+        // Tunables — per the user: the light-day hint fires only when there
+        // was a genuinely HEAVY workout in the previous 2 days; one is enough.
+        let hardWindowDays = 2           // "recent" = today + yesterday
+        let hardSessionFactor = 0.9      // ≥ 90% of the usual session load
+        let hardEffortThreshold = 7.5    // session RPE
         let compressedWeekShare = 0.45   // 3-day load ≥ 45% of the weekly norm
 
         if let windowStart = calendar.date(byAdding: .day, value: -(hardWindowDays - 1), to: today) {
             let recent = sessions.filter { $0.startTime >= windowStart }
-            if recent.count >= 2 {
-                let count = Double(recent.count)
-                let avgSessionLoad = recent.reduce(0.0) { $0 + $1.loadValue } / count
-                let avgEffort = recent.reduce(0.0) { $0 + Double($1.effortScore) } / count
-                if let l = usableLoad, l.averageLoad > 0,
-                   avgSessionLoad >= l.averageLoad * hardSessionFactor {
+            if let l = usableLoad, l.averageLoad > 0 {
+                let hardByLoad = recent.filter { $0.loadValue >= l.averageLoad * hardSessionFactor }
+                if !hardByLoad.isEmpty {
                     return DailyRecommendation(kind: .easy, reasonFragments: [
                         ReasonFragment("Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera.",
-                                       ["\(recent.count)", "\(hardWindowDays)"])])
+                                       ["\(hardByLoad.count)", "\(hardWindowDays)"])])
                 }
-                // High RPE marks the block as hard even when its load stays
-                // under the baseline (short heavy sessions barely move load).
-                if avgEffort >= hardEffortThreshold {
-                    return DailyRecommendation(kind: .easy, reasonFragments: [
-                        ReasonFragment("Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera.",
-                                       ["\(recent.count)", "\(hardWindowDays)", String(format: "%.1f", avgEffort)])])
-                }
+            }
+            // High RPE marks a session as hard even when its load stays
+            // under the baseline (short heavy sessions barely move load).
+            let hardByEffort = recent.filter { Double($0.effortScore) >= hardEffortThreshold }
+            if !hardByEffort.isEmpty {
+                let avgEffort = hardByEffort.reduce(0.0) { $0 + Double($1.effortScore) }
+                    / Double(hardByEffort.count)
+                return DailyRecommendation(kind: .easy, reasonFragments: [
+                    ReasonFragment("Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera.",
+                                   ["\(hardByEffort.count)", "\(hardWindowDays)", String(format: "%.1f", avgEffort)])])
             }
         }
         if let l = usableLoad, l.chronic > 0,

@@ -219,39 +219,56 @@ public enum SleepStageType: String, Codable {
 // MARK: - SleepQuality
 
 public enum SleepQuality: Int, Codable, CaseIterable, Sendable {
+    // Declaration order = display order (allCases follows it). Raw values are
+    // STORAGE IDs for already-logged nights — 0 and 5 were added when the
+    // scale grew from 4 to 6 levels, so they sit out of sequence on purpose.
+    // Never renumber the existing ones.
+    case pessimo = 0
     case scarso = 1
     case sufficiente = 2
     case buono = 3
+    case moltoBuono = 5
     case ottimo = 4
 
     public var label: String {
         switch self {
+        case .pessimo:     return "Pessimo"
         case .scarso:      return "Scarso"
         case .sufficiente: return "Sufficiente"
         case .buono:       return "Buono"
+        case .moltoBuono:  return "Molto buono"
         case .ottimo:      return "Ottimo"
         }
     }
 
     public var emoji: String {
         switch self {
+        case .pessimo:     return "😫"
         case .scarso:      return "😞"
         case .sufficiente: return "😐"
-        case .buono:       return "😊"
+        case .buono:       return "🙂"
+        case .moltoBuono:  return "😊"
         case .ottimo:      return "🤩"
         }
     }
 
-    /// Maps 1-4 to a 0-30 recovery score
-    public var baseRecoveryScore: Double { Double(rawValue) / 4.0 * 30 }
+    /// Position on the 6-level scale (0-based, display order).
+    public var scaleIndex: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+
+    /// Maps the 6 levels to a 0-30 recovery score.
+    public var baseRecoveryScore: Double {
+        Double(scaleIndex + 1) / Double(Self.allCases.count) * 30
+    }
 
     /// (deep fraction, REM fraction) of total sleep duration for Apple Health stage writing.
     /// Core = 1 - deep - rem. Based on typical sleep architecture scaled by quality.
     public var sleepStageFractions: (deep: Double, rem: Double) {
         switch self {
-        case .scarso:      return (0.05, 0.10)   // poor: mostly light sleep
+        case .pessimo:     return (0.03, 0.07)   // barely restorative
+        case .scarso:      return (0.05, 0.10)
         case .sufficiente: return (0.12, 0.15)
-        case .buono:       return (0.20, 0.22)
+        case .buono:       return (0.18, 0.20)
+        case .moltoBuono:  return (0.22, 0.23)
         case .ottimo:      return (0.25, 0.25)   // excellent: ~50% restorative
         }
     }

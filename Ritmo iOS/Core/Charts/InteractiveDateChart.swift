@@ -21,6 +21,11 @@ struct InteractiveDateChart: View {
     /// Decimal places for values/averages/goals (water in litres and body
     /// weight need 1; steps/kcal stay at 0).
     var decimals: Int = 0
+    /// Dates that count toward the average. nil = every non-zero point (the
+    /// default). Nutrition passes the days that were actually TRACKED
+    /// (calories above the noise floor), so an untracked day — or a zero
+    /// macro on a tracked day — is handled correctly.
+    var averageEligibleDates: Set<Date>? = nil
 
     @State private var selectedPoint: ChartPoint?
     @State private var isExpanded = false
@@ -30,9 +35,14 @@ struct InteractiveDateChart: View {
     }
 
     var avg: Double {
-        let nonZero = points.filter { $0.value > 0 }
-        guard !nonZero.isEmpty else { return 0 }
-        return nonZero.map(\.value).reduce(0, +) / Double(nonZero.count)
+        let eligible: [ChartPoint]
+        if let averageEligibleDates {
+            eligible = points.filter { averageEligibleDates.contains($0.date) }
+        } else {
+            eligible = points.filter { $0.value > 0 }
+        }
+        guard !eligible.isEmpty else { return 0 }
+        return eligible.map(\.value).reduce(0, +) / Double(eligible.count)
     }
 
     var body: some View {
@@ -69,7 +79,8 @@ struct InteractiveDateChart: View {
         .fullScreenCover(isPresented: $isExpanded) {
             ExpandedChartView(title: title, points: points, goal: goal,
                               color: color, unit: unit, chartUnit: chartUnit, chartType: chartType,
-                              yDomain: yDomain, decimals: decimals)
+                              yDomain: yDomain, decimals: decimals,
+                              averageEligibleDates: averageEligibleDates)
         }
     }
 
@@ -132,6 +143,7 @@ struct ExpandedChartView: View {
     let chartType: ChartDisplayType
     var yDomain: ClosedRange<Double>? = nil
     var decimals: Int = 0
+    var averageEligibleDates: Set<Date>? = nil
 
     @State private var selectedPoint: ChartPoint?
 
@@ -140,9 +152,14 @@ struct ExpandedChartView: View {
     }
 
     var avg: Double {
-        let nonZero = points.filter { $0.value > 0 }
-        guard !nonZero.isEmpty else { return 0 }
-        return nonZero.map(\.value).reduce(0, +) / Double(nonZero.count)
+        let eligible: [ChartPoint]
+        if let averageEligibleDates {
+            eligible = points.filter { averageEligibleDates.contains($0.date) }
+        } else {
+            eligible = points.filter { $0.value > 0 }
+        }
+        guard !eligible.isEmpty else { return 0 }
+        return eligible.map(\.value).reduce(0, +) / Double(eligible.count)
     }
 
     var body: some View {

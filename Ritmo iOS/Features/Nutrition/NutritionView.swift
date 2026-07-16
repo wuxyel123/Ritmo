@@ -125,9 +125,13 @@ struct NutritionView: View {
                     _ goal: Double, _ unit: String, _ color: Color, _ type: ChartDisplayType,
                     decimals: Int = 0) -> some View {
         let pts = vm.displayHistory.map { ChartPoint(date: $0.date, value: value($0)) }
+        // Only days that were actually TRACKED count toward the average:
+        // an untracked day would drag every macro to zero, while a genuine
+        // 0-protein entry on a tracked day still counts.
+        let trackedDates = Set(vm.displayHistory.filter { $0.calories > 50 }.map(\.date))
         InteractiveDateChart(title: title, points: pts, goal: goal, color: color,
                              unit: unit, chartUnit: period.chartUnit, chartType: type,
-                             decimals: decimals)
+                             decimals: decimals, averageEligibleDates: trackedDates)
     }
 }
 

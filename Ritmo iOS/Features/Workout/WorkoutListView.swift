@@ -38,6 +38,15 @@ struct WorkoutListView: View {
                         }
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         .listRowSeparator(.hidden)
+                        ZStack {
+                            NavigationLink {
+                                CalculatorsView()
+                            } label: { EmptyView() }
+                            .opacity(0)
+                            CalculatorsEntryCard()
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden)
                         ForEach(sessions) { session in
                             NavigationLink(destination: WorkoutDetailView(session: session)) {
                                 if session.source == .healthKit {
@@ -138,6 +147,30 @@ struct StatsEntryCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Statistiche").font(.subheadline.bold())
                     Text("Serie, tonnellaggio, frequenza e progressione esercizi")
+                        .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+// MARK: - Calculators entry card
+
+struct CalculatorsEntryCard: View {
+    var body: some View {
+        FitCard {
+            HStack(spacing: 12) {
+                Image(systemName: "function")
+                    .font(.title3)
+                    .foregroundStyle(.orange)
+                    .frame(width: 38, height: 38)
+                    .background(Color.orange.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Calcolatori").font(.subheadline.bold())
+                    Text("Gara, RPE, passo e FC")
                         .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                 }
                 Spacer()

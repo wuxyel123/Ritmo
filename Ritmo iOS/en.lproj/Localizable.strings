@@ -818,3 +818,37 @@
 "Registra acqua" = "Log water";
 "Punteggio di oggi" = "Today's score";
 "Basate sulla tua FC max osservata: %@ bpm" = "Based on your observed max HR: %@ bpm";
+
+// ── Sleep 6 levels + RPE calculator (2026-07-11)
+"Pessimo" = "Terrible";
+"Molto buono" = "Very good";
+"Calcolatore RPE" = "RPE calculator";
+"e1RM e pesi target da peso × ripetizioni @ RPE" = "e1RM and target weights from weight × reps @ RPE";
+"Serie fatta" = "Set performed";
+"Peso sollevato" = "Weight lifted";
+"Ripetizioni: %@" = "Reps: %@";
+"RPE obiettivo" = "Target RPE";
+"Pesi target" = "Target weights";
+"%@ ripetizioni" = "%@ reps";
+"kg · 1RM stimato" = "kg · estimated 1RM";
+"Tabella RPE RTS (Reactive Training Systems); oltre 10 ripetizioni effettive i valori sono estrapolati. Pesi arrotondati a 2,5 kg." = "RTS RPE chart (Reactive Training Systems); past 10 effective reps the values are extrapolated. Weights rounded to 2.5 kg.";
+"Ripetizioni target" = "Target reps";
+
+// ── Calculators hub + pace calculator (2026-07-16) ──
+"Calcolatori" = "Calculators";
+"Gara, RPE, passo e FC" = "Meet, RPE, pace and HR";
+"Calcolatore passo" = "Pace calculator";
+"Passo, tempo e distanza per la corsa" = "Pace, time and distance for running";
+"Calcola" = "Solve for";
+"Tempo" = "Time";
+"Passo" = "Pace";
+"Risultato" = "Result";
+
+// ── Pace-from-HR calculator (2026-07-16) ──
+"Passo previsto da FC" = "Predicted pace from HR";
+"Relazione passo–FC stimata dalle tue corse" = "Pace–HR relationship estimated from your runs";
+"FC" = "HR";
+"Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm" = "Based on %@ runs in the last 6 months · observed average HR %@–%@ bpm";
+"Fuori dall'intervallo osservato: valore estrapolato." = "Outside the observed range: extrapolated value.";
+"Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "At least 5 runs of 15+ minutes with heart-rate data in the last 6 months are needed.";
+"Corse trovate: %@" = "Runs found: %@";

@@ -816,3 +816,37 @@
 "Registra acqua" = "Registar água";
 "Punteggio di oggi" = "Pontuação de hoje";
 "Basate sulla tua FC max osservata: %@ bpm" = "Baseadas na tua FC máx. observada: %@ bpm";
+
+// ── Sleep 6 levels + RPE calculator (2026-07-11)
+"Pessimo" = "Péssimo";
+"Molto buono" = "Muito bom";
+"Calcolatore RPE" = "Calculadora RPE";
+"e1RM e pesi target da peso × ripetizioni @ RPE" = "e1RM e pesos-alvo a partir de peso × repetições @ RPE";
+"Serie fatta" = "Série realizada";
+"Peso sollevato" = "Peso levantado";
+"Ripetizioni: %@" = "Repetições: %@";
+"RPE obiettivo" = "RPE alvo";
+"Pesi target" = "Pesos-alvo";
+"%@ ripetizioni" = "%@ repetições";
+"kg · 1RM stimato" = "kg · 1RM estimado";
+"Tabella RPE RTS (Reactive Training Systems); oltre 10 ripetizioni effettive i valori sono estrapolati. Pesi arrotondati a 2,5 kg." = "Tabela RPE RTS (Reactive Training Systems); acima de 10 repetições efetivas os valores são extrapolados. Pesos arredondados para 2,5 kg.";
+"Ripetizioni target" = "Repetições alvo";
+
+// ── Calculators hub + pace calculator (2026-07-16) ──
+"Calcolatori" = "Calculadoras";
+"Gara, RPE, passo e FC" = "Competição, RPE, ritmo e FC";
+"Calcolatore passo" = "Calculadora de ritmo";
+"Passo, tempo e distanza per la corsa" = "Ritmo, tempo e distância para corrida";
+"Calcola" = "Calcular";
+"Tempo" = "Tempo";
+"Passo" = "Ritmo";
+"Risultato" = "Resultado";
+
+// ── Pace-from-HR calculator (2026-07-16) ──
+"Passo previsto da FC" = "Ritmo previsto pela FC";
+"Relazione passo–FC stimata dalle tue corse" = "Relação ritmo–FC estimada a partir das suas corridas";
+"FC" = "FC";
+"Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm" = "Baseado em %@ corridas dos últimos 6 meses · FC média observada %@–%@ bpm";
+"Fuori dall'intervallo osservato: valore estrapolato." = "Fora do intervalo observado: valor extrapolado.";
+"Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "São necessárias pelo menos 5 corridas de 15+ minutos com dados de frequência cardíaca nos últimos 6 meses.";
+"Corse trovate: %@" = "Corridas encontradas: %@";

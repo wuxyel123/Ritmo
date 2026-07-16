@@ -364,8 +364,6 @@ struct WorkoutDetailView: View {
         var totalReps = 0
         var workingSets = 0                   // non-warmup
         var warmupSets = 0
-        var bestSet: (name: String, weightKg: Double, reps: Int)?
-        var bestE1RM: (name: String, kg: Double)?
         var avgSetRPE: Double?
         var groupShares: [(group: MuscleGroup, share: Double)] = []
     }
@@ -383,16 +381,6 @@ struct WorkoutDetailView: View {
             if let rpe = set.rpe { rpeSum += rpe; rpeCount += 1 }
             if volume > 0, let group = set.exercise?.muscleGroup {
                 groupVolume[group, default: 0] += volume
-            }
-            guard set.setType != .warmup, set.weightKg > 0, reps > 0 else { continue }
-            let name = set.exercise?.name ?? ""
-            if set.weightKg > (m.bestSet?.weightKg ?? 0) {
-                m.bestSet = (name, set.weightKg, reps)
-            }
-            // Epley loses meaning past ~12 reps, so those sets don't compete.
-            if reps <= 12 {
-                let e1rm = set.weightKg * (1 + Double(reps) / 30.0)
-                if e1rm > (m.bestE1RM?.kg ?? 0) { m.bestE1RM = (name, e1rm) }
             }
         }
         if rpeCount > 0 { m.avgSetRPE = rpeSum / Double(rpeCount) }
@@ -418,21 +406,6 @@ struct WorkoutDetailView: View {
                     if m.warmupSets > 0 {
                         Divider().frame(height: 40)
                         StatItem(value: "\(m.workingSets)", label: "serie effettive", icon: "flame.fill")
-                    }
-                    if let e1rm = m.bestE1RM {
-                        Divider().frame(height: 40)
-                        StatItem(value: String(format: "%.0f", e1rm.kg), label: "1RM stimato", icon: "trophy")
-                    }
-                }
-                if let best = m.bestSet {
-                    Divider()
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Miglior serie").font(.caption).foregroundStyle(RitmoTheme.textSecondary)
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 1) {
-                            Text("\(fmtKg(best.weightKg)) kg × \(best.reps)").font(.subheadline.bold())
-                            Text(best.name).font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
-                        }
                     }
                 }
                 if let rpe = m.avgSetRPE {
@@ -473,9 +446,6 @@ struct WorkoutDetailView: View {
         kg >= 1000 ? String(format: "%.1fk", kg / 1000) : "\(Int(kg.rounded()))"
     }
 
-    private func fmtKg(_ kg: Double) -> String {
-        kg.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(kg))" : String(format: "%.1f", kg)
-    }
 
     // MARK: - Training load (this workout vs the 7-day total)
 

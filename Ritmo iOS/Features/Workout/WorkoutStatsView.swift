@@ -66,7 +66,6 @@ struct WorkoutStatsView: View {
     @State private var kmSport: EnduranceStats.Sport = .run
     @State private var showingRaceEditor = false
     @State private var stravaImportError: String?
-    @State private var showingCalculator = false
     @State private var routineRows: [RoutineRow] = []
     @AppStorage("meetDateEpoch") private var meetDateEpoch = 0.0
     @AppStorage("hevyConnected") private var hevyConnected = false
@@ -94,7 +93,6 @@ struct WorkoutStatsView: View {
                         densityCard(stats)
                         relativeStrengthCard(stats)
                         compMaxCard(stats)
-                        calculatorCard
                         routinesCard
                         oplCard
                         exercisesCard(stats)
@@ -115,9 +113,6 @@ struct WorkoutStatsView: View {
         }
         .sheet(isPresented: $showingRaceEditor) {
             RaceEditorView()
-        }
-        .sheet(isPresented: $showingCalculator) {
-            AttemptCalculatorView(maxes: resolvedCompMaxes())
         }
         .onChange(of: races.count) { _, _ in recomputeCardio() }
         .navigationTitle("Statistiche")
@@ -659,37 +654,6 @@ struct WorkoutStatsView: View {
         }
     }
 
-    private var calculatorCard: some View {
-        Button { showingCalculator = true } label: {
-            FitCard {
-                HStack(spacing: 12) {
-                    Image(systemName: "function")
-                        .font(.title3).foregroundStyle(RitmoTheme.workout)
-                        .frame(width: 38, height: 38)
-                        .background(RitmoTheme.workout.opacity(0.12), in: Circle())
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Calcolatore gara").font(.subheadline.bold())
-                        Text("Tentativi e riscaldamento dal massimale")
-                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Comp maxes with the usual priority (OPL best → manual) for the calculator.
-    private func resolvedCompMaxes() -> (squat: Double, bench: Double, deadlift: Double) {
-        if !oplMeets.isEmpty {
-            return (oplMeets.compactMap(\.bestSquatKg).max() ?? 0,
-                    oplMeets.compactMap(\.bestBenchKg).max() ?? 0,
-                    oplMeets.compactMap(\.bestDeadliftKg).max() ?? 0)
-        }
-        let goals = storedGoals.first
-        return (goals?.compSquatKg ?? 0, goals?.compBenchKg ?? 0, goals?.compDeadliftKg ?? 0)
-    }
 
     @ViewBuilder
     private var routinesCard: some View {
@@ -1308,6 +1272,7 @@ struct AttemptCalculatorView: View {
                     } header: { Text("Riscaldamento") }
                 }
             }
+            .keyboardDoneButton()
             .navigationTitle("Calcolatore gara")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1336,6 +1301,512 @@ struct AttemptCalculatorView: View {
             Spacer()
             Text(String(format: "%.4g kg × %d", kg, reps))
                 .font(.caption.bold())
+        }
+    }
+}
+
+// MARK: - Keyboard dismissal (number pads have no return key)
+
+extension View {
+    func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
+    }
+
+    /// "Fine" button above the keyboard + drag-to-dismiss on the form.
+    func keyboardDoneButton() -> some View {
+        self
+            .scrollDismissesKeyboard(.immediately)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Fine") { dismissKeyboard() }
+                }
+            }
+    }
+}
+
+// MARK: - CalculatorsView (meet attempts · RPE · running pace)
+
+struct CalculatorsView: View {
+    @Query private var storedGoals: [UserGoals]
+    @AppStorage("oplUsername") private var oplUsername = ""
+
+    @State private var showingAttempts = false
+    @State private var showingRPE = false
+    @State private var showingPace = false
+    @State private var showingHRPace = false
+    @State private var compMaxes: (squat: Double, bench: Double, deadlift: Double) = (0, 0, 0)
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: RitmoTheme.gap) {
+                calculatorRow(icon: "function", color: RitmoTheme.workout,
+                              title: "Calcolatore gara",
+                              subtitle: "Tentativi e riscaldamento dal massimale") {
+                    showingAttempts = true
+                }
+                calculatorRow(icon: "gauge.with.needle", color: .orange,
+                              title: "Calcolatore RPE",
+                              subtitle: "e1RM e pesi target da peso × ripetizioni @ RPE") {
+                    showingRPE = true
+                }
+                calculatorRow(icon: "figure.run", color: .mint,
+                              title: "Calcolatore passo",
+                              subtitle: "Passo, tempo e distanza per la corsa") {
+                    showingPace = true
+                }
+                calculatorRow(icon: "heart.text.square", color: .pink,
+                              title: "Passo previsto da FC",
+                              subtitle: "Relazione passo–FC stimata dalle tue corse") {
+                    showingHRPace = true
+                }
+            }
+            .padding(RitmoTheme.pagePadding)
+        }
+        .navigationTitle("Calcolatori")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .sheet(isPresented: $showingAttempts) {
+            AttemptCalculatorView(maxes: compMaxes)
+        }
+        .sheet(isPresented: $showingRPE) {
+            RPECalculatorView()
+        }
+        .sheet(isPresented: $showingPace) {
+            PaceCalculatorView()
+        }
+        .sheet(isPresented: $showingHRPace) {
+            HRPaceCalculatorView()
+        }
+        .task {
+            // Same priority as everywhere: OPL bests when connected, else the
+            // manually entered maxes.
+            let goals = storedGoals.first
+            compMaxes = (goals?.compSquatKg ?? 0, goals?.compBenchKg ?? 0, goals?.compDeadliftKg ?? 0)
+            if !oplUsername.isEmpty,
+               let meets = try? await OpenPowerliftingService.fetchMeets(username: oplUsername),
+               !meets.isEmpty {
+                compMaxes = (meets.compactMap(\.bestSquatKg).max() ?? 0,
+                             meets.compactMap(\.bestBenchKg).max() ?? 0,
+                             meets.compactMap(\.bestDeadliftKg).max() ?? 0)
+            }
+        }
+    }
+
+    private func calculatorRow(icon: String, color: Color, title: String,
+                               subtitle: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            FitCard {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.title3).foregroundStyle(color)
+                        .frame(width: 38, height: 38)
+                        .background(color.opacity(0.12), in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(LocalizedStringKey(title)).font(.subheadline.bold())
+                        Text(LocalizedStringKey(subtitle))
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - PaceCalculatorView (pace · time · distance, any one from the other two)
+
+struct PaceCalculatorView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    enum Solve: CaseIterable {
+        case time, pace, distance
+        var label: String {
+            switch self {
+            case .time:     return "Tempo"
+            case .pace:     return "Passo"
+            case .distance: return "Distanza"
+            }
+        }
+    }
+
+    @State private var solve: Solve = .time
+    @State private var distanceKmText = ""
+    @State private var hoursText = ""
+    @State private var minutesText = ""
+    @State private var secondsText = ""
+    @State private var paceMinText = ""
+    @State private var paceSecText = ""
+
+    private var distanceKm: Double {
+        Double(distanceKmText.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+    private var timeSeconds: Int {
+        (Int(hoursText) ?? 0) * 3600 + (Int(minutesText) ?? 0) * 60 + (Int(secondsText) ?? 0)
+    }
+    private var paceSecondsPerKm: Double {
+        Double((Int(paceMinText) ?? 0) * 60 + (Int(paceSecText) ?? 0))
+    }
+
+    private var result: (value: String, detail: String)? {
+        switch solve {
+        case .time:
+            guard distanceKm > 0, paceSecondsPerKm > 0 else { return nil }
+            let seconds = Int((paceSecondsPerKm * distanceKm).rounded())
+            return (EnduranceStats.formatDuration(seconds),
+                    String(format: "%.2f km/h", 3600 / paceSecondsPerKm))
+        case .pace:
+            guard distanceKm > 0, timeSeconds > 0 else { return nil }
+            let pace = Double(timeSeconds) / distanceKm
+            return (EnduranceStats.formatPace(pace) + "/km",
+                    String(format: "%.2f km/h", distanceKm / (Double(timeSeconds) / 3600)))
+        case .distance:
+            guard timeSeconds > 0, paceSecondsPerKm > 0 else { return nil }
+            let km = Double(timeSeconds) / paceSecondsPerKm
+            return (String(format: "%.2f km", km),
+                    String(format: "%.2f km/h", 3600 / paceSecondsPerKm))
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Calcola", selection: $solve) {
+                        ForEach(Solve.allCases, id: \.self) { option in
+                            Text(LocalizedStringKey(option.label)).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                if solve != .distance {
+                    Section {
+                        HStack {
+                            TextField("0", text: $distanceKmText)
+                                .keyboardType(.decimalPad)
+                            Text("km").foregroundStyle(RitmoTheme.textSecondary)
+                            Menu {
+                                Button("5 km") { distanceKmText = "5" }
+                                Button("10 km") { distanceKmText = "10" }
+                                Button("Mezza maratona") { distanceKmText = "21,0975" }
+                                Button("Maratona") { distanceKmText = "42,195" }
+                            } label: {
+                                Label("Distanze standard", systemImage: "list.bullet").font(.caption)
+                            }
+                        }
+                    } header: { Text("Distanza") }
+                }
+
+                if solve != .time {
+                    Section {
+                        HStack(spacing: 8) {
+                            TextField("0", text: $hoursText).keyboardType(.numberPad)
+                            Text("h").foregroundStyle(RitmoTheme.textSecondary)
+                            TextField("0", text: $minutesText).keyboardType(.numberPad)
+                            Text("min").foregroundStyle(RitmoTheme.textSecondary)
+                            TextField("0", text: $secondsText).keyboardType(.numberPad)
+                            Text("s").foregroundStyle(RitmoTheme.textSecondary)
+                        }
+                    } header: { Text("Tempo") }
+                }
+
+                if solve != .pace {
+                    Section {
+                        HStack(spacing: 8) {
+                            TextField("0", text: $paceMinText).keyboardType(.numberPad)
+                            Text("min").foregroundStyle(RitmoTheme.textSecondary)
+                            TextField("0", text: $paceSecText).keyboardType(.numberPad)
+                            Text("s · /km").foregroundStyle(RitmoTheme.textSecondary)
+                        }
+                    } header: { Text("Passo") }
+                }
+
+                if let result {
+                    Section {
+                        HStack(alignment: .lastTextBaseline, spacing: 8) {
+                            Text(result.value)
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .foregroundStyle(.mint)
+                            Spacer()
+                            Text(result.detail).font(.caption).foregroundStyle(.secondary)
+                        }
+                    } header: { Text("Risultato") }
+                }
+            }
+            .keyboardDoneButton()
+            .navigationTitle("Calcolatore passo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - HRPaceCalculatorView (expected pace at a heart rate, from run history)
+
+struct HRPaceCalculatorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var healthRepo: HealthKitRepository
+    @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
+
+    enum Solve: CaseIterable {
+        case pace, hr
+        var label: String {
+            switch self {
+            case .pace: return "Passo"
+            case .hr:   return "FC"
+            }
+        }
+    }
+
+    @State private var solve: Solve = .pace
+    @State private var hrText = ""
+    @State private var paceMinText = ""
+    @State private var paceSecText = ""
+    @State private var model: EnduranceStats.PaceHRModel?
+    @State private var runsWithHR = 0
+    @State private var loading = true
+
+    private var result: (value: String, detail: String, extrapolated: Bool)? {
+        guard let model else { return nil }
+        switch solve {
+        case .pace:
+            guard let hr = Double(hrText), hr > 0,
+                  let pace = model.paceSecondsPerKm(atHR: hr) else { return nil }
+            return (EnduranceStats.formatPace(pace) + "/km",
+                    String(format: "%.2f km/h", 3600 / pace),
+                    !model.hrRange.contains(hr))
+        case .hr:
+            let paceSec = Double((Int(paceMinText) ?? 0) * 60 + (Int(paceSecText) ?? 0))
+            guard paceSec > 0, let hr = model.hr(atPaceSecondsPerKm: paceSec) else { return nil }
+            return (String(format: "%.0f bpm", hr),
+                    String(format: "%.2f km/h", 3600 / paceSec),
+                    paceSec < model.paceRange.lowerBound || paceSec > model.paceRange.upperBound)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if loading {
+                    Section {
+                        HStack { Spacer(); ProgressView(); Spacer() }
+                    }
+                } else if let model {
+                    Section {
+                        Picker("Calcola", selection: $solve) {
+                            ForEach(Solve.allCases, id: \.self) { option in
+                                Text(LocalizedStringKey(option.label)).tag(option)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
+                    if solve == .pace {
+                        Section {
+                            HStack {
+                                TextField("0", text: $hrText).keyboardType(.numberPad)
+                                Text("bpm").foregroundStyle(RitmoTheme.textSecondary)
+                            }
+                        } header: { Text("FC media") }
+                    } else {
+                        Section {
+                            HStack(spacing: 8) {
+                                TextField("0", text: $paceMinText).keyboardType(.numberPad)
+                                Text("min").foregroundStyle(RitmoTheme.textSecondary)
+                                TextField("0", text: $paceSecText).keyboardType(.numberPad)
+                                Text("s · /km").foregroundStyle(RitmoTheme.textSecondary)
+                            }
+                        } header: { Text("Passo") }
+                    }
+
+                    if let result {
+                        Section {
+                            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                                Text(result.value)
+                                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.pink)
+                                Spacer()
+                                Text(result.detail).font(.caption).foregroundStyle(.secondary)
+                            }
+                        } header: { Text("Risultato") } footer: {
+                            if result.extrapolated {
+                                Text("Fuori dall'intervallo osservato: valore estrapolato.")
+                            }
+                        }
+                    }
+
+                    Section {
+                    } footer: {
+                        Text(String(format: NSLocalizedString(
+                            "Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm",
+                            comment: ""),
+                            "\(model.runCount)",
+                            "\(Int(model.hrRange.lowerBound))",
+                            "\(Int(model.hrRange.upperBound))"))
+                    }
+                } else {
+                    Section {
+                        Text("Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi.")
+                            .font(.subheadline)
+                        Text(String(format: NSLocalizedString("Corse trovate: %@", comment: ""),
+                                    "\(runsWithHR)"))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .keyboardDoneButton()
+            .navigationTitle("Passo previsto da FC")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
+            .task {
+                // Steady-ish runs only: 15+ min and 1+ km keep warm-up jogs and
+                // paused GPS fragments out of the fit; 6 months keeps it current.
+                let cutoff = Calendar.current.date(byAdding: .month, value: -6, to: .now) ?? .distantPast
+                let runs = sessions.filter {
+                    $0.hkActivityType == 37
+                    && $0.startTime >= cutoff
+                    && $0.distanceMeters > 1_000
+                    && $0.endTime.timeIntervalSince($0.startTime) >= 900
+                }.prefix(60)
+
+                var points: [(hr: Double, speedMps: Double)] = []
+                for run in runs {
+                    guard let hr = await healthRepo.fetchAverageHeartRate(start: run.startTime,
+                                                                          end: run.endTime)
+                    else { continue }
+                    let seconds = run.endTime.timeIntervalSince(run.startTime)
+                    points.append((hr: hr, speedMps: run.distanceMeters / seconds))
+                }
+                runsWithHR = points.count
+                model = EnduranceStats.paceHRModel(points: points)
+                loading = false
+            }
+        }
+    }
+}
+
+// MARK: - RPECalculatorView (e1RM + target weights from the RTS RPE chart)
+
+struct RPECalculatorView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var weightText = ""
+    @State private var reps = 5
+    @State private var rpe = 8.0
+    @State private var targetRepsSelection = 1   // 0 = nothing selected yet
+
+    private static let rpeSteps: [Double] = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+
+    /// RTS rep-max percentages of the 1RM at RPE 10, for 1…10 reps. RPE below
+    /// 10 shifts along the same column via reps-in-reserve (effective reps =
+    /// reps + 10 − RPE), half steps interpolate, past 10 extrapolates.
+    private static let rpe10Percents: [Double] = [100, 95.5, 92.2, 89.2, 86.3, 83.7, 81.1, 78.6, 76.2, 73.9]
+
+    private func percentOf1RM(reps: Int, rpe: Double) -> Double {
+        let effective = Double(reps) + (10 - rpe)
+        func value(at index: Int) -> Double {
+            if index < 0 { return 100 }
+            if index < Self.rpe10Percents.count { return Self.rpe10Percents[index] }
+            let last = Self.rpe10Percents.count - 1
+            let slope = Self.rpe10Percents[last] - Self.rpe10Percents[last - 1]
+            return Self.rpe10Percents[last] + slope * Double(index - last)
+        }
+        let lowerIndex = Int(floor(effective)) - 1     // 1 effective rep → index 0
+        let fraction = effective - floor(effective)
+        let lower = value(at: lowerIndex)
+        let upper = value(at: lowerIndex + 1)
+        return lower + (upper - lower) * fraction
+    }
+
+    private var weight: Double {
+        Double(weightText.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+    private var e1RM: Double {
+        guard weight > 0 else { return 0 }
+        return weight / (percentOf1RM(reps: reps, rpe: rpe) / 100)
+    }
+    private func plateRounded(_ kg: Double) -> Double { (kg / 2.5).rounded() * 2.5 }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        Text("Peso sollevato")
+                        Spacer()
+                        TextField("—", text: $weightText)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 90)
+                        Text("kg").foregroundStyle(RitmoTheme.textSecondary).font(.caption)
+                    }
+                    Stepper(value: $reps, in: 1...10) {
+                        Text(String(format: NSLocalizedString("Ripetizioni: %@", comment: ""), "\(reps)"))
+                    }
+                    Picker("RPE", selection: $rpe) {
+                        ForEach(Self.rpeSteps, id: \.self) { step in
+                            Text(String(format: "%.1f", step)).tag(step)
+                        }
+                    }
+                } header: { Text("Serie fatta") }
+
+                if e1RM > 0 {
+                    Section {
+                        HStack(alignment: .lastTextBaseline, spacing: 6) {
+                            Text(String(format: "%.1f", e1RM))
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .foregroundStyle(RitmoTheme.workout)
+                            Text("kg · 1RM stimato").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Section {
+                        Stepper(value: $targetRepsSelection, in: 0...12) {
+                            Text(String(format: NSLocalizedString("Ripetizioni: %@", comment: ""),
+                                        "\(targetRepsSelection)"))
+                        }
+                        if targetRepsSelection >= 1 {
+                            // The whole RPE column for the chosen rep count,
+                            // heaviest first: RPE → % of estimated 1RM → load.
+                            ForEach(Self.rpeSteps.reversed(), id: \.self) { step in
+                                let pct = percentOf1RM(reps: targetRepsSelection, rpe: step)
+                                HStack {
+                                    Text(String(format: "RPE %.1f", step)).font(.caption)
+                                    Spacer()
+                                    Text(String(format: "%.1f%%", pct))
+                                        .font(.caption).foregroundStyle(.secondary)
+                                    Text(String(format: "%.4g kg", plateRounded(e1RM * pct / 100)))
+                                        .font(.caption.bold())
+                                        .frame(width: 80, alignment: .trailing)
+                                }
+                            }
+                        }
+                    } header: { Text("Ripetizioni target") } footer: {
+                        Text("Tabella RPE RTS (Reactive Training Systems); oltre 10 ripetizioni effettive i valori sono estrapolati. Pesi arrotondati a 2,5 kg.")
+                    }
+                }
+            }
+            .keyboardDoneButton()
+            .navigationTitle("Calcolatore RPE")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Chiudi") { dismiss() }
+                }
+            }
         }
     }
 }
@@ -1403,6 +1874,7 @@ struct RaceEditorView: View {
                     }
                 } header: { Text("Tempo ufficiale") }
             }
+            .keyboardDoneButton()
             .navigationTitle("Nuova gara")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

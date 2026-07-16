@@ -164,6 +164,60 @@ public enum EnduranceStats {
         }
     }
 
+    // MARK: Pace ↔ heart-rate model
+
+    /// Linear speed-vs-HR relationship fitted on the user's own runs.
+    /// Valid inside the observed HR/pace range; callers must disclose
+    /// extrapolation beyond it (same rule as the RTS and WMA tables).
+    public struct PaceHRModel {
+        public let slope: Double            // m/s gained per bpm
+        public let intercept: Double        // m/s at 0 bpm (mathematical anchor only)
+        public let runCount: Int
+        public let hrRange: ClosedRange<Double>     // observed per-run average HR
+        public let paceRange: ClosedRange<Double>   // observed sec/km (fastest…slowest)
+
+        public func paceSecondsPerKm(atHR hr: Double) -> Double? {
+            let speed = intercept + slope * hr
+            guard speed > 0.3 else { return nil }   // slower than ~55 min/km: no signal
+            return 1000 / speed
+        }
+
+        public func hr(atPaceSecondsPerKm pace: Double) -> Double? {
+            guard pace > 0, slope > 0 else { return nil }
+            return (1000 / pace - intercept) / slope
+        }
+    }
+
+    /// Least-squares fit of speed (m/s) against average heart rate across
+    /// steady runs. Nil below 5 usable runs, when the HR values barely
+    /// spread (< 8 bpm — a vertical cloud has no slope), or when the slope
+    /// comes out non-positive (faster at lower HR is noise, not physiology).
+    public static func paceHRModel(points: [(hr: Double, speedMps: Double)]) -> PaceHRModel? {
+        let pts = points.filter { $0.hr > 60 && $0.hr < 230 && $0.speedMps > 0.5 }
+        guard pts.count >= 5 else { return nil }
+        let hrs = pts.map(\.hr)
+        guard let minHR = hrs.min(), let maxHR = hrs.max(), maxHR - minHR >= 8 else { return nil }
+
+        let n = Double(pts.count)
+        let meanHR = hrs.reduce(0, +) / n
+        let meanSpeed = pts.reduce(0) { $0 + $1.speedMps } / n
+        var sxx = 0.0, sxy = 0.0
+        for p in pts {
+            sxx += (p.hr - meanHR) * (p.hr - meanHR)
+            sxy += (p.hr - meanHR) * (p.speedMps - meanSpeed)
+        }
+        guard sxx > 0 else { return nil }
+        let slope = sxy / sxx
+        guard slope > 0 else { return nil }
+
+        let paces = pts.map { 1000 / $0.speedMps }
+        return PaceHRModel(slope: slope,
+                           intercept: meanSpeed - slope * meanHR,
+                           runCount: pts.count,
+                           hrRange: minHR...maxHR,
+                           paceRange: paces.min()!...paces.max()!)
+    }
+
     /// h:mm:ss / mm:ss for race times.
     public static func formatDuration(_ seconds: Int) -> String {
         let h = seconds / 3600, m = (seconds % 3600) / 60, s = seconds % 60

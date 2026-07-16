@@ -816,3 +816,37 @@
 "Registra acqua" = "Enregistrer de l'eau";
 "Punteggio di oggi" = "Score du jour";
 "Basate sulla tua FC max osservata: %@ bpm" = "Basées sur votre FC max observée : %@ bpm";
+
+// ── Sleep 6 levels + RPE calculator (2026-07-11)
+"Pessimo" = "Très mauvais";
+"Molto buono" = "Très bon";
+"Calcolatore RPE" = "Calculateur RPE";
+"e1RM e pesi target da peso × ripetizioni @ RPE" = "e1RM et poids cibles à partir de poids × répétitions @ RPE";
+"Serie fatta" = "Série réalisée";
+"Peso sollevato" = "Poids soulevé";
+"Ripetizioni: %@" = "Répétitions : %@";
+"RPE obiettivo" = "RPE cible";
+"Pesi target" = "Poids cibles";
+"%@ ripetizioni" = "%@ répétitions";
+"kg · 1RM stimato" = "kg · 1RM estimé";
+"Tabella RPE RTS (Reactive Training Systems); oltre 10 ripetizioni effettive i valori sono estrapolati. Pesi arrotondati a 2,5 kg." = "Table RPE RTS (Reactive Training Systems) ; au-delà de 10 répétitions effectives les valeurs sont extrapolées. Poids arrondis à 2,5 kg.";
+"Ripetizioni target" = "Répétitions cibles";
+
+// ── Calculators hub + pace calculator (2026-07-16) ──
+"Calcolatori" = "Calculateurs";
+"Gara, RPE, passo e FC" = "Compétition, RPE, allure et FC";
+"Calcolatore passo" = "Calculateur d'allure";
+"Passo, tempo e distanza per la corsa" = "Allure, temps et distance pour la course";
+"Calcola" = "Calculer";
+"Tempo" = "Temps";
+"Passo" = "Allure";
+"Risultato" = "Résultat";
+
+// ── Pace-from-HR calculator (2026-07-16) ──
+"Passo previsto da FC" = "Allure prévue selon la FC";
+"Relazione passo–FC stimata dalle tue corse" = "Relation allure–FC estimée à partir de tes courses";
+"FC" = "FC";
+"Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm" = "Basé sur %@ courses des 6 derniers mois · FC moyenne observée %@–%@ bpm";
+"Fuori dall'intervallo osservato: valore estrapolato." = "Hors de l'intervalle observé : valeur extrapolée.";
+"Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "Il faut au moins 5 courses de 15 min ou plus avec données de fréquence cardiaque sur les 6 derniers mois.";
+"Corse trovate: %@" = "Courses trouvées : %@";

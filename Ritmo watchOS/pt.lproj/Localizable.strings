@@ -117,3 +117,7 @@
 // ── Windowed fatigue gate (2026-07-10)
 "Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera." = "Fizeste %@ sessões intensas nos últimos %@ dias: melhor um dia leve.";
 "Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera." = "Fizeste %@ sessões de esforço alto nos últimos %@ dias (RPE médio %@): melhor um dia leve.";
+
+// ── Sleep 6 levels + RPE calculator (2026-07-11)
+"Pessimo" = "Péssimo";
+"Molto buono" = "Muito bom";

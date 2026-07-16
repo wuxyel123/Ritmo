@@ -226,9 +226,11 @@ func hkAuthMessage(for error: Error) -> String? {
 
 func watchQualityColor(_ q: SleepQuality) -> Color {
     switch q {
-    case .scarso:      return .red
-    case .sufficiente: return .orange
+    case .pessimo:     return .red
+    case .scarso:      return .orange
+    case .sufficiente: return .yellow
     case .buono:       return .blue
+    case .moltoBuono:  return .mint
     case .ottimo:      return .green
     }
 }

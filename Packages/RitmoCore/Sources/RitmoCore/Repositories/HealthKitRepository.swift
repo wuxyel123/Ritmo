@@ -1051,6 +1051,23 @@ public final class HealthKitRepository: ObservableObject {
         }
     }
 
+    /// Average heart rate over an arbitrary window (bpm) — one number per
+    /// run for the pace–HR model, without pulling every sample.
+    public func fetchAverageHeartRate(start: Date, end: Date) async -> Double? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let localStore = store
+        return await withCheckedContinuation { cont in
+            let query = HKStatisticsQuery(quantityType: type,
+                                          quantitySamplePredicate: predicate,
+                                          options: .discreteAverage) { _, stats, _ in
+                let bpm = stats?.averageQuantity()?.doubleValue(for: HKUnit(from: "count/min"))
+                cont.resume(returning: bpm)
+            }
+            localStore.execute(query)
+        }
+    }
+
     /// 1-minute heart-rate recovery: bpm at the workout's end minus bpm ~60s
     /// later (the standard HRR₁ marker). Needs the watch still on the wrist
     /// after the session — returns nil when the samples aren't there or the

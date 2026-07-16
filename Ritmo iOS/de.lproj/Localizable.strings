@@ -816,3 +816,37 @@
 "Registra acqua" = "Wasser erfassen";
 "Punteggio di oggi" = "Heutiger Score";
 "Basate sulla tua FC max osservata: %@ bpm" = "Basierend auf deiner beobachteten max. HF: %@ bpm";
+
+// ── Sleep 6 levels + RPE calculator (2026-07-11)
+"Pessimo" = "Sehr schlecht";
+"Molto buono" = "Sehr gut";
+"Calcolatore RPE" = "RPE-Rechner";
+"e1RM e pesi target da peso × ripetizioni @ RPE" = "e1RM und Zielgewichte aus Gewicht × Wiederholungen @ RPE";
+"Serie fatta" = "Absolvierter Satz";
+"Peso sollevato" = "Gehobenes Gewicht";
+"Ripetizioni: %@" = "Wiederholungen: %@";
+"RPE obiettivo" = "Ziel-RPE";
+"Pesi target" = "Zielgewichte";
+"%@ ripetizioni" = "%@ Wiederholungen";
+"kg · 1RM stimato" = "kg · geschätztes 1RM";
+"Tabella RPE RTS (Reactive Training Systems); oltre 10 ripetizioni effettive i valori sono estrapolati. Pesi arrotondati a 2,5 kg." = "RTS-RPE-Tabelle (Reactive Training Systems); über 10 effektive Wiederholungen hinaus werden die Werte extrapoliert. Gewichte auf 2,5 kg gerundet.";
+"Ripetizioni target" = "Ziel-Wiederholungen";
+
+// ── Calculators hub + pace calculator (2026-07-16) ──
+"Calcolatori" = "Rechner";
+"Gara, RPE, passo e FC" = "Wettkampf, RPE, Pace und HF";
+"Calcolatore passo" = "Pace-Rechner";
+"Passo, tempo e distanza per la corsa" = "Pace, Zeit und Distanz fürs Laufen";
+"Calcola" = "Berechnen";
+"Tempo" = "Zeit";
+"Passo" = "Pace";
+"Risultato" = "Ergebnis";
+
+// ── Pace-from-HR calculator (2026-07-16) ──
+"Passo previsto da FC" = "Erwartete Pace aus HF";
+"Relazione passo–FC stimata dalle tue corse" = "Pace–HF-Beziehung aus deinen Läufen geschätzt";
+"FC" = "HF";
+"Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm" = "Basierend auf %@ Läufen der letzten 6 Monate · beobachtete durchschnittliche HF %@–%@ bpm";
+"Fuori dall'intervallo osservato: valore estrapolato." = "Außerhalb des beobachteten Bereichs: extrapolierter Wert.";
+"Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "Es werden mindestens 5 Läufe von 15+ Minuten mit Herzfrequenzdaten aus den letzten 6 Monaten benötigt.";
+"Corse trovate: %@" = "Gefundene Läufe: %@";
