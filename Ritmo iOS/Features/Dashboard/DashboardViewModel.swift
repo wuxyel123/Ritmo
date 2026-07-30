@@ -4,7 +4,10 @@ import RitmoCore
 
 @MainActor
 final class DashboardViewModel: ObservableObject {
-    @Published var snapshot: DailySnapshot = .placeholder
+    // Empty, NOT .placeholder: the placeholder carries invented numbers for
+    // the widget gallery (7200 steps, 5.4 km, 8 floors…). Starting from it
+    // flashed that fiction on the home screen until HealthKit answered.
+    @Published var snapshot = DailySnapshot()
     @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var lastSession: WorkoutSession?
     @Published var topInsight: FitInsight?

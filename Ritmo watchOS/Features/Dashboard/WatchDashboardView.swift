@@ -73,6 +73,16 @@ struct WatchHomeView: View {
                     goal: "\(vm.snapshot.stepGoal.formatted())",
                     progress: Double(vm.snapshot.steps) / Double(max(vm.snapshot.stepGoal, 1))
                 )
+                // Distance and floors read as part of "steps" in Apple Health.
+                // Always shown, zeros included, so the metrics never look absent.
+                HStack(spacing: 10) {
+                    Label(String(format: "%.2f km", vm.snapshot.distanceKm ?? 0),
+                          systemImage: "location.fill")
+                    Label("\(vm.snapshot.flightsClimbed ?? 0)", systemImage: "figure.stairs")
+                    Spacer(minLength: 0)
+                }
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
                 WatchMetricRow(
                     icon: "😴", label: "Sonno",
                     value: String(format: "%.1fh", vm.snapshot.sleepHours),

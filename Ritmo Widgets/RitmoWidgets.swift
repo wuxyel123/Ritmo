@@ -8,11 +8,13 @@ struct RitmoWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> RitmoEntry {
         RitmoEntry(date: .now, snapshot: .placeholder)
     }
+    // Invented numbers belong in the gallery preview above and nowhere else:
+    // on the home screen an un-synced widget shows zeros, not fiction.
     func getSnapshot(in context: Context, completion: @escaping (RitmoEntry) -> Void) {
-        completion(RitmoEntry(date: .now, snapshot: .placeholder))
+        completion(RitmoEntry(date: .now, snapshot: loadSnapshot() ?? DailySnapshot()))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<RitmoEntry>) -> Void) {
-        let snapshot = loadSnapshot() ?? .placeholder
+        let snapshot = loadSnapshot() ?? DailySnapshot()
         let entry = RitmoEntry(date: .now, snapshot: snapshot)
         let next = Calendar.current.date(byAdding: .minute, value: 30, to: .now)!
         completion(Timeline(entries: [entry], policy: .after(next)))
@@ -167,7 +169,7 @@ struct OggiProvider: TimelineProvider {
     }
 
     private func load() -> OggiEntry {
-        var snapshot = DailySnapshot.placeholder
+        var snapshot = DailySnapshot()   // zeros until the phone has synced
         if let defaults = UserDefaults(suiteName: "group.alessandrodiscalzi.com.ritmo"),
            let data = defaults.data(forKey: "dailySnapshot"),
            let decoded = try? JSONDecoder().decode(DailySnapshot.self, from: data) {

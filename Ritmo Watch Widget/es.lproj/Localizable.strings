@@ -19,3 +19,8 @@
 "giorni alla gara" = "días para la competición";
 "Conto alla rovescia gara" = "Cuenta atrás de competición";
 "Giorni alla prossima gara programmata." = "Días hasta tu próxima competición programada.";
+
+// ── Steps complication (2026-07-16) ──
+"Passi" = "Pasos";
+"%@ piani" = "%@ pisos";
+"Passi, distanza e piani saliti di oggi." = "Pasos, distancia y pisos subidos de hoy.";

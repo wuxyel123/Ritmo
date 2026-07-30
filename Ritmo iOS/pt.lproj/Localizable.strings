@@ -850,3 +850,21 @@
 "Fuori dall'intervallo osservato: valore estrapolato." = "Fora do intervalo observado: valor extrapolado.";
 "Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "São necessárias pelo menos 5 corridas de 15+ minutos com dados de frequência cardíaca nos últimos 6 meses.";
 "Corse trovate: %@" = "Corridas encontradas: %@";
+
+// ── UI pass: Altro menu, recovery no-data (2026-07-16) ──
+"Nessun dato" = "Sem dados";
+"Registra il sonno di stanotte per calcolare il recupero." = "Registre o sono desta noite para calcular a recuperação.";
+"FC, HRV, peso e attività" = "FC, VFC, peso e atividade";
+"Correlazioni e tendenze sui tuoi dati" = "Correlações e tendências dos seus dados";
+"Obiettivi, integrazioni ed esportazione" = "Metas, integrações e exportação";
+
+// ── Sleep awake time + steps companions (2026-07-16) ──
+"Tempo sveglio per risveglio" = "Tempo acordado por despertar";
+"%@ min" = "%@ min";
+"Quanto resti sveglio in media a ogni risveglio notturno. Usato per i risvegli che registri a mano: definisce il tempo da vigile scritto in Apple Salute e quanto pesa la continuità nel punteggio del sonno." = "Quanto tempo costuma ficar acordado a cada despertar noturno. Aplica-se aos despertares registados manualmente: define o tempo acordado escrito na Apple Saúde e o peso da continuidade na pontuação do sono.";
+"Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Ogni risveglio conta %@ min (modificabile in Impostazioni)." = "Quantas vezes acordou durante a noite: torna a pontuação de continuidade mais precisa. Cada despertar conta %@ min (editável nos Ajustes).";
+
+// ── Health permission hint + tile sizing (2026-07-16) ──
+"Permessi Apple Salute" = "Permissões da Apple Saúde";
+"— km" = "— km";
+"Se una metrica resta a zero mentre le altre si aggiornano (per esempio la distanza con i passi già contati), il permesso di lettura di quella categoria è disattivato: Ritmo riceve zero senza poter distinguere il rifiuto. Attivalo in Salute › profilo › App e servizi › Ritmo." = "Se uma métrica ficar a zero enquanto as outras atualizam (por exemplo a distância com os passos já contados), a permissão de leitura dessa categoria está desativada: o Ritmo recebe zero sem conseguir distinguir a recusa. Ative-a em Saúde › perfil › Apps e serviços › Ritmo.";

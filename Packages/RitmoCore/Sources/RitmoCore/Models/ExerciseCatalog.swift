@@ -247,6 +247,12 @@ public enum ExerciseCatalog {
                     already.secondaryMuscleGroups = item.secondary
                     changed = true
                 }
+                // Heal exercises created by a Hevy import that ran before the
+                // catalog was seeded: they carry the seed name but "Altro".
+                if already.muscleGroup == .other && item.group != .other {
+                    already.muscleGroup = item.group
+                    changed = true
+                }
             } else {
                 context.insert(Exercise(name: item.name, muscleGroup: item.group,
                                         exerciseType: item.type,

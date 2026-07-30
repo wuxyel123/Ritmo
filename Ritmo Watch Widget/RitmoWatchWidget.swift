@@ -8,11 +8,13 @@ struct WatchWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> WatchWidgetEntry {
         WatchWidgetEntry(date: .now, snapshot: .placeholder)
     }
+    // Only the gallery preview above may show invented numbers. On the watch
+    // face itself an un-synced complication shows zeros rather than fiction.
     func getSnapshot(in context: Context, completion: @escaping (WatchWidgetEntry) -> Void) {
-        completion(WatchWidgetEntry(date: .now, snapshot: loadSnapshot() ?? .placeholder))
+        completion(WatchWidgetEntry(date: .now, snapshot: loadSnapshot() ?? DailySnapshot()))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchWidgetEntry>) -> Void) {
-        let snapshot = loadSnapshot() ?? .placeholder
+        let snapshot = loadSnapshot() ?? DailySnapshot()
         let entry = WatchWidgetEntry(date: .now, snapshot: snapshot)
         let next = Calendar.current.date(byAdding: .hour, value: 1, to: .now)!
         completion(Timeline(entries: [entry], policy: .after(next)))
@@ -154,6 +156,121 @@ struct RitmoRingsWidget: Widget {
         .configurationDisplayName("Ritmo Anelli")
         .description("Calorie attive, passi e sonno — anelli o valori.")
         .supportedFamilies([.accessoryCircular, .accessoryRectangular])
+    }
+}
+
+// MARK: - Steps complication (steps + distance + floors, Apple Health style)
+
+struct StepsComplicationView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: WatchWidgetEntry
+
+    private var stepPct: Double {
+        Double(entry.snapshot.steps) / Double(max(entry.snapshot.stepGoal, 1))
+    }
+    private var kmText: String? {
+        guard let km = entry.snapshot.distanceKm, km > 0 else { return nil }
+        return String(format: "%.2f km", km)
+    }
+    private var floors: Int? {
+        guard let f = entry.snapshot.flightsClimbed, f > 0 else { return nil }
+        return f
+    }
+    /// "7.2k" keeps four digits readable on the circular face.
+    private var compactSteps: String {
+        entry.snapshot.steps >= 10_000
+            ? "\(entry.snapshot.steps / 1000)k"
+            : String(format: "%.1fk", Double(entry.snapshot.steps) / 1000)
+    }
+
+    var body: some View {
+        switch family {
+        case .accessoryInline:
+            // One line: the count plus whichever companions have data.
+            let parts = [entry.snapshot.steps.formatted() + " passi", kmText,
+                         floors.map { String(format: NSLocalizedString("%@ piani", comment: ""), "\($0)") }]
+            Label(parts.compactMap { $0 }.joined(separator: " · "), systemImage: "figure.walk")
+
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Image(systemName: "figure.walk").font(.system(size: 10))
+                    Text("Passi").font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(entry.snapshot.steps.formatted())
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                }
+                ProgressView(value: min(stepPct, 1))
+                    .tint(stepPct >= 1 ? .green : .cyan)
+                    .scaleEffect(x: 1, y: 1.3, anchor: .center)
+                HStack(spacing: 8) {
+                    if let kmText {
+                        Label(kmText, systemImage: "location.fill")
+                    }
+                    if let floors {
+                        Label("\(floors)", systemImage: "figure.stairs")
+                    }
+                    Spacer(minLength: 0)
+                }
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+            }
+
+        case .accessoryCorner:
+            Gauge(value: min(stepPct, 1)) {
+                Image(systemName: "figure.walk")
+            } currentValueLabel: {
+                Text(compactSteps)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+            }
+            .gaugeStyle(.accessoryCircular)
+            .tint(stepPct >= 1 ? .green : .cyan)
+
+        default:
+            // Circular: step ring outside, count and distance stacked inside.
+            ZStack {
+                Circle().stroke(Color.cyan.opacity(0.3), lineWidth: 5)
+                Circle()
+                    .trim(from: 0, to: min(max(stepPct, 0), 1))
+                    .stroke(stepPct >= 1 ? Color.green : Color.cyan,
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: -1) {
+                    Text(compactSteps)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    if let km = entry.snapshot.distanceKm, km > 0 {
+                        Text(String(format: "%.1fkm", km))
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    } else if let floors {
+                        Text("\(floors)🪜").font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct RitmoStepsWidget: Widget {
+    let kind = "RitmoSteps"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: WatchWidgetProvider()) { entry in
+            StepsComplicationView(entry: entry)
+                .containerBackground(.background, for: .widget)
+        }
+        .configurationDisplayName("Passi")
+        .description("Passi, distanza e piani saliti di oggi.")
+        .supportedFamilies([
+            .accessoryCircular,
+            .accessoryRectangular,
+            .accessoryInline,
+            .accessoryCorner
+        ])
     }
 }
 
@@ -351,6 +468,7 @@ struct RitmoWatchWidgetBundle: WidgetBundle {
     var body: some Widget {
         RitmoWatchWidget()
         RitmoRingsWidget()
+        RitmoStepsWidget()
         RitmoDaysSinceWorkoutWidget()
         RitmoMeetCountdownWidget()
     }

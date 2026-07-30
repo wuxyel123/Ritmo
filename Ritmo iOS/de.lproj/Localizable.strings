@@ -850,3 +850,21 @@
 "Fuori dall'intervallo osservato: valore estrapolato." = "Außerhalb des beobachteten Bereichs: extrapolierter Wert.";
 "Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi." = "Es werden mindestens 5 Läufe von 15+ Minuten mit Herzfrequenzdaten aus den letzten 6 Monaten benötigt.";
 "Corse trovate: %@" = "Gefundene Läufe: %@";
+
+// ── UI pass: Altro menu, recovery no-data (2026-07-16) ──
+"Nessun dato" = "Keine Daten";
+"Registra il sonno di stanotte per calcolare il recupero." = "Erfasse den Schlaf dieser Nacht, um die Erholung zu berechnen.";
+"FC, HRV, peso e attività" = "HF, HRV, Gewicht und Aktivität";
+"Correlazioni e tendenze sui tuoi dati" = "Korrelationen und Trends deiner Daten";
+"Obiettivi, integrazioni ed esportazione" = "Ziele, Integrationen und Export";
+
+// ── Sleep awake time + steps companions (2026-07-16) ──
+"Tempo sveglio per risveglio" = "Wachzeit pro Aufwachen";
+"%@ min" = "%@ Min.";
+"Quanto resti sveglio in media a ogni risveglio notturno. Usato per i risvegli che registri a mano: definisce il tempo da vigile scritto in Apple Salute e quanto pesa la continuità nel punteggio del sonno." = "Wie lange du bei jedem nächtlichen Aufwachen im Schnitt wach bleibst. Gilt für manuell erfasste Aufwacher: bestimmt die in Apple Health geschriebene Wachzeit und das Gewicht der Kontinuität im Schlafscore.";
+"Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Ogni risveglio conta %@ min (modificabile in Impostazioni)." = "Wie oft du nachts aufgewacht bist: macht den Kontinuitätswert genauer. Jedes Aufwachen zählt %@ Min. (in den Einstellungen änderbar).";
+
+// ── Health permission hint + tile sizing (2026-07-16) ──
+"Permessi Apple Salute" = "Apple Health-Berechtigungen";
+"— km" = "— km";
+"Se una metrica resta a zero mentre le altre si aggiornano (per esempio la distanza con i passi già contati), il permesso di lettura di quella categoria è disattivato: Ritmo riceve zero senza poter distinguere il rifiuto. Attivalo in Salute › profilo › App e servizi › Ritmo." = "Bleibt eine Metrik bei null, während sich die anderen aktualisieren (etwa die Distanz bei bereits gezählten Schritten), ist die Leseberechtigung dieser Kategorie deaktiviert: Ritmo erhält null und kann die Ablehnung nicht unterscheiden. Aktiviere sie unter Health › Profil › Apps und Dienste › Ritmo.";

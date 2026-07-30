@@ -20,7 +20,9 @@ struct WorkoutRow: View {
                 if session.totalVolumeKg > 0 {
                     Label("\(Int(session.totalVolumeKg / 1000))k kg", systemImage: "scalemass")
                 }
-                Label("RPE \(session.effortScore)", systemImage: "gauge.with.dots.needle.50percent")
+                // "~" marks an estimated effort — plain RPE is user-entered.
+                Label(session.hasUserRPE ? "RPE \(session.effortScore)" : "RPE ~\(session.effortScore)",
+                      systemImage: "gauge.with.dots.needle.50percent")
             }
             .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
             if !session.muscleGroups.isEmpty {
@@ -70,7 +72,8 @@ struct HealthKitWorkoutRow: View {
                     Label(formattedDistance, systemImage: "arrow.forward")
                         .foregroundStyle(.cyan)
                 }
-                Label("RPE \(session.effortScore)", systemImage: "gauge.with.dots.needle.50percent")
+                Label(session.hasUserRPE ? "RPE \(session.effortScore)" : "RPE ~\(session.effortScore)",
+                      systemImage: "gauge.with.dots.needle.50percent")
             }
             .font(.caption).foregroundStyle(RitmoTheme.textSecondary)
         }

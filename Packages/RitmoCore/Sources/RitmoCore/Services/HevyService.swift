@@ -185,6 +185,11 @@ public final class HevyService {
         var page = 1
         var pageCount = 1
 
+        // The catalog must exist BEFORE matching titles: on a fresh install the
+        // first Hevy import used to run against an empty store and file every
+        // exercise under "Altro" with no muscle group.
+        ExerciseCatalog.ensureSeeded(in: context)
+
         var localSessions = (try? context.fetch(FetchDescriptor<WorkoutSession>())) ?? []
         var exercisesByName: [String: Exercise] = [:]
         for e in (try? context.fetch(FetchDescriptor<Exercise>())) ?? [] {

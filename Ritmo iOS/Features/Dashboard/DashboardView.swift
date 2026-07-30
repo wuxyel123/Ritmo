@@ -6,12 +6,16 @@ import RitmoCore
 struct DashboardView: View {
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.locale) private var locale
     @Query private var storedGoals: [UserGoals]
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
     @StateObject private var vm = DashboardViewModel()
     @State private var selectedDate = Date.now
     @State private var showingCaloriesDetail = false
+    /// Every metric tile in the grid reserves this much height so the six read
+    /// as one block: the steps tile carries an extra line (distance + floors)
+    /// and would otherwise tower over its neighbours.
+    static let tileHeight: CGFloat = 104
+
     @State private var showingStepsDetail = false
     var onNavigate: ((Int) -> Void)? = nil
 
@@ -198,11 +202,14 @@ struct DashboardView: View {
                                     Text("su \(Int(vm.snapshot.activeCalorieGoal)) kcal")
                                         .font(.caption2)
                                         .foregroundStyle(RitmoTheme.textSecondary)
+                                    Spacer(minLength: 0)
                                     FitProgressBar(
                                         value: vm.snapshot.activeCalories / max(vm.snapshot.activeCalorieGoal, 1),
                                         color: .red
                                     )
                                 }
+                                .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                       alignment: .topLeading)
                             }
                         }
                         .buttonStyle(.plain)
@@ -224,11 +231,32 @@ struct DashboardView: View {
                                     Text("su \(vm.snapshot.stepGoal.formatted())")
                                         .font(.caption2)
                                         .foregroundStyle(RitmoTheme.textSecondary)
+                                    // Distance and floors alongside the count,
+                                    // the way Apple Health pairs them. Steps
+                                    // without any distance can't happen while
+                                    // walking — it means the "Distanza a piedi
+                                    // + in corsa" read permission is off, so
+                                    // say "—" rather than claim zero km.
+                                    HStack(spacing: 8) {
+                                        let km = vm.snapshot.distanceKm ?? 0
+                                        Label(km == 0 && vm.snapshot.steps > 0
+                                              ? "— km" : String(format: "%.2f km", km),
+                                              systemImage: "location.fill")
+                                        Label("\(vm.snapshot.flightsClimbed ?? 0)",
+                                              systemImage: "figure.stairs")
+                                    }
+                                    .font(.caption2)
+                                    .foregroundStyle(RitmoTheme.textSecondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    Spacer(minLength: 0)
                                     FitProgressBar(
                                         value: Double(vm.snapshot.steps) / Double(max(vm.snapshot.stepGoal, 1)),
                                         color: RitmoTheme.steps
                                     )
                                 }
+                                .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                       alignment: .topLeading)
                             }
                         }
                         .buttonStyle(.plain)
@@ -250,33 +278,44 @@ struct DashboardView: View {
                                     Text("score \(vm.snapshot.sleepScore)/100")
                                         .font(.caption2)
                                         .foregroundStyle(RitmoTheme.textSecondary)
+                                    Spacer(minLength: 0)
                                     FitProgressBar(
                                         value: vm.snapshot.sleepHours / 8.0,
                                         color: RitmoTheme.sleep
                                     )
                                 }
+                                .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                       alignment: .topLeading)
                             }
                         }
                         .buttonStyle(.plain)
 
-                        // Recupero (compact, beside Sonno)
+                        // Recupero (compact, beside Sonno). overall == 0 means
+                        // no data tonight (same rule as the recommendation):
+                        // show a placeholder instead of grading a missing night.
                         if let recovery = vm.recovery {
+                            let hasData = recovery.overall > 0
                             Button { onNavigate?(3) } label: {
                                 FitCard {
                                     VStack(alignment: .leading, spacing: 6) {
                                         HStack {
                                             Label("Recupero", systemImage: "sparkles")
-                                                .font(.caption).foregroundStyle(recoveryColor(recovery.status))
+                                                .font(.caption)
+                                                .foregroundStyle(hasData ? recoveryColor(recovery.status) : .secondary)
                                             Spacer()
                                             Image(systemName: "chevron.right")
                                                 .font(.system(size: 9)).foregroundStyle(.secondary)
                                         }
-                                        Text("\(recovery.overall)").font(.title2.bold())
-                                        Text(LocalizedStringKey(recovery.status.label))
+                                        Text(hasData ? "\(recovery.overall)" : "—").font(.title2.bold())
+                                        Text(hasData ? LocalizedStringKey(recovery.status.label)
+                                                     : LocalizedStringKey("Nessun dato"))
                                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
-                                        FitProgressBar(value: Double(recovery.overall) / 100,
-                                                       color: recoveryColor(recovery.status))
+                                        Spacer(minLength: 0)
+                                        FitProgressBar(value: hasData ? Double(recovery.overall) / 100 : 0,
+                                                       color: hasData ? recoveryColor(recovery.status) : .secondary)
                                     }
+                                    .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                           alignment: .topLeading)
                                 }
                             }
                             .buttonStyle(.plain)
@@ -297,9 +336,12 @@ struct DashboardView: View {
                                         Text("\(trainingLoad.acute)").font(.title2.bold())
                                         Text(LocalizedStringKey(trainingLoad.status.label))
                                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                                        Spacer(minLength: 0)
                                         FitProgressBar(value: min(trainingLoad.ratio / 1.5, 1),
                                                        color: loadColor(trainingLoad.status))
                                     }
+                                    .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                           alignment: .topLeading)
                                 }
                             }
                             .buttonStyle(.plain)
@@ -333,7 +375,10 @@ struct DashboardView: View {
                                             .foregroundStyle(RitmoTheme.textSecondary)
                                     }
                                     .font(.caption2)
+                                    Spacer(minLength: 0)
                                 }
+                                .frame(maxWidth: .infinity, minHeight: Self.tileHeight,
+                                       alignment: .topLeading)
                             }
                         }
                         .buttonStyle(.plain)
@@ -453,7 +498,9 @@ struct DashboardView: View {
                 }
                 .padding(RitmoTheme.pagePadding)
             }
-            .navigationTitle(isToday ? Text("Oggi") : Text(selectedDate, format: .dateTime.weekday(.wide).day().month().locale(locale)))
+            // The DateNavigationBar right below already says "Oggi"/the date —
+            // repeating it as the large title read twice; brand the page instead.
+            .navigationTitle("Ritmo")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif

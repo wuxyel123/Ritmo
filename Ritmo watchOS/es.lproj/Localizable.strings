@@ -121,3 +121,7 @@
 // ── Sleep 6 levels + RPE calculator (2026-07-11)
 "Pessimo" = "Pésimo";
 "Molto buono" = "Muy bueno";
+
+// ── Steps complication (2026-07-16) ──
+"%@ piani" = "%@ pisos";
+"Passi, distanza e piani saliti di oggi." = "Pasos, distancia y pisos subidos de hoy.";

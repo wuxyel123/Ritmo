@@ -29,6 +29,9 @@ extension WorkoutSession {
 
     public var category: WorkoutCategory {
         if Self.strengthActivityTypes.contains(hkActivityType) { return .strength }
+        // Hevy/manual sessions have no HK activity type — logged sets with
+        // weight or reps are gym work, not "other".
+        if sets.contains(where: { $0.weightKg > 0 || $0.reps != nil }) { return .strength }
         return activeCalories > 0 ? .cardio : .other
     }
 
@@ -48,9 +51,16 @@ extension WorkoutSession {
         }
     }
 
-    /// Effort used for load: the user's RPE if they set one, else the estimate.
+    /// Effort used for load: the user's session RPE if they set one, else the
+    /// average of the logged per-set RPEs (Hevy sessions carry them), else the
+    /// duration/calorie estimate. A 3-hour gym session with rests would
+    /// otherwise saturate the duration heuristic at 10 every time.
     public var effortScore: Int {
         if let rpe = userRPE { return min(max(rpe, 1), 10) }
+        let setRPEs = sets.compactMap(\.rpe)
+        if !setRPEs.isEmpty {
+            return clampEffort(setRPEs.reduce(0, +) / Double(setRPEs.count))
+        }
         return autoEffort
     }
 
@@ -443,41 +453,38 @@ public struct DailyRecommendation: Codable {
         // calendar days, so an evening session doesn't age out mid-day.
         let today = calendar.startOfDay(for: now)
 
-        // Tunables — per the user: the light-day hint fires only when there
-        // was a genuinely HEAVY workout in the previous 2 days; one is enough.
+        // Tunables — per the user (2026-07-16): the light-day hint fires only
+        // after TWO intense sessions within the previous 2 days; one hard
+        // workout alone no longer gates the push.
         let hardWindowDays = 2           // "recent" = today + yesterday
         let hardSessionFactor = 0.9      // ≥ 90% of the usual session load
         let hardEffortThreshold = 7.5    // session RPE
+        let hardSessionCount = 2         // intense sessions needed in the window
         let compressedWeekShare = 0.45   // 3-day load ≥ 45% of the weekly norm
 
         if let windowStart = calendar.date(byAdding: .day, value: -(hardWindowDays - 1), to: today) {
             let recent = sessions.filter { $0.startTime >= windowStart }
-            if let l = usableLoad, l.averageLoad > 0 {
-                let hardByLoad = recent.filter { $0.loadValue >= l.averageLoad * hardSessionFactor }
-                if !hardByLoad.isEmpty {
-                    return DailyRecommendation(kind: .easy, reasonFragments: [
-                        ReasonFragment("Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera.",
-                                       ["\(hardByLoad.count)", "\(hardWindowDays)"])])
-                }
+            // Hard by load (vs the usual session) OR by effort — short heavy
+            // sessions barely move load but carry high RPE.
+            let averageLoad = usableLoad?.averageLoad ?? 0
+            let hard = recent.filter {
+                (averageLoad > 0 && $0.loadValue >= averageLoad * hardSessionFactor)
+                    || Double($0.effortScore) >= hardEffortThreshold
             }
-            // High RPE marks a session as hard even when its load stays
-            // under the baseline (short heavy sessions barely move load).
-            let hardByEffort = recent.filter { Double($0.effortScore) >= hardEffortThreshold }
-            if !hardByEffort.isEmpty {
-                let avgEffort = hardByEffort.reduce(0.0) { $0 + Double($1.effortScore) }
-                    / Double(hardByEffort.count)
+            if hard.count >= hardSessionCount {
                 return DailyRecommendation(kind: .easy, reasonFragments: [
-                    ReasonFragment("Hai fatto %@ sessioni con sforzo alto negli ultimi %@ giorni (RPE medio %@): meglio una giornata leggera.",
-                                   ["\(hardByEffort.count)", "\(hardWindowDays)", String(format: "%.1f", avgEffort)])])
+                    ReasonFragment("Hai fatto %@ sessioni intense negli ultimi %@ giorni: meglio una giornata leggera.",
+                                   ["\(hard.count)", "\(hardWindowDays)"])])
             }
         }
+        // Same rule as above: a single (even monster) session never gates the
+        // push on its own — the share matters only across 2+ sessions.
         if let l = usableLoad, l.chronic > 0,
            let shareWindowStart = calendar.date(byAdding: .day, value: -2, to: today) {
-            let recentLoad = sessions
-                .filter { $0.startTime >= shareWindowStart }
-                .reduce(0.0) { $0 + $1.loadValue }
+            let recentSessions = sessions.filter { $0.startTime >= shareWindowStart }
+            let recentLoad = recentSessions.reduce(0.0) { $0 + $1.loadValue }
             let share = recentLoad / Double(l.chronic)
-            if share >= compressedWeekShare {
+            if recentSessions.count >= hardSessionCount, share >= compressedWeekShare {
                 return DailyRecommendation(kind: .easy, reasonFragments: [
                     ReasonFragment("Negli ultimi 3 giorni hai accumulato il %@%% del tuo carico settimanale medio: meglio una giornata leggera.",
                                    ["\(Int((share * 100).rounded()))"])])

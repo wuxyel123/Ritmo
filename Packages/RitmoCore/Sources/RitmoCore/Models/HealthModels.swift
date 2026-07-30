@@ -111,6 +111,9 @@ public struct SleepSession: Identifiable, Codable {
     /// User-reported night wake-ups (manual logging only — watch-tracked
     /// nights have real awake stages instead). nil = not reported.
     public let manualWakeCount: Int?
+    /// How long the user typically stays awake per wake-up (Settings → Sonno).
+    /// Only used for reported wake counts; nil falls back to 10 minutes.
+    public let manualAwakeMinutesPerWake: Double?
 
     public init(
         id: UUID = UUID(),
@@ -118,7 +121,8 @@ public struct SleepSession: Identifiable, Codable {
         endTime: Date,
         stages: [SleepStage] = [],
         bedtimeDeviationMinutes: Double? = nil,
-        manualWakeCount: Int? = nil
+        manualWakeCount: Int? = nil,
+        manualAwakeMinutesPerWake: Double? = nil
     ) {
         self.id = id
         self.startTime = startTime
@@ -126,6 +130,7 @@ public struct SleepSession: Identifiable, Codable {
         self.stages = stages
         self.bedtimeDeviationMinutes = bedtimeDeviationMinutes
         self.manualWakeCount = manualWakeCount
+        self.manualAwakeMinutesPerWake = manualAwakeMinutesPerWake
     }
 
     public var totalHours: Double {
@@ -154,14 +159,18 @@ public struct SleepSession: Identifiable, Codable {
         // 0% awake = 10 pts, 15%+ awake = 0 pts. WASO of 15-30 min in an 8h
         // night is normal/healthy, and HealthKit's staging tends to flag
         // brief motion blips as "awake" — the old 5% cutoff (~24 min) zeroed
-        // this out for essentially normal sleep. Manually logged nights have
-        // no awake stages: fall back to the user-reported wake count (one
-        // brief wake is normal, each additional one costs 15%).
+        // this out for essentially normal sleep. Older manual logs have no
+        // awake stages: reconstruct the awake time from the reported wake
+        // count × the user's average awake minutes, then score it identically,
+        // so a night scores the same however it was recorded.
         let continuityScore: Double
-        if awakeH > 0 {
-            continuityScore = max(0.0, 1.0 - (awakeH / total) / 0.15) * 10
-        } else if let wakes = manualWakeCount, wakes > 0 {
-            continuityScore = max(0.0, 1.0 - Double(max(0, wakes - 1)) * 0.15) * 10
+        let reportedAwakeH: Double = {
+            guard awakeH == 0, let wakes = manualWakeCount, wakes > 0 else { return awakeH }
+            let perWake = manualAwakeMinutesPerWake ?? 10
+            return Double(wakes) * perWake / 60
+        }()
+        if reportedAwakeH > 0 {
+            continuityScore = max(0.0, 1.0 - (reportedAwakeH / total) / 0.15) * 10
         } else {
             continuityScore = 10
         }
@@ -425,6 +434,11 @@ public struct DailySnapshot: Codable {
     public let waterGoal: Double
     public let steps: Int
     public let stepGoal: Int
+    // Walking companions to the step count, Apple Health style. Optional so
+    // snapshots cached by older builds still decode (missing key → nil)
+    // instead of failing and falling back to placeholder numbers.
+    public let distanceKm: Double?
+    public let flightsClimbed: Int?
     public let activeCalories: Double
     public let activeCalorieGoal: Double
     public let sleepHours: Double
@@ -453,6 +467,8 @@ public struct DailySnapshot: Codable {
         waterGoal: Double = 2500,
         steps: Int = 0,
         stepGoal: Int = 10000,
+        distanceKm: Double? = nil,
+        flightsClimbed: Int? = nil,
         activeCalories: Double = 0,
         activeCalorieGoal: Double = 600,
         sleepHours: Double = 0,
@@ -479,6 +495,8 @@ public struct DailySnapshot: Codable {
         self.waterGoal = waterGoal
         self.steps = steps
         self.stepGoal = stepGoal
+        self.distanceKm = distanceKm
+        self.flightsClimbed = flightsClimbed
         self.activeCalories = activeCalories
         self.activeCalorieGoal = activeCalorieGoal
         self.sleepHours = sleepHours
@@ -500,6 +518,7 @@ public struct DailySnapshot: Codable {
             fiber: 22, fiberGoal: 30,
             waterMl: 1800, waterGoal: 2500,
             steps: 7200, stepGoal: 10000,
+            distanceKm: 5.4, flightsClimbed: 8,
             activeCalories: 420,
             sleepHours: 7.2, sleepScore: 74,
             dayScore: 78,

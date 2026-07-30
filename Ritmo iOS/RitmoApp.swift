@@ -57,6 +57,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query private var storedGoals: [UserGoals]
     @State private var selectedTab = 0
+    @State private var morePath: [MoreDestination] = []
     @AppStorage("didShowWelcome") private var didShowWelcome = false
 
     private var goals: UserGoals { storedGoals.first ?? UserGoals() }
@@ -88,7 +89,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            DashboardView(onNavigate: { selectedTab = $0 })
+            DashboardView(onNavigate: { navigate(to: $0) })
                 .tabItem { Label("Oggi", systemImage: "house.fill") }.tag(0)
 
             WorkoutListView()
@@ -100,14 +101,11 @@ struct ContentView: View {
             RecoveryView()
                 .tabItem { Label("Recupero", systemImage: "bed.double.fill") }.tag(3)
 
-            HealthView()
-                .tabItem { Label("Salute", systemImage: "heart.fill") }.tag(4)
-
-            InsightsView()
-                .tabItem { Label("Insights", systemImage: "chart.line.uptrend.xyaxis") }.tag(5)
-
-            SettingsTabView()
-                .tabItem { Label("Impostazioni", systemImage: "gearshape.fill") }.tag(6)
+            // Salute/Insights/Impostazioni share one themed "Altro" tab: with
+            // seven top-level tabs UIKit collapses the overflow into its bare
+            // system More list, which looks nothing like the rest of the app.
+            MoreMenuView(path: $morePath)
+                .tabItem { Label("Altro", systemImage: "ellipsis") }.tag(4)
         }
         .tint(RitmoTheme.accent)
         .sheet(isPresented: Binding(get: { !didShowWelcome },
@@ -115,6 +113,9 @@ struct ContentView: View {
             WelcomeSheet()
         }
         .task {
+            // Seed (and heal) the exercise catalog before anything imports:
+            // a Hevy import against an unseeded store loses muscle groups.
+            ExerciseCatalog.ensureSeeded(in: RitmoStore.container.mainContext)
             pushGoals()
             await syncWorkoutsToWatch()
         }
@@ -128,14 +129,81 @@ struct ContentView: View {
         }
         .onOpenURL { url in
             switch url.host {
-            case "nutrition": selectedTab = 2
-            case "recovery":  selectedTab = 3
-            case "health":    selectedTab = 4
-            case "insights":  selectedTab = 5
-            case "workouts":  selectedTab = 1
-            default:          selectedTab = 0
+            case "nutrition": navigate(to: 2)
+            case "recovery":  navigate(to: 3)
+            case "health":    navigate(to: 4)
+            case "insights":  navigate(to: 5)
+            case "workouts":  navigate(to: 1)
+            default:          navigate(to: 0)
             }
         }
+    }
+
+    /// Historical indices 4/5/6 (Salute/Insights/Impostazioni) now live inside
+    /// the Altro tab — translate them into tab 4 + a pushed destination.
+    private func navigate(to index: Int) {
+        switch index {
+        case 4: selectedTab = 4; morePath = [.health]
+        case 5: selectedTab = 4; morePath = [.insights]
+        case 6: selectedTab = 4; morePath = [.settings]
+        default: selectedTab = index
+        }
+    }
+}
+
+// MARK: - MoreMenuView (Altro tab — themed replacement for the system More list)
+
+enum MoreDestination: Hashable {
+    case health, insights, settings
+}
+
+struct MoreMenuView: View {
+    @Binding var path: [MoreDestination]
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(spacing: RitmoTheme.gap) {
+                    menuRow(.health, icon: "heart.fill", color: .red,
+                            title: "Salute", subtitle: "FC, HRV, peso e attività")
+                    menuRow(.insights, icon: "chart.line.uptrend.xyaxis", color: RitmoTheme.accent,
+                            title: "Insights", subtitle: "Correlazioni e tendenze sui tuoi dati")
+                    menuRow(.settings, icon: "gearshape.fill", color: .gray,
+                            title: "Impostazioni", subtitle: "Obiettivi, integrazioni ed esportazione")
+                }
+                .padding(RitmoTheme.pagePadding)
+            }
+            .navigationTitle("Altro")
+            .navigationDestination(for: MoreDestination.self) { destination in
+                switch destination {
+                case .health:   HealthView()
+                case .insights: InsightsView()
+                case .settings: SettingsTabView()
+                }
+            }
+        }
+    }
+
+    private func menuRow(_ destination: MoreDestination, icon: String, color: Color,
+                         title: String, subtitle: String) -> some View {
+        Button { path.append(destination) } label: {
+            FitCard {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.title3).foregroundStyle(color)
+                        .frame(width: 38, height: 38)
+                        .background(color.opacity(0.12), in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(LocalizedStringKey(title)).font(.subheadline.bold())
+                        Text(LocalizedStringKey(subtitle))
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

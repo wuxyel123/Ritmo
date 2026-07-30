@@ -7,8 +7,9 @@ struct HealthView: View {
     @StateObject private var vm = HealthViewModel()
     @State private var period: HistoryPeriod = .week
 
+    // No NavigationStack of its own: pushed inside the Altro tab's stack.
     var body: some View {
-        NavigationStack {
+        Group {
             ScrollView {
                 VStack(spacing: RitmoTheme.gap) {
 

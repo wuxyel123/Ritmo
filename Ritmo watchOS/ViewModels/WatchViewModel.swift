@@ -5,7 +5,9 @@ import RitmoCore
 
 @MainActor
 final class WatchViewModel: ObservableObject {
-    @Published var snapshot: DailySnapshot = .placeholder
+    // Empty, NOT .placeholder — see DashboardViewModel: the placeholder's
+    // invented numbers must never reach a real screen.
+    @Published var snapshot = DailySnapshot()
     @Published var activity: DailyActivity = DailyActivity(date: .now)
     @Published var sleepSession: SleepSession? = nil   // primary (longest) — used by recovery score
     @Published var sleepSessions: [SleepSession] = []  // all sessions for the night

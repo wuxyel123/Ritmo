@@ -12,8 +12,9 @@ struct InsightsView: View {
 
     var goals: UserGoals { storedGoals.first ?? UserGoals() }
 
+    // No NavigationStack of its own: pushed inside the Altro tab's stack.
     var body: some View {
-        NavigationStack {
+        Group {
             ScrollView {
                 VStack(spacing: RitmoTheme.gap) {
 

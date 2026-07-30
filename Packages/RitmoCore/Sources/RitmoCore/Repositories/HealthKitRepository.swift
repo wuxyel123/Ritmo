@@ -136,6 +136,25 @@ public final class HealthKitRepository: ObservableObject {
         return "sleepWakeCount-\(f.string(from: date))"
     }
 
+    /// How long the user typically stays awake per night-time wake-up.
+    /// Drives both the awake samples written to Apple Health for manually
+    /// logged nights and the continuity part of the sleep score — 3 brief
+    /// wakes are not the same night as 3 half-hour ones.
+    public nonisolated static let defaultAwakeMinutesPerWake: Double = 10
+
+    public nonisolated static func averageAwakeMinutes() -> Double {
+        guard let defaults = UserDefaults(suiteName: appGroupID),
+              defaults.object(forKey: "sleepAvgAwakeMinutes") != nil
+        else { return defaultAwakeMinutesPerWake }
+        let value = defaults.double(forKey: "sleepAvgAwakeMinutes")
+        return value > 0 ? value : defaultAwakeMinutesPerWake
+    }
+
+    public nonisolated static func saveAverageAwakeMinutes(_ minutes: Double) {
+        UserDefaults(suiteName: appGroupID)?
+            .set(max(1, minutes), forKey: "sleepAvgAwakeMinutes")
+    }
+
     // MARK: - Sleep Logging
 
     /// Writes sleep to Apple Health.
@@ -143,10 +162,11 @@ public final class HealthKitRepository: ObservableObject {
     /// stage samples (deep → REM → core) whose proportions reflect the quality rating,
     /// so Apple Health's sleep stages screen shows meaningful breakdown.
     /// On older OS or when quality is nil, writes a single asleepUnspecified sample.
-    /// `wakeCount` reported wake-ups become REAL 10-minute awake samples spread
-    /// evenly through the night (carved out of the sleep phases), so Apple
-    /// Health shows the interruptions and continuity scoring works from actual
-    /// stage data — no app-private bookkeeping needed.
+    /// `wakeCount` reported wake-ups become REAL awake samples spread evenly
+    /// through the night (carved out of the sleep phases), so Apple Health
+    /// shows the interruptions and continuity scoring works from actual stage
+    /// data — no app-private bookkeeping needed. Each awake window lasts the
+    /// user's configured average (Settings → Sonno), default 10 minutes.
     /// Quality is also persisted in the shared App Group for recovery score blending.
     public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil,
                            wakeCount: Int = 0) async throws {
@@ -177,12 +197,12 @@ public final class HealthKitRepository: ObservableObject {
             blocks = [(value, start, end)]
         }
 
-        // Carve a 10-minute awake window out of the timeline per reported
-        // wake-up: wake i sits at i/(N+1) of the night, so N wakes split the
-        // sleep into N+1 even stretches. Capped so each wake still has sleep
-        // around it on very short nights.
+        // Carve an awake window out of the timeline per reported wake-up:
+        // wake i sits at i/(N+1) of the night, so N wakes split the sleep into
+        // N+1 even stretches. Capped so each wake still has sleep around it on
+        // very short nights.
         var awakeWindows: [(start: Date, end: Date)] = []
-        let wakeDuration: TimeInterval = 10 * 60
+        let wakeDuration: TimeInterval = Self.averageAwakeMinutes() * 60
         let n = min(max(wakeCount, 0), Int(total / (wakeDuration * 3)))
         if n > 0 {
             for i in 1...n {
@@ -377,7 +397,8 @@ public final class HealthKitRepository: ObservableObject {
         }
         return SleepSession(startTime: start, endTime: end, stages: stages,
                             bedtimeDeviationMinutes: deviation,
-                            manualWakeCount: loadWakeCount(for: end))
+                            manualWakeCount: loadWakeCount(for: end),
+                            manualAwakeMinutesPerWake: Self.averageAwakeMinutes())
     }
 
     /// Most-recent sleep session within the last `withinDays` days.
@@ -414,7 +435,8 @@ public final class HealthKitRepository: ObservableObject {
                             endTime: nightSamples.last!.endDate,
                             stages: stages,
                             bedtimeDeviationMinutes: deviation,
-                            manualWakeCount: loadWakeCount(for: nightSamples.last!.endDate))
+                            manualWakeCount: loadWakeCount(for: nightSamples.last!.endDate),
+                            manualAwakeMinutesPerWake: Self.averageAwakeMinutes())
     }
 
     // MARK: - Allenamenti da HealthKit
@@ -506,6 +528,8 @@ public final class HealthKitRepository: ObservableObject {
             waterGoal: goals.dailyWaterMl,
             steps: a.steps,
             stepGoal: goals.dailySteps,
+            distanceKm: a.distanceKm,
+            flightsClimbed: a.flightsClimbed,
             activeCalories: a.activeCalories,
             activeCalorieGoal: goals.dailyActiveCalories,
             sleepHours: sleepHours,
@@ -1227,20 +1251,55 @@ public final class HealthKitRepository: ObservableObject {
         return result?.sumQuantity()?.doubleValue(for: unit) ?? 0
     }
 
+    /// Day total for the metrics BOTH the iPhone and the Apple Watch record
+    /// (steps, distance, flights, energy). A plain sum counts the same walk
+    /// twice — once per device — which is why the totals ran high compared to
+    /// Apple Health, and it does merge the devices rather than add them.
+    /// Bucketing the day by hour and keeping only the busiest source in each
+    /// hour reproduces that: hours where both devices saw the same movement
+    /// stop inflating, while an hour only one device covered still counts in
+    /// full (watch on the wrist in the morning, phone in a pocket later).
+    /// NOT for nutrition — two food apps logging different meals must add up.
+    private func fetchMergedSourceSum(
+        identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        for date: Date
+    ) async -> Double {
+        guard let type = HKQuantityType.quantityType(forIdentifier: identifier) else { return 0 }
+        let (start, end) = dayRange(for: date)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let descriptor = HKStatisticsCollectionQueryDescriptor(
+            predicate: .quantitySample(type: type, predicate: predicate),
+            options: [.cumulativeSum, .separateBySource],
+            anchorDate: start,
+            intervalComponents: DateComponents(hour: 1)
+        )
+        guard let collection = try? await descriptor.result(for: store) else { return 0 }
+        var total = 0.0
+        collection.enumerateStatistics(from: start, to: end) { stats, _ in
+            let perSource = (stats.sources ?? []).compactMap {
+                stats.sumQuantity(for: $0)?.doubleValue(for: unit)
+            }
+            // No per-source breakdown (single source) → the plain hour total.
+            total += perSource.max() ?? stats.sumQuantity()?.doubleValue(for: unit) ?? 0
+        }
+        return total
+    }
+
     private func fetchSteps(for date: Date) async -> Int {
-        Int(await fetchSum(identifier: .stepCount, unit: .count(), for: date))
+        Int(await fetchMergedSourceSum(identifier: .stepCount, unit: .count(), for: date))
     }
 
     private func fetchActiveCalories(for date: Date) async -> Double {
-        await fetchSum(identifier: .activeEnergyBurned, unit: .kilocalorie(), for: date)
+        await fetchMergedSourceSum(identifier: .activeEnergyBurned, unit: .kilocalorie(), for: date)
     }
 
     private func fetchRestingCalories(for date: Date) async -> Double {
-        await fetchSum(identifier: .basalEnergyBurned, unit: .kilocalorie(), for: date)
+        await fetchMergedSourceSum(identifier: .basalEnergyBurned, unit: .kilocalorie(), for: date)
     }
 
     private func fetchExerciseMinutes(for date: Date) async -> Int {
-        Int(await fetchSum(identifier: .appleExerciseTime, unit: .minute(), for: date))
+        Int(await fetchMergedSourceSum(identifier: .appleExerciseTime, unit: .minute(), for: date))
     }
 
     private func fetchNutrientSum(
@@ -1285,11 +1344,12 @@ public final class HealthKitRepository: ObservableObject {
     }
 
     private func fetchFlightsClimbed(for date: Date) async -> Int {
-        Int(await fetchSum(identifier: .flightsClimbed, unit: .count(), for: date))
+        Int(await fetchMergedSourceSum(identifier: .flightsClimbed, unit: .count(), for: date))
     }
 
     private func fetchWalkingDistance(for date: Date) async -> Double {
-        await fetchSum(identifier: .distanceWalkingRunning, unit: .meterUnit(with: .kilo), for: date)
+        await fetchMergedSourceSum(identifier: .distanceWalkingRunning,
+                                   unit: .meterUnit(with: .kilo), for: date)
     }
 
     private func fetchMindfulMinutes(for date: Date) async -> Int {
@@ -1381,7 +1441,8 @@ public final class HealthKitRepository: ObservableObject {
                             endTime: sorted.last!.endDate,
                             stages: stages,
                             bedtimeDeviationMinutes: bedtimeDeviation,
-                            manualWakeCount: loadWakeCount(for: sorted.last!.endDate))
+                            manualWakeCount: loadWakeCount(for: sorted.last!.endDate),
+                            manualAwakeMinutesPerWake: Self.averageAwakeMinutes())
     }
 
     // MARK: - Bedtime consistency helpers

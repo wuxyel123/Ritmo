@@ -21,6 +21,9 @@ struct SleepLogView: View {
     }()
     @State private var quality: SleepQuality = .buono
     @State private var wakeCount = 0
+    @AppStorage("sleepAvgAwakeMinutes",
+                store: UserDefaults(suiteName: "group.alessandrodiscalzi.com.ritmo"))
+    private var avgAwakeMinutes = HealthKitRepository.defaultAwakeMinutesPerWake
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var saved = false
@@ -62,7 +65,9 @@ struct SleepLogView: View {
                         }
                     }
                 } footer: {
-                    Text("Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Un risveglio breve è normale.")
+                    Text(String(format: NSLocalizedString(
+                        "Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Ogni risveglio conta %@ min (modificabile in Impostazioni).",
+                        comment: ""), "\(Int(avgAwakeMinutes))"))
                 }
 
                 Section("Qualità") {

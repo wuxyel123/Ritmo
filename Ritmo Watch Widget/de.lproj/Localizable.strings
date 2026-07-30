@@ -19,3 +19,8 @@
 "giorni alla gara" = "Tage bis zum Wettkampf";
 "Conto alla rovescia gara" = "Wettkampf-Countdown";
 "Giorni alla prossima gara programmata." = "Tage bis zu deinem nächsten geplanten Wettkampf.";
+
+// ── Steps complication (2026-07-16) ──
+"Passi" = "Schritte";
+"%@ piani" = "%@ Etagen";
+"Passi, distanza e piani saliti di oggi." = "Heutige Schritte, Distanz und erklommene Etagen.";

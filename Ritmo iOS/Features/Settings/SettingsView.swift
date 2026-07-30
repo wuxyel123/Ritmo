@@ -55,6 +55,11 @@ struct SettingsTabView: View {
     @AppStorage("macroProteinPerKg") private var storedProteinPerKg = 0.0
     @AppStorage("macroFatPerKg") private var storedFatPerKg = 0.0
     @AppStorage("macroCarbsPerKg") private var storedCarbsPerKg = 0.0
+    // Lives in the App Group: the repository reads it when writing awake
+    // samples and when scoring continuity for manually logged nights.
+    @AppStorage("sleepAvgAwakeMinutes",
+                store: UserDefaults(suiteName: "group.alessandrodiscalzi.com.ritmo"))
+    private var avgAwakeMinutes = HealthKitRepository.defaultAwakeMinutesPerWake
     @AppStorage("weeklyRecapNotification") private var weeklyRecapNotification = false
     @AppStorage("hevyConnected") private var hevyConnected = false
     @AppStorage("oplUsername") private var oplUsername = ""
@@ -83,8 +88,9 @@ struct SettingsTabView: View {
     var macrosOk: Bool { proteinG >= 0 && carbsG >= 0 && fatG >= 0 }
     var totalMacroKcal: Double { proteinG * 4 + carbsG * 4 + fatG * 9 }
 
+    // No NavigationStack of its own: pushed inside the Altro tab's stack.
     var body: some View {
-        NavigationStack {
+        Group {
             Form {
                 // MARK: Language
                 Section {
@@ -209,6 +215,38 @@ struct SettingsTabView: View {
                     SmartStepper(label: "Calorie attive", value: $activeKcal, step: 50,
                                  format: "%.0f kcal", color: .red, onChange: saveGoals)
                 } header: { Text("Movimento") }
+
+                // MARK: Sleep
+                Section {
+                    Stepper(value: $avgAwakeMinutes, in: 1...60, step: 1) {
+                        HStack {
+                            Text("Tempo sveglio per risveglio")
+                            Spacer()
+                            Text(String(format: NSLocalizedString("%@ min", comment: ""),
+                                        "\(Int(avgAwakeMinutes))"))
+                                .font(.headline)
+                                .foregroundStyle(RitmoTheme.sleep)
+                        }
+                    }
+                } header: { Text("Sonno") } footer: {
+                    Text("Quanto resti sveglio in media a ogni risveglio notturno. Usato per i risvegli che registri a mano: definisce il tempo da vigile scritto in Apple Salute e quanto pesa la continuità nel punteggio del sonno.")
+                }
+
+                // MARK: Health permissions
+                Section {
+                    Button {
+                        // No API reveals a DENIED read permission — HealthKit
+                        // just returns zero — so all we can do is send the user
+                        // to the one place where it can be turned back on.
+                        if let url = URL(string: "x-apple-health://") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Label("Permessi Apple Salute", systemImage: "heart.text.square")
+                    }
+                } header: { Text("Apple Salute") } footer: {
+                    Text("Se una metrica resta a zero mentre le altre si aggiornano (per esempio la distanza con i passi già contati), il permesso di lettura di quella categoria è disattivato: Ritmo riceve zero senza poter distinguere il rifiuto. Attivalo in Salute › profilo › App e servizi › Ritmo.")
+                }
 
                 // MARK: Integrations
                 Section {

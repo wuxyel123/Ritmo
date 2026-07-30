@@ -20,7 +20,8 @@ struct RecoveryView: View {
 
                     // MARK: Recovery (sleep + heart) — separate from sleep score
                     if let recovery = vm.recovery {
-                        RecoveryCard(recovery: recovery)
+                        RecoveryCard(recovery: recovery,
+                                     hasSleepData: !vm.allSleepSessions.isEmpty)
                     }
 
                     // MARK: Tonight's sleep — always shown inline
@@ -148,10 +149,12 @@ final class RecoveryViewModel: ObservableObject {
 
 struct RecoveryCard: View {
     let recovery: RecoveryScore
+    var hasSleepData: Bool = true
     var showsInfo: Bool = true
     @State private var showingInfo = false
 
     private var color: Color {
+        guard hasSleepData else { return .secondary }
         switch recovery.status {
         case .poor:      return .red
         case .fair:      return .orange
@@ -181,11 +184,11 @@ struct RecoveryCard: View {
                     ZStack {
                         Circle().stroke(Color.gray.opacity(0.2), lineWidth: 7)
                         Circle()
-                            .trim(from: 0, to: CGFloat(recovery.overall) / 100)
+                            .trim(from: 0, to: hasSleepData ? CGFloat(recovery.overall) / 100 : 0)
                             .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                         VStack(spacing: 0) {
-                            Text("\(recovery.overall)")
+                            Text(hasSleepData ? "\(recovery.overall)" : "—")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundStyle(color)
                             Text("/100").font(.caption2).foregroundStyle(.secondary)
@@ -194,14 +197,23 @@ struct RecoveryCard: View {
                     .frame(width: 76, height: 76)
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(LocalizedStringKey(recovery.status.label))
-                            .font(.headline).foregroundStyle(color)
-                        component("Sonno", recovery.sleep, RitmoTheme.sleep)
-                        if recovery.hasHeartData {
-                            component("HRV", recovery.hrv, .green)
-                            component("FC riposo", recovery.restingHR, .red)
+                        // Without tonight's sleep there is no score to judge:
+                        // a red "0 · Scarso" would grade missing data.
+                        if hasSleepData {
+                            Text(LocalizedStringKey(recovery.status.label))
+                                .font(.headline).foregroundStyle(color)
+                            component("Sonno", recovery.sleep, RitmoTheme.sleep)
+                            if recovery.hasHeartData {
+                                component("HRV", recovery.hrv, .green)
+                                component("FC riposo", recovery.restingHR, .red)
+                            } else {
+                                Text("Aggiungi HRV e FC a riposo per un punteggio completo")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
                         } else {
-                            Text("Aggiungi HRV e FC a riposo per un punteggio completo")
+                            Text("Nessun dato")
+                                .font(.headline).foregroundStyle(.secondary)
+                            Text("Registra il sonno di stanotte per calcolare il recupero.")
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     }

@@ -12,61 +12,66 @@ struct WorkoutListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            List {
+                // Invisible NavigationLink under the card: keeps the tap
+                // navigation but suppresses the List's default chevron —
+                // the cards draw their own. Load and stats only make sense
+                // with data; the calculators are pure tools and stay
+                // reachable even before the first workout arrives.
+                if !sessions.isEmpty {
+                    ZStack {
+                        NavigationLink {
+                            TrainingLoadDetailView(sessions: sessions)
+                        } label: { EmptyView() }
+                        .opacity(0)
+                        TrainingLoadCard(load: TrainingLoad.compute(from: sessions))
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+                    .listRowSeparator(.hidden)
+                    ZStack {
+                        NavigationLink {
+                            WorkoutStatsView()
+                        } label: { EmptyView() }
+                        .opacity(0)
+                        StatsEntryCard()
+                    }
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowSeparator(.hidden)
+                }
+                ZStack {
+                    NavigationLink {
+                        CalculatorsView()
+                    } label: { EmptyView() }
+                    .opacity(0)
+                    CalculatorsEntryCard()
+                }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowSeparator(.hidden)
                 if sessions.isEmpty {
                     EmptyWorkoutView(onSync: { Task { await syncHealthKit() } })
+                        .frame(maxWidth: .infinity)
+                        .listRowInsets(EdgeInsets(top: 24, leading: 16, bottom: 8, trailing: 16))
+                        .listRowSeparator(.hidden)
                 } else {
-                    List {
-                        // Invisible NavigationLink under the card: keeps the tap
-                        // navigation but suppresses the List's default chevron —
-                        // the cards draw their own.
-                        ZStack {
-                            NavigationLink {
-                                TrainingLoadDetailView(sessions: sessions)
-                            } label: { EmptyView() }
-                            .opacity(0)
-                            TrainingLoadCard(load: TrainingLoad.compute(from: sessions))
-                        }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
-                        .listRowSeparator(.hidden)
-                        ZStack {
-                            NavigationLink {
-                                WorkoutStatsView()
-                            } label: { EmptyView() }
-                            .opacity(0)
-                            StatsEntryCard()
-                        }
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .listRowSeparator(.hidden)
-                        ZStack {
-                            NavigationLink {
-                                CalculatorsView()
-                            } label: { EmptyView() }
-                            .opacity(0)
-                            CalculatorsEntryCard()
-                        }
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .listRowSeparator(.hidden)
-                        ForEach(sessions) { session in
-                            NavigationLink(destination: WorkoutDetailView(session: session)) {
-                                if session.source == .healthKit {
-                                    HealthKitWorkoutRow(session: session)
-                                } else {
-                                    WorkoutRow(session: session)
-                                }
+                    ForEach(sessions) { session in
+                        NavigationLink(destination: WorkoutDetailView(session: session)) {
+                            if session.source == .healthKit {
+                                HealthKitWorkoutRow(session: session)
+                            } else {
+                                WorkoutRow(session: session)
                             }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    pendingDelete = session
-                                } label: {
-                                    Label("Elimina", systemImage: "trash")
-                                }
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                pendingDelete = session
+                            } label: {
+                                Label("Elimina", systemImage: "trash")
                             }
                         }
                     }
-                    .listStyle(.inset)
                 }
             }
+            .listStyle(.inset)
             .confirmationDialog("Eliminare l'allenamento?",
                                 isPresented: Binding(get: { pendingDelete != nil },
                                                      set: { if !$0 { pendingDelete = nil } }),
