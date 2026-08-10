@@ -110,8 +110,10 @@ struct SleepSessionCard: View {
                     Text("Come si compone il punteggio").font(.caption.bold()).foregroundStyle(.secondary)
                     let b = session.scoreBreakdown
                     SleepScoreComponentRow(label: "Durata", points: b.duration, max: 40)
-                    SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20)
-                    SleepScoreComponentRow(label: "REM", points: b.rem, max: 20)
+                    SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20,
+                                           measured: b.stagesMeasured)
+                    SleepScoreComponentRow(label: "REM", points: b.rem, max: 20,
+                                           measured: b.stagesMeasured)
                     SleepScoreComponentRow(label: "Continuità", points: b.continuity, max: 10)
                     SleepScoreComponentRow(label: "Regolarità", points: b.consistency, max: 10)
                 }
@@ -219,16 +221,23 @@ struct SleepScoreComponentRow: View {
     let label: LocalizedStringKey
     let points: Int
     let max: Int
+    /// Not recorded for this night: shown as "—" and excluded from the total,
+    /// rather than displayed as a zero the sleep tracker never measured.
+    var measured: Bool = true
 
-    private var pct: Double { max > 0 ? Double(points) / Double(max) : 0 }
-    private var color: Color { pct >= 0.75 ? .green : pct >= 0.5 ? .orange : .red }
+    private var pct: Double { measured && max > 0 ? Double(points) / Double(max) : 0 }
+    private var color: Color {
+        guard measured else { return .secondary }
+        return pct >= 0.75 ? .green : pct >= 0.5 ? .orange : .red
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(label).font(.caption)
                 Spacer()
-                Text("\(points) / \(max)").font(.caption.bold()).foregroundStyle(color)
+                Text(measured ? "\(points) / \(max)" : "—")
+                    .font(.caption.bold()).foregroundStyle(color)
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -405,8 +414,10 @@ struct SleepDetailSheet: View {
                             Text("Come si compone il punteggio").font(.headline)
                             let b = session.scoreBreakdown
                             SleepScoreComponentRow(label: "Durata", points: b.duration, max: 40)
-                            SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20)
-                            SleepScoreComponentRow(label: "REM", points: b.rem, max: 20)
+                            SleepScoreComponentRow(label: "Sonno profondo", points: b.deep, max: 20,
+                                           measured: b.stagesMeasured)
+                            SleepScoreComponentRow(label: "REM", points: b.rem, max: 20,
+                                           measured: b.stagesMeasured)
                             SleepScoreComponentRow(label: "Continuità", points: b.continuity, max: 10)
                             SleepScoreComponentRow(label: "Regolarità", points: b.consistency, max: 10)
                         }

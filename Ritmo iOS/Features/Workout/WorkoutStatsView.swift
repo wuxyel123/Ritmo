@@ -1225,7 +1225,7 @@ struct AttemptCalculatorView: View {
     }
 
     /// Everything plate-rounded to 2.5 kg — that's what exists on the bar.
-    private func rounded(_ kg: Double) -> Double { (kg / 2.5).rounded() * 2.5 }
+    private func rounded(_ kg: Double) -> Double { MeetPlan.plateRounded(kg) }
 
     var body: some View {
         NavigationStack {
@@ -1255,21 +1255,25 @@ struct AttemptCalculatorView: View {
 
                 if oneRM > 0 {
                     Section {
-                        attemptRow("1° tentativo", pct: 0.91)
-                        attemptRow("2° tentativo", pct: 0.97)
-                        attemptRow("3° tentativo", pct: 1.01)
+                        let attempts = MeetPlan.attempts(oneRM: oneRM)
+                        attemptRow("1° tentativo", kg: attempts[0])
+                        attemptRow("2° tentativo", kg: attempts[1])
+                        attemptRow("3° tentativo", kg: attempts[2])
                     } header: { Text("Tentativi") } footer: {
-                        Text("91% · 97% · 101% del massimale — arrotondati a 2,5 kg.")
+                        Text(String(format: NSLocalizedString(
+                            "Terzo tentativo al massimale, salti di %@ kg (4%%) sotto — arrotondati a 2,5 kg.",
+                            comment: ""),
+                            String(format: "%.4g", MeetPlan.attemptJump(oneRM: oneRM))))
                     }
 
                     Section {
-                        warmupRow("Bilanciere", kg: 20, reps: 10)
-                        warmupRow("40%", kg: rounded(oneRM * 0.4), reps: 5)
-                        warmupRow("55%", kg: rounded(oneRM * 0.55), reps: 4)
-                        warmupRow("70%", kg: rounded(oneRM * 0.7), reps: 3)
-                        warmupRow("80%", kg: rounded(oneRM * 0.8), reps: 2)
-                        warmupRow("87%", kg: rounded(oneRM * 0.87), reps: 1)
-                    } header: { Text("Riscaldamento") }
+                        warmupRow("Bilanciere", kg: MeetPlan.barKg, reps: 10)
+                        ForEach(MeetPlan.warmups(oneRM: oneRM), id: \.kg) { set in
+                            warmupRow("\(set.percentOfMax)%", kg: set.kg, reps: set.reps)
+                        }
+                    } header: { Text("Riscaldamento") } footer: {
+                        Text("I salti si accorciano fino al primo tentativo: l'ultimo riscaldamento resta almeno un salto pieno sotto l'apertura.")
+                    }
                 }
             }
             .keyboardDoneButton()
@@ -1286,11 +1290,11 @@ struct AttemptCalculatorView: View {
         }
     }
 
-    private func attemptRow(_ label: String, pct: Double) -> some View {
+    private func attemptRow(_ label: String, kg: Double) -> some View {
         HStack {
             Text(LocalizedStringKey(label)).font(.subheadline)
             Spacer()
-            Text(String(format: "%.4g kg", rounded(oneRM * pct)))
+            Text(String(format: "%.4g kg", kg))
                 .font(.subheadline.bold()).foregroundStyle(RitmoTheme.workout)
         }
     }

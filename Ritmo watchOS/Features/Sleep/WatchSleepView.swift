@@ -277,19 +277,25 @@ struct WatchSleepView: View {
         let b = sleep.scoreBreakdown
         return VStack(spacing: 3) {
             scoreLine("Durata",     b.duration,   "/ 40")
-            scoreLine("Profondo",   b.deep,       "/ 20")
-            scoreLine("REM",        b.rem,        "/ 20")
+            // Without stage detail these were never measured: "—", not 0.
+            scoreLine("Profondo",   b.deep,       "/ 20", measured: b.stagesMeasured)
+            scoreLine("REM",        b.rem,        "/ 20", measured: b.stagesMeasured)
             scoreLine("Continuità", b.continuity, "/ 10")
             scoreLine("Regolarità", b.consistency,"/ 10")
         }
     }
 
-    private func scoreLine(_ label: String, _ pts: Int, _ max: String) -> some View {
+    private func scoreLine(_ label: String, _ pts: Int, _ max: String,
+                           measured: Bool = true) -> some View {
         HStack {
             Text(LocalizedStringKey(label)).font(.system(size: 9)).foregroundStyle(.secondary)
             Spacer()
-            Text("\(pts)").font(.system(size: 9, weight: .bold))
-            Text(max).font(.system(size: 9)).foregroundStyle(.secondary)
+            if measured {
+                Text("\(pts)").font(.system(size: 9, weight: .bold))
+                Text(max).font(.system(size: 9)).foregroundStyle(.secondary)
+            } else {
+                Text("—").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
+            }
         }
     }
 }

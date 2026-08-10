@@ -65,6 +65,7 @@ struct WorkoutDetailView: View {
     @State private var weekLoad: TrainingLoad?
     @State private var hrRecovery: Int?
     @State private var observedMaxHR: Double?
+    @State private var maxHRIsObserved = false
     @State private var isLoadingHR = false
     @State private var showingRPEInfo = false
     @State private var showingDeleteDialog = false
@@ -184,7 +185,11 @@ struct WorkoutDetailView: View {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     SectionHeader(title: "Zone di frequenza cardiaca")
-                                    Text(String(format: NSLocalizedString("Basate sulla tua FC max osservata: %@ bpm", comment: ""),
+                                    Text(String(format: NSLocalizedString(
+                                        maxHRIsObserved
+                                            ? "Basate sulla tua FC max osservata: %@ bpm"
+                                            : "Basate sulla tua FC max stimata per età: %@ bpm",
+                                        comment: ""),
                                                 "\(Int(observedMaxHR ?? 190))"))
                                         .font(.caption2).foregroundStyle(.secondary)
                                     HRZonesChart(zones: hr.zones)
@@ -336,10 +341,13 @@ struct WorkoutDetailView: View {
             weekLoad = TrainingLoad.compute(from: allSessions)
             guard session.source == .healthKit else { return }
             isLoadingHR = true
-            // The user's own observed max HR personalizes the zones; the old
-            // fixed 190 stays only as fallback when no data exists.
-            let maxHR = await healthRepo.fetchMaxHeartRate() ?? 190
+            // Age-predicted max, raised to what the user has actually hit if
+            // that is higher; the fixed 190 stays only as a last resort when
+            // there is neither a birth date nor usable readings.
+            let resolved = await healthRepo.fetchMaxHeartRate()
+            let maxHR = resolved?.bpm ?? 190
             observedMaxHR = maxHR
+            maxHRIsObserved = resolved?.isObserved ?? false
             async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime,
                                                             end: session.endTime, maxHR: maxHR)
             async let locs = healthRepo.fetchWorkoutRoute(start: session.startTime, end: session.endTime)

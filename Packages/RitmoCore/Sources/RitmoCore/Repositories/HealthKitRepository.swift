@@ -108,7 +108,12 @@ public final class HealthKitRepository: ObservableObject {
 
     public func loadSleepQuality(for date: Date = .now) -> SleepQuality? {
         guard let defaults = UserDefaults(suiteName: Self.appGroupID) else { return nil }
-        let raw = defaults.integer(forKey: sleepQualityKey(for: date))
+        // `integer(forKey:)` cannot tell a missing key from a stored 0, and 0
+        // has been a REAL rating (pessimo) since the scale grew to 6 levels —
+        // so every unrated night was silently blended into the recovery score
+        // as the worst possible rating. Read the object instead.
+        guard let raw = defaults.object(forKey: sleepQualityKey(for: date)) as? Int
+        else { return nil }
         return SleepQuality(rawValue: raw)
     }
 
@@ -1059,19 +1064,74 @@ public final class HealthKitRepository: ObservableObject {
 
     /// Highest heart rate ever recorded in the window — replaces the fixed
     /// 190 bpm assumption in the zone charts with the user's own max.
-    public func fetchMaxHeartRate(days: Int = 365) async -> Double? {
+    public struct MaxHeartRate: Sendable {
+        public let bpm: Double
+        /// True when real readings beat the age-predicted value.
+        public let isObserved: Bool
+    }
+
+    /// Age-predicted maximum, Tanaka et al. (2001): 208 − 0.7 × age.
+    /// Fits measured maxima across ages far better than the old 220 − age,
+    /// and — the point here — it does not require the user to ever have gone
+    /// all-out. Someone who never trains near their ceiling would otherwise be
+    /// handed a "max" that is merely their hardest easy day.
+    public nonisolated static func predictedMaxHeartRate(age: Int) -> Double {
+        208 - 0.7 * Double(age)
+    }
+
+    /// Physiologically plausible ceiling for a wrist reading. Optical sensors
+    /// spike well past this (cadence lock, cold, loose strap).
+    private static let maxPlausibleHeartRate: Double = 230
+
+    /// The highest heart rate the user actually reached, made robust to sensor
+    /// spikes: daily maxima over the window, sorted, and the THIRD highest
+    /// taken. One bad reading — or two — can no longer define the ceiling,
+    /// while a genuine max hit repeatedly still comes through. Needs at least
+    /// three days of data; below that a single unverified spike would be the
+    /// whole sample, so it reports nothing instead.
+    public func observedMaxHeartRate(days: Int = 365) async -> Double? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: .now) ?? .distantPast
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
-        let localStore = store
-        return await withCheckedContinuation { cont in
-            let query = HKStatisticsQuery(quantityType: type,
-                                          quantitySamplePredicate: predicate,
-                                          options: .discreteMax) { _, stats, _ in
-                let bpm = stats?.maximumQuantity()?.doubleValue(for: HKUnit(from: "count/min"))
-                cont.resume(returning: bpm)
+        let calendar = Calendar.current
+        let end = Date.now
+        guard let start = calendar.date(byAdding: .day, value: -days, to: calendar.startOfDay(for: end))
+        else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let descriptor = HKStatisticsCollectionQueryDescriptor(
+            predicate: .quantitySample(type: type, predicate: predicate),
+            options: .discreteMax,
+            anchorDate: calendar.startOfDay(for: start),
+            intervalComponents: DateComponents(day: 1)
+        )
+        guard let collection = try? await descriptor.result(for: store) else { return nil }
+
+        let unit = HKUnit(from: "count/min")
+        var dailyMaxima: [Double] = []
+        collection.enumerateStatistics(from: start, to: end) { stats, _ in
+            if let bpm = stats.maximumQuantity()?.doubleValue(for: unit),
+               bpm > 0, bpm <= Self.maxPlausibleHeartRate {
+                dailyMaxima.append(bpm)
             }
-            localStore.execute(query)
+        }
+        guard dailyMaxima.count >= 3 else { return nil }
+        return dailyMaxima.sorted(by: >)[2]
+    }
+
+    /// Max heart rate for the zone calculations: the age-predicted value,
+    /// raised to what the user has actually hit when that is genuinely higher.
+    public func fetchMaxHeartRate(days: Int = 365) async -> MaxHeartRate? {
+        let predicted = ageYears().map { Self.predictedMaxHeartRate(age: $0) }
+        let observed = await observedMaxHeartRate(days: days)
+        switch (predicted, observed) {
+        case let (predicted?, observed?):
+            return observed > predicted
+                ? MaxHeartRate(bpm: observed, isObserved: true)
+                : MaxHeartRate(bpm: predicted, isObserved: false)
+        case let (predicted?, nil):
+            return MaxHeartRate(bpm: predicted, isObserved: false)
+        case let (nil, observed?):
+            return MaxHeartRate(bpm: observed, isObserved: true)
+        default:
+            return nil   // no birth date and no usable readings
         }
     }
 

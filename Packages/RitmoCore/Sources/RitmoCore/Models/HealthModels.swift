@@ -145,6 +145,18 @@ public struct SleepSession: Identifiable, Codable {
         stages.filter { $0.type == .rem }.reduce(0) { $0 + $1.durationHours }
     }
 
+    /// Time actually ASLEEP (every stage but awake), as opposed to
+    /// `totalHours`, which is the first-to-last span and therefore also covers
+    /// awake stretches, gaps between fragments and plain "in bed" records.
+    /// Clamped to the span: two sources writing overlapping stages for the
+    /// same night must not add up to more sleep than the night lasted.
+    public var asleepHours: Double {
+        let asleep = stages
+            .filter { $0.type != .awake }
+            .reduce(0) { $0 + $1.durationHours }
+        return min(asleep, totalHours)
+    }
+
     /// Sleep quality 0-100, broken into its 5 weighted components so both the
     /// total and the per-component points can be shown (single source of
     /// truth for iOS + watchOS, which previously each computed this inline).
@@ -153,9 +165,19 @@ public struct SleepSession: Identifiable, Codable {
         let total = max(totalHours, 0.01)
         let awakeH = stages.filter { $0.type == .awake }.reduce(0) { $0 + $1.durationHours }
 
-        let durationScore    = min(totalHours / 8.0, 1.0) * 40
-        let deepScore        = min((deepSleepHours / total) / 0.15, 1.0) * 20
-        let remScore         = min((remSleepHours  / total) / 0.20, 1.0) * 20
+        // Judge the night on time ASLEEP, never on the in-bed span: the span
+        // counts awake stretches, the gap around an early-evening fragment and
+        // "in bed" records as if they were sleep, which handed out full
+        // duration points for a broken night AND, because the same inflated
+        // span was the denominator, quietly shrank the deep/REM percentages —
+        // deep and REM are shares of total SLEEP time, not of time in bed.
+        // Nights with no stage detail at all (plain in-bed records) have
+        // nothing better to go on, so they keep using the span.
+        let asleep = asleepHours > 0 ? asleepHours : total
+
+        let durationScore    = min(asleep / 8.0, 1.0) * 40
+        let deepScore        = min((deepSleepHours / asleep) / 0.15, 1.0) * 20
+        let remScore         = min((remSleepHours  / asleep) / 0.20, 1.0) * 20
         // 0% awake = 10 pts, 15%+ awake = 0 pts. WASO of 15-30 min in an 8h
         // night is normal/healthy, and HealthKit's staging tends to flag
         // brief motion blips as "awake" — the old 5% cutoff (~24 min) zeroed
@@ -183,7 +205,15 @@ public struct SleepSession: Identifiable, Codable {
             consistencyScore = 10
         }
         return SleepScoreBreakdown(duration: Int(durationScore), deep: Int(deepScore), rem: Int(remScore),
-                                   continuity: Int(continuityScore), consistency: Int(consistencyScore))
+                                   continuity: Int(continuityScore), consistency: Int(consistencyScore),
+                                   stagesMeasured: hasStageDetail)
+    }
+
+    /// Whether the recorder broke the night into stages at all. iPhone-only
+    /// tracking and many third-party apps write undifferentiated "asleep"
+    /// samples, which say nothing about deep or REM.
+    public var hasStageDetail: Bool {
+        stages.contains { $0.type == .deep || $0.type == .rem || $0.type == .core }
     }
 
     public var qualityScore: Int { scoreBreakdown.total }
@@ -195,8 +225,29 @@ public struct SleepScoreBreakdown {
     public let rem: Int           // out of 20
     public let continuity: Int    // out of 10
     public let consistency: Int   // out of 10
+    /// False when the night was recorded without stage detail. Deep and REM
+    /// were then never measured, so counting them as 0 would grade missing
+    /// data — the same mistake as scoring an untracked night 0/100. They are
+    /// left out and the measurable 60 points are rescaled onto 100 instead.
+    public let stagesMeasured: Bool
 
-    public var total: Int { duration + deep + rem + continuity + consistency }
+    public init(duration: Int, deep: Int, rem: Int, continuity: Int, consistency: Int,
+                stagesMeasured: Bool = true) {
+        self.duration = duration
+        self.deep = deep
+        self.rem = rem
+        self.continuity = continuity
+        self.consistency = consistency
+        self.stagesMeasured = stagesMeasured
+    }
+
+    public var total: Int {
+        let measured = duration + continuity + consistency
+        guard stagesMeasured else {
+            return min(Int((Double(measured) / 60.0 * 100).rounded()), 100)
+        }
+        return measured + deep + rem
+    }
 }
 
 public struct SleepStage: Identifiable, Codable {

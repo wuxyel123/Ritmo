@@ -788,7 +788,6 @@
 "1° tentativo" = "1st attempt";
 "2° tentativo" = "2nd attempt";
 "3° tentativo" = "3rd attempt";
-"91% · 97% · 101% del massimale — arrotondati a 2,5 kg." = "91% · 97% · 101% of the max — rounded to 2.5 kg.";
 "Bilanciere" = "Barbell";
 "Routine Hevy" = "Hevy routines";
 "Ultima esecuzione (allenamenti con lo stesso nome della routine)" = "Last performed (workouts named after the routine)";
@@ -870,3 +869,12 @@
 "Permessi Apple Salute" = "Apple Health permissions";
 "— km" = "— km";
 "Se una metrica resta a zero mentre le altre si aggiornano (per esempio la distanza con i passi già contati), il permesso di lettura di quella categoria è disattivato: Ritmo riceve zero senza poter distinguere il rifiuto. Attivalo in Salute › profilo › App e servizi › Ritmo." = "If one metric stays at zero while the others update (distance, say, with steps already counted), that category's read permission is off: Ritmo receives zero and cannot tell refusal apart. Turn it on in Health › profile › Apps and services › Ritmo.";
+
+// ── Warm-up ramp (2026-07-16) ──
+"I salti si accorciano fino al primo tentativo: l'ultimo riscaldamento resta almeno un salto pieno sotto l'apertura." = "The jumps keep shrinking into the first attempt: the top warm-up stays a full jump below the opener.";
+
+// ── Attempts anchored at 100% (2026-07-16) ──
+"Terzo tentativo al massimale, salti di %@ kg (4%%) sotto — arrotondati a 2,5 kg." = "Third attempt at the max, %@ kg (4%%) steps below it — rounded to 2.5 kg.";
+
+// ── Age-predicted max HR (2026-07-16) ──
+"Basate sulla tua FC max stimata per età: %@ bpm" = "Based on your age-predicted max HR: %@ bpm";
