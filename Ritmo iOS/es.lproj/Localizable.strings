@@ -878,3 +878,6 @@
 
 // ── Strava callback host (2026-07-16) ──
 "Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Crea TU PROPIA app API en strava.com/settings/api (gratis): pon %@ como «Authorization Callback Domain» y pega aquí Client ID y Client Secret. La conexión abre Strava para autorizar y sigue activa hasta que la quites.";
+
+// ── Strava attribution (2026-07-16) ──
+"Powered by Strava" = "Powered by Strava";

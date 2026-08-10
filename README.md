@@ -66,9 +66,15 @@ Ritmo/
 
 `RitmoCore` has no UI dependencies — it owns HealthKit access, SwiftData models, and the scoring, training-load, meet-planning, and endurance math shared by every target. Keeping that logic UI-free is also what makes it testable outside a simulator, which is how the scoring and meet-ramp fixes were verified.
 
+## Privacy
+
+Nothing is collected. There is no server, no account, and no analytics — health
+data stays in Apple Health and in a local database on the device. See
+[PRIVACY.md](PRIVACY.md).
+
 ## Setup
 
-See [SETUP.md](SETUP.md) for the full Xcode project setup (targets, HealthKit entitlements, App Group, signing).
+See [SETUP.md](SETUP.md) for the full Xcode project setup (targets, HealthKit entitlements, App Group, signing), and [SUBMISSION.md](SUBMISSION.md) for App Store notes.
 
 Hevy, Strava, and OpenPowerlifting are optional: each is configured in Settings with your own API key, OAuth app, or username.
 

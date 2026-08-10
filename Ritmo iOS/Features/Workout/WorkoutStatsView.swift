@@ -858,6 +858,12 @@ struct WorkoutStatsView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                    // Strava's API agreement asks for attribution wherever its
+                    // data is shown. Only when some of it actually came from
+                    // there — claiming it otherwise would be its own untruth.
+                    if races.contains(where: { $0.stravaID != nil }) {
+                        StravaAttribution()
+                    }
                 }
             }
         }
@@ -1923,6 +1929,20 @@ struct RaceEditorView: View {
 
 // MARK: - RaceListView (full race log, deletable)
 
+// MARK: - StravaAttribution
+//
+// Required by Strava's brand guidelines wherever their data is displayed.
+// "Powered by Strava" is one of the two phrases they accept, and their name
+// must never be more prominent than the app's own — hence caption2, secondary.
+struct StravaAttribution: View {
+    var body: some View {
+        Text("Powered by Strava")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
 struct RaceListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \RaceResult.date, order: .reverse) private var races: [RaceResult]
@@ -1957,6 +1977,10 @@ struct RaceListView: View {
             .onDelete { offsets in
                 for index in offsets { modelContext.delete(races[index]) }
                 try? modelContext.save()
+            }
+            if races.contains(where: { $0.stravaID != nil }) {
+                StravaAttribution()
+                    .listRowSeparator(.hidden)
             }
         }
         .navigationTitle("Gare")
