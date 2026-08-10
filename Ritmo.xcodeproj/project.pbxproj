@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DD000000000000000753AAAA /* PrivacyInfo.xcprivacy (WatchWidget) in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000753AAAA /* PrivacyInfo.xcprivacy (WatchWidget) */; };
+		DD000000000000000752AAAA /* PrivacyInfo.xcprivacy (Widgets) in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000752AAAA /* PrivacyInfo.xcprivacy (Widgets) */; };
+		DD000000000000000751AAAA /* PrivacyInfo.xcprivacy (Watch) in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000751AAAA /* PrivacyInfo.xcprivacy (Watch) */; };
+		DD000000000000000750AAAA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = BB000000000000000750AAAA /* PrivacyInfo.xcprivacy */; };
 		DD000000000000000001AAAA /* RitmoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000001AAAA /* RitmoApp.swift */; };
 		DD000000000000000002AAAA /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000002AAAA /* DashboardView.swift */; };
 		DD000000000000000003AAAA /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000003AAAA /* DashboardViewModel.swift */; };
@@ -136,6 +140,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BB000000000000000753AAAA /* PrivacyInfo.xcprivacy (WatchWidget) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "PrivacyInfo.xcprivacy (WatchWidget)"; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BB000000000000000752AAAA /* PrivacyInfo.xcprivacy (Widgets) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "PrivacyInfo.xcprivacy (Widgets)"; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BB000000000000000751AAAA /* PrivacyInfo.xcprivacy (Watch) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "PrivacyInfo.xcprivacy (Watch)"; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BB000000000000000750AAAA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB000000000000000001AAAA /* RitmoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitmoApp.swift; sourceTree = "<group>"; };
 		BB000000000000000002AAAA /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		BB000000000000000003AAAA /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
@@ -276,6 +284,10 @@
 		AA000000000000000016AAAA /* Ritmo Watch Widget */ = {
 			isa = PBXGroup;
 			children = (
+				BB000000000000000753AAAA /* PrivacyInfo.xcprivacy (WatchWidget) */,
+				BB000000000000000752AAAA /* PrivacyInfo.xcprivacy (Widgets) */,
+				BB000000000000000751AAAA /* PrivacyInfo.xcprivacy (Watch) */,
+				BB000000000000000750AAAA /* PrivacyInfo.xcprivacy */,
 				BB000000000000000200AAAA /* RitmoWatchWidget.swift */,
 				BB000000000000000306AAAA /* WatchCircularView.swift */,
 				BB000000000000000307AAAA /* WatchRectangularView.swift */,
@@ -693,6 +705,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD000000000000000750AAAA /* PrivacyInfo.xcprivacy in Resources */,
 				DD000000000000000006AAAA /* Assets.xcassets in Resources */,
 				DD000000000001000001AAAA /* Localizable.strings in Resources */,
 			);
@@ -702,6 +715,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD000000000000000751AAAA /* PrivacyInfo.xcprivacy (Watch) in Resources */,
 				DD000000000000000009AAAA /* Assets.xcassets (Watch) in Resources */,
 				DA000000000001000001AAAA /* Localizable.strings (Watch) in Resources */,
 			);
@@ -711,6 +725,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD000000000000000752AAAA /* PrivacyInfo.xcprivacy (Widgets) in Resources */,
 				DD00000000000000000CAAAA /* Assets.xcassets (Widgets) in Resources */,
 				DD000000000002000001AAAA /* Localizable.strings (Widget) in Resources */,
 			);
@@ -720,6 +735,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD000000000000000753AAAA /* PrivacyInfo.xcprivacy (WatchWidget) in Resources */,
 				DD000000000003000001AAAA /* Localizable.strings (WatchWidget) in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

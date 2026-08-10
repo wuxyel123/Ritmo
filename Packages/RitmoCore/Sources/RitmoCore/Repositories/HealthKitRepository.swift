@@ -163,16 +163,18 @@ public final class HealthKitRepository: ObservableObject {
     // MARK: - Sleep Logging
 
     /// Writes sleep to Apple Health.
-    /// On iOS 16+ / watchOS 9+, when quality is specified, writes three consecutive
-    /// stage samples (deep → REM → core) whose proportions reflect the quality rating,
-    /// so Apple Health's sleep stages screen shows meaningful breakdown.
-    /// On older OS or when quality is nil, writes a single asleepUnspecified sample.
-    /// `wakeCount` reported wake-ups become REAL awake samples spread evenly
-    /// through the night (carved out of the sleep phases), so Apple Health
-    /// shows the interruptions and continuity scoring works from actual stage
-    /// data — no app-private bookkeeping needed. Each awake window lasts the
-    /// user's configured average (Settings → Sonno), default 10 minutes.
-    /// Quality is also persisted in the shared App Group for recovery score blending.
+    ///
+    /// ONLY what the user actually reported: the sleep span as
+    /// `asleepUnspecified`, interrupted by one awake window per wake-up they
+    /// counted, each lasting their configured average (Settings → Sonno).
+    ///
+    /// It used to also write deep/REM/core samples whose proportions were
+    /// derived from the subjective quality rating — inventing a sleep
+    /// architecture nobody measured, writing it into Health where every other
+    /// app would read it as sensor data, and then scoring that invention as if
+    /// it were evidence. App Review forbids writing inaccurate data into
+    /// HealthKit, and it was dishonest regardless. The rating still informs the
+    /// recovery score, but it stays in the App Group where it belongs.
     public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil,
                            wakeCount: Int = 0) async throws {
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -181,26 +183,13 @@ public final class HealthKitRepository: ObservableObject {
         let type = HKCategoryType(.sleepAnalysis)
         let total = end.timeIntervalSince(start)
 
-        // Asleep-phase timeline (deep → REM → core when quality is known).
-        var blocks: [(value: Int, start: Date, end: Date)]
-        if #available(iOS 16.0, watchOS 9.0, *), let q = quality {
-            let (deepFrac, remFrac) = q.sleepStageFractions
-            let t1 = start.addingTimeInterval(total * deepFrac)
-            let t2 = t1.addingTimeInterval(total * remFrac)
-            blocks = [
-                (HKCategoryValueSleepAnalysis.asleepDeep.rawValue, start, t1),
-                (HKCategoryValueSleepAnalysis.asleepREM.rawValue,  t1, t2),
-                (HKCategoryValueSleepAnalysis.asleepCore.rawValue, t2, end)
-            ]
+        let asleepValue: Int
+        if #available(iOS 16.0, watchOS 9.0, *) {
+            asleepValue = HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
         } else {
-            let value: Int
-            if #available(iOS 16.0, watchOS 9.0, *) {
-                value = HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
-            } else {
-                value = HKCategoryValueSleepAnalysis.inBed.rawValue
-            }
-            blocks = [(value, start, end)]
+            asleepValue = HKCategoryValueSleepAnalysis.inBed.rawValue
         }
+        var blocks: [(value: Int, start: Date, end: Date)] = [(asleepValue, start, end)]
 
         // Carve an awake window out of the timeline per reported wake-up:
         // wake i sits at i/(N+1) of the night, so N wakes split the sleep into

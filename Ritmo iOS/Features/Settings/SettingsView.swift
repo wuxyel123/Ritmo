@@ -1152,7 +1152,7 @@ struct StravaSettingsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Come collegare Strava", systemImage: "info.circle")
                             .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
-                        Text("Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi localhost, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi.")
+                        Text(String(format: NSLocalizedString("Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi.", comment: ""), StravaService.callbackHost))
                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                     }
                     .padding(.vertical, 2)
@@ -1194,7 +1194,7 @@ struct StravaSettingsView: View {
     /// exchanged (with the user's own client secret) for the token pair.
     private func connect() {
         guard let url = StravaService.authorizationURL(clientID: clientID.trimmingCharacters(in: .whitespaces)) else { return }
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "ritmo") { callbackURL, error in
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: StravaService.urlScheme) { callbackURL, error in
             guard error == nil,
                   let callbackURL,
                   let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?

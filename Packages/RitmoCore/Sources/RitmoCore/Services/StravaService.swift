@@ -7,10 +7,13 @@ import SwiftData
 // Like the Hevy key, the credentials are the user's own: they register a
 // personal API application on strava.com/settings/api (free) and paste the
 // Client ID + Client Secret; the OAuth dance itself happens in the app via
-// ASWebAuthenticationSession (redirect ritmo://localhost — Strava's callback
-// domain is set to "localhost"). Only races are imported — training
-// activities already reach Ritmo through HealthKit, importing them twice
-// would duplicate the store.
+// ASWebAuthenticationSession. Only races are imported — training activities
+// already reach Ritmo through HealthKit, importing them twice would
+// duplicate the store.
+//
+// Strava only ever shows the user their OWN activities here, which is what
+// its API agreement permits; attribution ("Powered by Strava") belongs on any
+// screen presenting the imported data.
 
 public enum StravaError: LocalizedError {
     case notConnected
@@ -52,7 +55,19 @@ public struct StravaTokens: Codable, Sendable {
 public enum StravaService {
 
     public static let authorizeURL = "https://www.strava.com/oauth/mobile/authorize"
-    public static let redirectURI = "ritmo://localhost/strava"
+
+    /// Host of the OAuth redirect, and the exact string that must go in the
+    /// Strava application's "Authorization Callback Domain" field.
+    ///
+    /// It used to be `localhost`, which works but is leftover development
+    /// config: it claims the callback lands on the loopback interface when it
+    /// is really caught by this app's URL scheme, and a callback domain of
+    /// "localhost" on a shipping app invites questions during Strava's own
+    /// review. The bundle identifier is a string the developer demonstrably
+    /// controls and needs no DNS, since a custom scheme is matched literally.
+    public static let callbackHost = "com.alessandrodiscalzi.ritmo"
+    public static let urlScheme = "ritmo"
+    public static var redirectURI: String { "\(urlScheme)://\(callbackHost)/strava" }
 
     /// Full authorization URL for ASWebAuthenticationSession.
     public static func authorizationURL(clientID: String) -> URL? {

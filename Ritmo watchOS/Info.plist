@@ -29,6 +29,6 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Ritmo legge i tuoi dati di salute per mostrarti le metriche sul Watch.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Ritmo non scrive dati su Apple Health.</string>
+	<string>Ritmo salva in Apple Salute solo ciò che registri tu dal Watch: acqua, sonno e allenamenti.</string>
 </dict>
 </plist>

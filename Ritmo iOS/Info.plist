@@ -27,7 +27,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Ritmo legge i tuoi dati di salute per mostrarti grafici e insights personalizzati.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Ritmo non scrive dati su Apple Health.</string>
+	<string>Ritmo salva in Apple Salute solo ciò che registri tu: acqua, sonno, allenamenti creati nell'app e il tuo RPE come punteggio di sforzo.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

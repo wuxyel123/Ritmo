@@ -758,7 +758,6 @@
 "Olimpico" = "Olímpico";
 "Strava collegato" = "Strava ligado";
 "Come collegare Strava" = "Como ligar o Strava";
-"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi localhost, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Cria a TUA app API em strava.com/settings/api (grátis): define localhost como «Authorization Callback Domain» e cola aqui o Client ID e o Client Secret. A ligação abre o Strava para autorizar e permanece ativa até a removeres.";
 "Importa gare ora" = "Importar provas agora";
 "Collega Strava" = "Ligar Strava";
 "Importate %@ gare." = "%@ provas importadas.";
@@ -876,3 +875,6 @@
 
 // ── Age-predicted max HR (2026-07-16) ──
 "Basate sulla tua FC max stimata per età: %@ bpm" = "Baseadas na sua FC máx estimada pela idade: %@ bpm";
+
+// ── Strava callback host (2026-07-16) ──
+"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Crie a SUA app API em strava.com/settings/api (grátis): defina %@ como «Authorization Callback Domain» e cole aqui Client ID e Client Secret. A ligação abre o Strava para autorização e fica ativa até a remover.";

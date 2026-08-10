@@ -320,18 +320,11 @@ public enum SleepQuality: Int, Codable, CaseIterable, Sendable {
         Double(scaleIndex + 1) / Double(Self.allCases.count) * 30
     }
 
-    /// (deep fraction, REM fraction) of total sleep duration for Apple Health stage writing.
-    /// Core = 1 - deep - rem. Based on typical sleep architecture scaled by quality.
-    public var sleepStageFractions: (deep: Double, rem: Double) {
-        switch self {
-        case .pessimo:     return (0.03, 0.07)   // barely restorative
-        case .scarso:      return (0.05, 0.10)
-        case .sufficiente: return (0.12, 0.15)
-        case .buono:       return (0.18, 0.20)
-        case .moltoBuono:  return (0.22, 0.23)
-        case .ottimo:      return (0.25, 0.25)   // excellent: ~50% restorative
-        }
-    }
+    // A `sleepStageFractions` table used to live here, turning this subjective
+    // rating into deep/REM proportions that were written to Apple Health as
+    // though a sensor had measured them. Deleted: a rating of how you feel is
+    // not a hypnogram, and inventing one polluted both Health and this app's
+    // own sleep score. See HealthKitRepository.writeSleep.
 }
 
 // MARK: - DailyActivity
