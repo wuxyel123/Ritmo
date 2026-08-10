@@ -8,7 +8,7 @@ extension Notification.Name {
 }
 
 /// Receives user goals pushed from the paired iPhone and writes them into the
-/// watch's SwiftData store (which has no CloudKit). Workouts come from HealthKit.
+/// watch's SwiftData store. Workouts come from HealthKit.
 final class GoalsSyncService: NSObject {
     static let shared = GoalsSyncService()
 

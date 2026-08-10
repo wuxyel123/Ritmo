@@ -77,15 +77,14 @@ Aggiungi queste chiavi (Xcode le aggiunge automaticamente con HealthKit, ma veri
 
 ---
 
-## Passo 5 — Configura CloudKit (sync iPhone → Mac)
+## Passo 5 — Archiviazione locale (niente CloudKit)
 
-1. Seleziona target `Ritmo` → **Signing & Capabilities**
-2. Aggiungi **iCloud**
-3. Spunta **CloudKit**
-4. Aggiungi **Background Modes** → spunta **Background fetch** e **Remote notifications**
+Non serve alcuna configurazione: lo store SwiftData vive solo sul dispositivo.
 
-> CloudKit sincronizza automaticamente SwiftData tra tutti i dispositivi dell'utente
-> (iPhone → Mac, iPhone → iPad).
+> La sincronizzazione iCloud è esclusa di proposito. Quasi tutto ciò che Ritmo
+> salva deriva da Apple Salute, e le regole di App Review vietano di conservare
+> dati sanitari su iCloud. Gli allenamenti seguono comunque l'utente tra i suoi
+> dispositivi, perché è Apple Salute stessa a sincronizzarli.
 
 ---
 
@@ -158,7 +157,7 @@ Sources/RitmoCore/
 ├── Services/
 │   └── PRAndInsightsService.swift
 └── Storage/
-    └── RitmoStore.swift       (SwiftData + CloudKit)
+    └── RitmoStore.swift       (SwiftData, solo locale)
 ```
 
 ---
@@ -167,4 +166,3 @@ Sources/RitmoCore/
 
 - **Apple Developer Account**: serve per testare HealthKit su dispositivo fisico (account gratuito è sufficiente). Per distribuire su App Store serve l'account a pagamento ($99/anno).
 - **Privacy**: tutti i dati restano sul dispositivo o nell'iCloud privato dell'utente. Ritmo non ha un backend.
-- **CloudKit**: la sync funziona solo se l'utente ha iCloud attivo e ha effettuato il login con Apple ID.

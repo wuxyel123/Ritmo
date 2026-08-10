@@ -147,7 +147,7 @@ public final class Exercise {
     }
 }
 
-// MARK: - UserGoals (salvati su SwiftData, sincronizzati via CloudKit)
+// MARK: - UserGoals (salvati su SwiftData, solo in locale)
 @Model
 public final class UserGoals {
     public var id: UUID
@@ -243,7 +243,7 @@ extension UserGoals {
     }
 
     /// Returns the single canonical `UserGoals`, creating one if none exists and
-    /// removing any duplicates (CloudKit sync + WatchConnectivity can introduce them).
+    /// removing any duplicates (WatchConnectivity can introduce them).
     /// This guarantees a deterministic record for both scoring and goal display.
     @MainActor
     public static func canonical(in context: ModelContext) -> UserGoals {

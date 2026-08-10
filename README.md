@@ -46,7 +46,7 @@ The result is not a demo. It syncs with Apple Health, imports from Hevy and Stra
 ### Platform
 
 - **Sleep** — quality scoring across duration, deep/REM %, continuity, and bedtime consistency, with an interactive hypnogram; nights recorded without stage detail are scored on what was actually measured rather than counted as zero.
-- **Apple Watch app** — home, nutrition, workout, sleep, health, and water tabs, plus goal sync from iPhone over WatchConnectivity (the watch has no CloudKit of its own).
+- **Apple Watch app** — home, nutrition, workout, sleep, health, and water tabs, plus goal sync from iPhone over WatchConnectivity.
 - **Watch face complications** — daily score, rings, steps with distance and floors, days since last workout, and meet countdown.
 - **iOS widgets** — daily score, activity, and macro goals, on the home screen and lock screen.
 - **Siri shortcuts** — log water and ask for your day score.

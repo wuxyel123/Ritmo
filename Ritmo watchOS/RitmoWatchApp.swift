@@ -44,7 +44,7 @@ struct WatchTabView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await reload() } }
         }
-        // Reload snapshot when goals change (CloudKit or local mutation)
+        // Reload snapshot when goals change
         .onChange(of: goals.dailyCalories)       { Task { await reload() } }
         .onChange(of: goals.dailyProteinG)       { Task { await reload() } }
         .onChange(of: goals.dailyWaterMl)        { Task { await reload() } }

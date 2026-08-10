@@ -3,7 +3,7 @@ import SwiftData
 import RitmoCore
 
 /// Pushes user goals + the excluded-workout set to the paired Apple Watch over
-/// WatchConnectivity (the watch has no CloudKit). Everything is tiny, so a single
+/// WatchConnectivity. Everything is tiny, so a single
 /// application context carries the latest state, backed by transferUserInfo
 /// (guaranteed delivery) and a live sendMessage when reachable.
 final class GoalsSyncService: NSObject {

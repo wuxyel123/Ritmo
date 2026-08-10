@@ -2,49 +2,32 @@ import Foundation
 import SwiftData
 
 // MARK: - RitmoStore
-/// Configurazione SwiftData con CloudKit per sync automatico iPhone → Mac
+/// Configurazione SwiftData, solo locale.
+///
+/// Niente CloudKit — deliberatamente. Quasi tutto ciò che sta in questo store
+/// deriva da Apple Salute (le sessioni importate portano `hkWorkoutUUID`), e le
+/// regole di App Review vietano di conservare dati sanitari su iCloud. I dati
+/// che contano seguono comunque l'utente: gli allenamenti perché è Apple Salute
+/// stessa a sincronizzarli tra i dispositivi, e Hevy perché si reimporta.
 public enum RitmoStore {
 
-    /// Container principale — usa CloudKit per sync automatico tra dispositivi
+    private static let schema = Schema([
+        WorkoutSession.self,
+        WorkoutSet.self,
+        Exercise.self,
+        UserGoals.self,
+        RaceResult.self
+    ])
+
+    /// Container principale — su disco, nessuna sincronizzazione.
     public static var container: ModelContainer = {
-        let schema = Schema([
-            WorkoutSession.self,
-            WorkoutSet.self,
-            Exercise.self,
-            UserGoals.self,
-            RaceResult.self
-        ])
-
-        // CloudKit sync: i dati SwiftData vengono sincronizzati via iCloud
-        // automaticamente su tutti i dispositivi dell'utente (iPhone + Mac)
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic  // ← questa riga attiva CloudKit sync
-        )
-
-        do {
-            return try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            // Fallback senza CloudKit se non disponibile (simulatore, ecc.)
-            let fallbackConfig = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false
-            )
-            return try! ModelContainer(for: schema, configurations: [fallbackConfig])
-        }
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        return try! ModelContainer(for: schema, configurations: [config])
     }()
 
     /// Container in-memory per Preview e test
     @MainActor
     public static var previewContainer: ModelContainer = {
-        let schema = Schema([
-            WorkoutSession.self,
-            WorkoutSet.self,
-            Exercise.self,
-            UserGoals.self,
-            RaceResult.self
-        ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: schema, configurations: [config])
         SampleData.populate(container: container)

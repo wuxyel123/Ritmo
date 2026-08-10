@@ -35,9 +35,9 @@ public enum RaceSport: String, Codable, CaseIterable {
 
 @Model
 public final class RaceResult {
-    // Every property carries a default: the main container is CloudKit-backed
-    // and CloudKit refuses models whose attributes are neither optional nor
-    // defaulted.
+    // Every property carries a default. The store is local-only now, so this
+    // is no longer required — but defaults also keep SwiftData migrations
+    // additive, which is worth having on its own.
     public var id: UUID = UUID()
     public var date: Date = Date.now
     public var name: String = ""

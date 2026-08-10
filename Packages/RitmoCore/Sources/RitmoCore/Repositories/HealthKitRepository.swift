@@ -5,7 +5,7 @@ import SwiftData
 
 // MARK: - HealthKitRepository
 /// Legge tutti i dati da Apple Health (HealthKit)
-/// Disponibile su iOS e watchOS. Su Mac (Catalyst) i dati arrivano via CloudKit.
+/// Disponibile su iOS e watchOS.
 @MainActor
 public final class HealthKitRepository: ObservableObject {
 
