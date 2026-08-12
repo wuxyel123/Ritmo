@@ -23,7 +23,7 @@ struct InsightBanner: View {
     }
 
     private var localizedMessage: String {
-        let format = NSLocalizedString(insight.messageKey, comment: "")
+        let format = AppLocalization.string(insight.messageKey)
         guard !insight.messageArgs.isEmpty else { return format }
         let args: [CVarArg] = insight.messageArgs.map { $0 as CVarArg }
         return String(format: format, arguments: args)

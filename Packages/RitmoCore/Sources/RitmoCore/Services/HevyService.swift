@@ -34,11 +34,11 @@ public enum HevyError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidKey:
-            return NSLocalizedString("Chiave API non valida: controlla la chiave generata in Hevy (serve Hevy Pro).", comment: "")
+            return AppLocalization.string("Chiave API non valida: controlla la chiave generata in Hevy (serve Hevy Pro).")
         case .http(let code):
-            return String(format: NSLocalizedString("Hevy ha risposto con un errore (HTTP %@).", comment: ""), "\(code)")
+            return String(format: AppLocalization.string("Hevy ha risposto con un errore (HTTP %@)."), "\(code)")
         case .network(let e):
-            return String(format: NSLocalizedString("Errore di rete: %@", comment: ""), e.localizedDescription)
+            return String(format: AppLocalization.string("Errore di rete: %@"), e.localizedDescription)
         }
     }
 }

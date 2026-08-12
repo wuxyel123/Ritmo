@@ -222,7 +222,7 @@ struct SettingsTabView: View {
                         HStack {
                             Text("Tempo sveglio per risveglio")
                             Spacer()
-                            Text(String(format: NSLocalizedString("%@ min", comment: ""),
+                            Text(String(format: AppLocalization.string("%@ min"),
                                         "\(Int(avgAwakeMinutes))"))
                                 .font(.headline)
                                 .foregroundStyle(RitmoTheme.sleep)
@@ -867,10 +867,10 @@ struct HevySettingsView: View {
             do {
                 let result = try await service.importAll(into: modelContext,
                                                          stopWhenAllKnown: !fullHistory) { done, total in
-                    hevyProgress = String(format: NSLocalizedString("Importazione… %@ di ~%@", comment: ""),
+                    hevyProgress = String(format: AppLocalization.string("Importazione… %@ di ~%@"),
                                           "\(done)", "\(total)")
                 }
-                hevyResult = String(format: NSLocalizedString("Importati %@ allenamenti, %@ arricchiti, %@ corretti, %@ già presenti.", comment: ""),
+                hevyResult = String(format: AppLocalization.string("Importati %@ allenamenti, %@ arricchiti, %@ corretti, %@ già presenti."),
                                     "\(result.imported)", "\(result.mergedIntoExisting)",
                                     "\(result.updated)", "\(result.skipped)")
                 hevyLastSyncTimestamp = Date.now.timeIntervalSince1970
@@ -1036,7 +1036,7 @@ struct PowerliftingSettingsView: View {
             do {
                 let meets = try await OpenPowerliftingService.fetchMeets(username: candidate)
                 oplUsername = candidate
-                checkResult = String(format: NSLocalizedString("Trovate %@ gare.", comment: ""), "\(meets.count)")
+                checkResult = String(format: AppLocalization.string("Trovate %@ gare."), "\(meets.count)")
             } catch {
                 checkResult = error.localizedDescription
             }
@@ -1171,7 +1171,7 @@ struct StravaSettingsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Come collegare Strava", systemImage: "info.circle")
                             .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
-                        Text(String(format: NSLocalizedString("1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret.", comment: ""), StravaService.callbackHost))
+                        Text(String(format: AppLocalization.string("1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret."), StravaService.callbackHost))
                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                     }
                     .padding(.vertical, 2)
@@ -1219,7 +1219,7 @@ struct StravaSettingsView: View {
                   let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
                       .queryItems?.first(where: { $0.name == "code" })?.value
             else {
-                Task { @MainActor in result = NSLocalizedString("Accesso annullato.", comment: "") }
+                Task { @MainActor in result = AppLocalization.string("Accesso annullato.") }
                 return
             }
             Task { @MainActor in
@@ -1250,7 +1250,7 @@ struct StravaSettingsView: View {
         Task { @MainActor in
             do {
                 let added = try await StravaSession.importNewRaces(into: modelContext, full: full)
-                result = String(format: NSLocalizedString("Importate %@ gare.", comment: ""), "\(added)")
+                result = String(format: AppLocalization.string("Importate %@ gare."), "\(added)")
             } catch {
                 result = error.localizedDescription
             }

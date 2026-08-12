@@ -188,7 +188,7 @@ struct StepsComplicationView: View {
         case .accessoryInline:
             // One line: the count plus whichever companions have data.
             let parts = [entry.snapshot.steps.formatted() + " passi", kmText,
-                         floors.map { String(format: NSLocalizedString("%@ piani", comment: ""), "\($0)") }]
+                         floors.map { String(format: AppLocalization.string("%@ piani"), "\($0)") }]
             Label(parts.compactMap { $0 }.joined(separator: " · "), systemImage: "figure.walk")
 
         case .accessoryRectangular:
@@ -425,7 +425,7 @@ struct MeetCountdownComplicationView: View {
             case .accessoryInline:
                 if let days = daysToMeet {
                     Label {
-                        Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""), "\(days)"))
+                        Text(String(format: AppLocalization.string("Gara tra %@ giorni"), "\(days)"))
                     } icon: {
                         Image(systemName: "flag.checkered")
                     }

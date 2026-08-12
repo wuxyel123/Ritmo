@@ -141,7 +141,7 @@ struct DashboardView: View {
                                         .frame(width: 42, height: 42)
                                         .background(RitmoTheme.accent.opacity(0.15), in: Circle())
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""),
+                                        Text(String(format: AppLocalization.string("Gara tra %@ giorni"),
                                                     "\(daysToMeet)"))
                                             .font(.headline)
                                         Text(meetDate, format: .dateTime.weekday(.wide).day().month().year())

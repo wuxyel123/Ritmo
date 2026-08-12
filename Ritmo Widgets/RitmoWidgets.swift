@@ -100,7 +100,7 @@ struct MeetCountdownWidgetView: View {
             case .accessoryInline:
                 if let days = daysToMeet {
                     Label {
-                        Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""), "\(days)"))
+                        Text(String(format: AppLocalization.string("Gara tra %@ giorni"), "\(days)"))
                     } icon: {
                         Image(systemName: "flag.checkered")
                     }
@@ -119,7 +119,7 @@ struct MeetCountdownWidgetView: View {
                         Text("\(days)")
                             .font(.system(size: 40, weight: .bold, design: .rounded))
                             .monospacedDigit()
-                        Text(String(format: NSLocalizedString("giorni alla gara", comment: ""), "\(days)"))
+                        Text(String(format: AppLocalization.string("giorni alla gara"), "\(days)"))
                             .font(.caption2).foregroundStyle(.secondary)
                         Text(meetDate, format: .dateTime.day().month(.abbreviated).year())
                             .font(.caption2.bold()).foregroundStyle(.orange)

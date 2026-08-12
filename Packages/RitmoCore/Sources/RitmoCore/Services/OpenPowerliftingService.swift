@@ -37,13 +37,13 @@ public enum OPLError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .lifterNotFound:
-            return NSLocalizedString("Atleta non trovato su OpenPowerlifting: controlla lo username (quello nell'URL della tua pagina).", comment: "")
+            return AppLocalization.string("Atleta non trovato su OpenPowerlifting: controlla lo username (quello nell'URL della tua pagina).")
         case .http(let code):
-            return String(format: NSLocalizedString("OpenPowerlifting ha risposto con un errore (HTTP %@).", comment: ""), "\(code)")
+            return String(format: AppLocalization.string("OpenPowerlifting ha risposto con un errore (HTTP %@)."), "\(code)")
         case .network(let e):
-            return String(format: NSLocalizedString("Errore di rete: %@", comment: ""), e.localizedDescription)
+            return String(format: AppLocalization.string("Errore di rete: %@"), e.localizedDescription)
         case .emptyData:
-            return NSLocalizedString("Nessuna gara trovata per questo atleta.", comment: "")
+            return AppLocalization.string("Nessuna gara trovata per questo atleta.")
         }
     }
 }

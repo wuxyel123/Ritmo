@@ -268,7 +268,7 @@ struct WorkoutStatsView: View {
             HStack {
                 Text(label).font(.caption)
                 Spacer()
-                Text(String(format: NSLocalizedString("%@ serie · %@", comment: ""),
+                Text(String(format: AppLocalization.string("%@ serie · %@"),
                             "\(count)", "\(Int((share * 100).rounded()))%"))
                     .font(.caption.bold()).foregroundStyle(color)
             }
@@ -296,12 +296,12 @@ struct WorkoutStatsView: View {
                             .font(.caption)
                             .foregroundStyle(muscleColor(item.group))
                             .frame(width: 100, alignment: .leading)
-                        Text(String(format: NSLocalizedString("%@×/settimana", comment: ""),
+                        Text(String(format: AppLocalization.string("%@×/settimana"),
                                     String(format: "%.1f", item.perWeek)))
                             .font(.caption.bold())
                         Spacer()
                         if let gap = item.averageGapDays {
-                            Text(String(format: NSLocalizedString("ogni %@ giorni", comment: ""),
+                            Text(String(format: AppLocalization.string("ogni %@ giorni"),
                                         String(format: "%.1f", gap)))
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
@@ -441,7 +441,7 @@ struct WorkoutStatsView: View {
                             .foregroundStyle(RitmoTheme.accent)
                         Text("punti IPF").font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                        Text(String(format: NSLocalizedString("totale %@ kg · %@ kg BW", comment: ""),
+                        Text(String(format: AppLocalization.string("totale %@ kg · %@ kg BW"),
                                     fmtKg(total), fmtKg(bw)))
                             .font(.caption2).foregroundStyle(.secondary)
                     }
@@ -515,7 +515,7 @@ struct WorkoutStatsView: View {
                                 .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                             if let estimate, kg > 0 {
                                 let deltaPct = (estimate - kg) / kg * 100
-                                Text(String(format: NSLocalizedString("stima %@ (%@)", comment: ""),
+                                Text(String(format: AppLocalization.string("stima %@ (%@)"),
                                             fmtKg(estimate),
                                             String(format: "%+.0f%%", deltaPct)))
                                     .font(.system(size: 9))
@@ -534,7 +534,7 @@ struct WorkoutStatsView: View {
                         }
                         Spacer()
                         if let bestGL {
-                            Text(String(format: NSLocalizedString("%@ punti IPF", comment: ""),
+                            Text(String(format: AppLocalization.string("%@ punti IPF"),
                                         String(format: "%.1f", bestGL)))
                                 .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
                         }
@@ -636,7 +636,7 @@ struct WorkoutStatsView: View {
                             .frame(width: 38, height: 38)
                             .background(RitmoTheme.accent.opacity(0.12), in: Circle())
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(String(format: NSLocalizedString("Gara tra %@ giorni", comment: ""), "\(days)"))
+                            Text(String(format: AppLocalization.string("Gara tra %@ giorni"), "\(days)"))
                                 .font(.subheadline.bold())
                             Text(meetDate, format: .dateTime.weekday(.wide).day().month().year())
                                 .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
@@ -667,7 +667,7 @@ struct WorkoutStatsView: View {
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(row.title).font(.caption.bold()).lineLimit(1)
-                                Text(String(format: NSLocalizedString("%@ esercizi · %@ serie", comment: ""),
+                                Text(String(format: AppLocalization.string("%@ esercizi · %@ serie"),
                                             "\(row.exerciseCount)", "\(row.setCount)"))
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
@@ -679,7 +679,7 @@ struct WorkoutStatsView: View {
                                 } else {
                                     Text("mai eseguita").font(.caption2).foregroundStyle(.secondary)
                                 }
-                                Text(String(format: NSLocalizedString("×%@ in 30gg", comment: ""),
+                                Text(String(format: AppLocalization.string("×%@ in 30gg"),
                                             "\(row.count30)"))
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
@@ -703,8 +703,8 @@ struct WorkoutStatsView: View {
                         HStack {
                             Text(LocalizedStringKey(equivalent.bucket.label)).font(.caption.bold())
                             Spacer()
-                            Text(String(format: NSLocalizedString("da %@", comment: ""),
-                                        NSLocalizedString(equivalent.sourceLabel, comment: "")))
+                            Text(String(format: AppLocalization.string("da %@"),
+                                        AppLocalization.string(equivalent.sourceLabel)))
                                 .font(.caption2).foregroundStyle(.secondary)
                             Text(EnduranceStats.formatDuration(equivalent.seconds))
                                 .font(.subheadline.bold())
@@ -774,7 +774,7 @@ struct WorkoutStatsView: View {
                                     if let grade = ageGradePercent(pb.bucket.gradingDistance,
                                                                    seconds: pb.durationSeconds,
                                                                    date: pb.date) {
-                                        Text(String(format: NSLocalizedString("AG %@", comment: ""),
+                                        Text(String(format: AppLocalization.string("AG %@"),
                                                     String(format: "%.1f%%", grade)))
                                             .font(.caption2.bold()).foregroundStyle(.orange)
                                     }
@@ -890,7 +890,7 @@ struct WorkoutStatsView: View {
                 if race.sport == .run,
                    let grade = ageGradePercent(AgeGrading.Distance.match(meters: race.distanceMeters),
                                                seconds: race.durationSeconds, date: race.date) {
-                    Text(String(format: NSLocalizedString("AG %@", comment: ""),
+                    Text(String(format: AppLocalization.string("AG %@"),
                                 String(format: "%.1f%%", grade)))
                         .font(.caption2.bold()).foregroundStyle(.orange)
                 } else {
@@ -1269,9 +1269,7 @@ struct AttemptCalculatorView: View {
                         attemptRow("2° tentativo", kg: attempts[1])
                         attemptRow("3° tentativo", kg: attempts[2])
                     } header: { Text("Tentativi") } footer: {
-                        Text(String(format: NSLocalizedString(
-                            "Terzo tentativo al massimale, salti di %@ kg (4%%) sotto — arrotondati a 2,5 kg.",
-                            comment: ""),
+                        Text(String(format: AppLocalization.string("Terzo tentativo al massimale, salti di %@ kg (4%%) sotto — arrotondati a 2,5 kg."),
                             String(format: "%.4g", MeetPlan.attemptJump(oneRM: oneRM))))
                     }
 
@@ -1659,9 +1657,7 @@ struct HRPaceCalculatorView: View {
 
                     Section {
                     } footer: {
-                        Text(String(format: NSLocalizedString(
-                            "Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm",
-                            comment: ""),
+                        Text(String(format: AppLocalization.string("Basato su %@ corse negli ultimi 6 mesi · FC media osservata %@–%@ bpm"),
                             "\(model.runCount)",
                             "\(Int(model.hrRange.lowerBound))",
                             "\(Int(model.hrRange.upperBound))"))
@@ -1670,7 +1666,7 @@ struct HRPaceCalculatorView: View {
                     Section {
                         Text("Servono almeno 5 corse di 15+ minuti con dati di frequenza cardiaca negli ultimi 6 mesi.")
                             .font(.subheadline)
-                        Text(String(format: NSLocalizedString("Corse trovate: %@", comment: ""),
+                        Text(String(format: AppLocalization.string("Corse trovate: %@"),
                                     "\(runsWithHR)"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -1767,7 +1763,7 @@ struct RPECalculatorView: View {
                         Text("kg").foregroundStyle(RitmoTheme.textSecondary).font(.caption)
                     }
                     Stepper(value: $reps, in: 1...10) {
-                        Text(String(format: NSLocalizedString("Ripetizioni: %@", comment: ""), "\(reps)"))
+                        Text(String(format: AppLocalization.string("Ripetizioni: %@"), "\(reps)"))
                     }
                     Picker("RPE", selection: $rpe) {
                         ForEach(Self.rpeSteps, id: \.self) { step in
@@ -1788,7 +1784,7 @@ struct RPECalculatorView: View {
 
                     Section {
                         Stepper(value: $targetRepsSelection, in: 0...12) {
-                            Text(String(format: NSLocalizedString("Ripetizioni: %@", comment: ""),
+                            Text(String(format: AppLocalization.string("Ripetizioni: %@"),
                                         "\(targetRepsSelection)"))
                         }
                         if targetRepsSelection >= 1 {
@@ -2006,7 +2002,7 @@ struct OPLMeetsView: View {
                     Text(meet.meetName).font(.subheadline.bold()).lineLimit(2)
                     Spacer()
                     if !meet.place.isEmpty {
-                        Text(String(format: NSLocalizedString("%@°", comment: ""), meet.place))
+                        Text(String(format: AppLocalization.string("%@°"), meet.place))
                             .font(.caption.bold())
                             .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(RitmoTheme.accent.opacity(0.12), in: Capsule())
@@ -2034,7 +2030,7 @@ struct OPLMeetsView: View {
                     }
                 }
                 if let bw = meet.bodyweightKg {
-                    Text(String(format: NSLocalizedString("Peso gara: %@ kg (classe %@)", comment: ""),
+                    Text(String(format: AppLocalization.string("Peso gara: %@ kg (classe %@)"),
                                 fmt(bw), meet.weightClass))
                         .font(.caption2).foregroundStyle(.secondary)
                 }
@@ -2101,7 +2097,7 @@ struct ExerciseProgressionView: View {
                                     Spacer()
                                     Text(String(format: "%+.1f kg (%+.0f%%) · ", delta,
                                                 delta / compReference * 100)
-                                         + String(format: NSLocalizedString("gara %@ kg", comment: ""),
+                                         + String(format: AppLocalization.string("gara %@ kg"),
                                                   fmtWeight(compReference)))
                                         .font(.caption.bold())
                                         .foregroundStyle(.orange)

@@ -380,7 +380,7 @@ public struct DailyRecommendation: Codable {
     /// (falls back to Italian where a key is missing).
     public var reason: String {
         reasonFragments.map { fragment in
-            String(format: NSLocalizedString(fragment.key, comment: ""),
+            String(format: AppLocalization.string(fragment.key),
                    arguments: fragment.args)
         }.joined(separator: " ")
     }

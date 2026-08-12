@@ -185,11 +185,9 @@ struct WorkoutDetailView: View {
                             FitCard {
                                 VStack(alignment: .leading, spacing: 12) {
                                     SectionHeader(title: "Zone di frequenza cardiaca")
-                                    Text(String(format: NSLocalizedString(
-                                        maxHRIsObserved
+                                    Text(String(format: AppLocalization.string(maxHRIsObserved
                                             ? "Basate sulla tua FC max osservata: %@ bpm"
-                                            : "Basate sulla tua FC max stimata per età: %@ bpm",
-                                        comment: ""),
+                                            : "Basate sulla tua FC max stimata per età: %@ bpm"),
                                                 "\(Int(observedMaxHR ?? 190))"))
                                         .font(.caption2).foregroundStyle(.secondary)
                                     HRZonesChart(zones: hr.zones)
@@ -473,9 +471,9 @@ struct WorkoutDetailView: View {
         // Composed at runtime → localized explicitly (an interpolated
         // LocalizedStringKey would produce a key that matches no table entry).
         let avgLabel = matched.matchedCategory.map {
-            String(format: NSLocalizedString("Media dei tuoi allenamenti di %@", comment: ""),
-                   NSLocalizedString($0.displayName, comment: ""))
-        } ?? NSLocalizedString("Media dei tuoi allenamenti", comment: "")
+            String(format: AppLocalization.string("Media dei tuoi allenamenti di %@"),
+                   AppLocalization.string($0.displayName))
+        } ?? AppLocalization.string("Media dei tuoi allenamenti")
         let color = loadStatusColor(total.status)
         let vsAvgColor: Color = vsAveragePct > 10 ? .orange : (vsAveragePct < -10 ? .blue : .secondary)
 
@@ -504,7 +502,7 @@ struct WorkoutDetailView: View {
                         }
                     }
                     .frame(height: 8)
-                    Text(String(format: NSLocalizedString("%@ del carico degli ultimi 7 giorni", comment: ""),
+                    Text(String(format: AppLocalization.string("%@ del carico degli ultimi 7 giorni"),
                                 "\(Int((weekShare * 100).rounded()))%"))
                         .font(.caption2).foregroundStyle(.secondary)
 

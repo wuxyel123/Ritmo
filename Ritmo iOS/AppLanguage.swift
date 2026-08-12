@@ -1,4 +1,5 @@
 import SwiftUI
+import RitmoCore
 
 // MARK: - AppLanguage
 
@@ -62,11 +63,14 @@ final class LanguageManager: ObservableObject {
     init() {
         let saved = UserDefaults.standard.string(forKey: Self.storageKey) ?? AppLanguage.system.rawValue
         self.language = AppLanguage(rawValue: saved) ?? .system
+        // Widgets and the Watch app read the choice from the App Group.
+        AppLocalization.share(languageCode: self.language.rawValue)
     }
 
     func set(_ lang: AppLanguage) {
         guard lang != language else { return }
         UserDefaults.standard.set(lang.rawValue, forKey: Self.storageKey)
+        AppLocalization.share(languageCode: lang.rawValue)
         language = lang
         viewID = UUID()
     }

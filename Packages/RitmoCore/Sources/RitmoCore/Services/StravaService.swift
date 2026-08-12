@@ -23,11 +23,11 @@ public enum StravaError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notConnected:
-            return NSLocalizedString("Strava non collegato: apri Impostazioni → Strava e completa l'accesso.", comment: "")
+            return AppLocalization.string("Strava non collegato: apri Impostazioni → Strava e completa l'accesso.")
         case .http(let code):
-            return String(format: NSLocalizedString("Strava ha risposto con un errore (HTTP %@).", comment: ""), "\(code)")
+            return String(format: AppLocalization.string("Strava ha risposto con un errore (HTTP %@)."), "\(code)")
         case .network(let e):
-            return String(format: NSLocalizedString("Errore di rete: %@", comment: ""), e.localizedDescription)
+            return String(format: AppLocalization.string("Errore di rete: %@"), e.localizedDescription)
         }
     }
 }

@@ -65,9 +65,7 @@ struct SleepLogView: View {
                         }
                     }
                 } footer: {
-                    Text(String(format: NSLocalizedString(
-                        "Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Ogni risveglio conta %@ min (modificabile in Impostazioni).",
-                        comment: ""), "\(Int(avgAwakeMinutes))"))
+                    Text(String(format: AppLocalization.string("Quante volte ti sei svegliato durante la notte: rende più preciso il punteggio di continuità. Ogni risveglio conta %@ min (modificabile in Impostazioni)."), "\(Int(avgAwakeMinutes))"))
                 }
 
                 Section("Qualità") {
