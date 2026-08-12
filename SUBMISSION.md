@@ -122,6 +122,15 @@ Before submitting:
    description, the welcome sheet, and wherever you post about the launch. An
    unannounced gift buys no goodwill.
 
+### Your own copy
+
+You are covered by the founding rule itself — your first download necessarily
+predates the window, so the App Store build entitles you permanently like any
+other early user. On top of that, `ProStore.debugForcePro` keeps every debug
+build entitled so development never meets a paywall; it is inside `#if DEBUG`,
+so it is compiled out of the shipped app rather than being a back door. Set it
+to false when you want to test the locked state.
+
 The paywall links to the privacy policy and to Apple's standard EULA. If you
 write your own terms, replace that link.
 

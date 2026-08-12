@@ -37,6 +37,14 @@ public final class ProStore: ObservableObject {
         return Calendar(identifier: .gregorian).date(from: c) ?? .distantPast
     }()
 
+#if DEBUG
+    /// Debug builds are always entitled, so development never runs into a
+    /// paywall. Set to false when you actually want to see the locked state
+    /// and test the paywall itself. Release builds ignore this entirely — it
+    /// is compiled out, so there is no back door in the shipped app.
+    public static var debugForcePro = true
+#endif
+
     @Published public private(set) var isPro = false
     @Published public private(set) var isFoundingUser = false
     @Published public private(set) var product: Product?
@@ -62,6 +70,14 @@ public final class ProStore: ObservableObject {
     // MARK: Entitlement
 
     public func refresh() async {
+#if DEBUG
+        if Self.debugForcePro {
+            isFoundingUser = true
+            isPro = true
+            await loadProduct()
+            return
+        }
+#endif
         isFoundingUser = await resolveFoundingStatus()
         let subscribed = await hasActiveSubscription()
         isPro = isFoundingUser || subscribed

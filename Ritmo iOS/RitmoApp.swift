@@ -244,6 +244,15 @@ struct WelcomeSheet: View {
             welcomeRow(icon: "flag.checkered", color: .orange,
                        title: "Gare",
                        text: "OpenPowerlifting e Strava (in Impostazioni) portano dentro i tuoi risultati di gara.")
+
+            // The founding offer, stated on the way in. A gift nobody is told
+            // about buys no goodwill — and if someone only discovers Pro when
+            // it is already theirs, they never learn it had a value.
+            if Date.now < ProStore.foundingWindowEnd {
+                welcomeRow(icon: "star.fill", color: .yellow,
+                           title: "Sei tra i primi: Pro è tuo",
+                           text: "Chi installa Ritmo in questi primi mesi tiene Ritmo Pro per sempre, gratis. Niente da attivare, niente da pagare: statistiche, calcolatori, insights e integrazioni sono già sbloccati.")
+            }
             Spacer()
             Button {
                 dismiss()
