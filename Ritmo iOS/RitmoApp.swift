@@ -7,6 +7,7 @@ import RitmoCore
 struct RitmoApp: App {
     @StateObject private var langManager = LanguageManager()
     @StateObject private var healthRepo = HealthKitRepository()
+    @StateObject private var pro = ProStore.shared
 
     init() {
         _ = GoalsSyncService.shared  // activate WCSession early
@@ -23,7 +24,11 @@ struct RitmoApp: App {
                 .environment(\.locale, langManager.locale)
                 .environmentObject(langManager)
                 .environmentObject(healthRepo)
-                .task { await healthRepo.requestAuthorization() }
+                .environmentObject(pro)
+                .task {
+                    await healthRepo.requestAuthorization()
+                    await pro.refresh()
+                }
         }
     }
 }
@@ -159,6 +164,8 @@ enum MoreDestination: Hashable {
 
 struct MoreMenuView: View {
     @Binding var path: [MoreDestination]
+    @EnvironmentObject private var pro: ProStore
+    @State private var paywallFor: ProFeature?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -167,13 +174,15 @@ struct MoreMenuView: View {
                     menuRow(.health, icon: "heart.fill", color: .red,
                             title: "Salute", subtitle: "FC, HRV, peso e attività")
                     menuRow(.insights, icon: "chart.line.uptrend.xyaxis", color: RitmoTheme.accent,
-                            title: "Insights", subtitle: "Correlazioni e tendenze sui tuoi dati")
+                            title: "Insights", subtitle: "Correlazioni e tendenze sui tuoi dati",
+                            locked: !pro.isPro, feature: .insights)
                     menuRow(.settings, icon: "gearshape.fill", color: .gray,
                             title: "Impostazioni", subtitle: "Obiettivi, integrazioni ed esportazione")
                 }
                 .padding(RitmoTheme.pagePadding)
             }
             .navigationTitle("Altro")
+            .sheet(item: $paywallFor) { feature in PaywallView(requested: feature) }
             .navigationDestination(for: MoreDestination.self) { destination in
                 switch destination {
                 case .health:   HealthView()
@@ -185,8 +194,11 @@ struct MoreMenuView: View {
     }
 
     private func menuRow(_ destination: MoreDestination, icon: String, color: Color,
-                         title: String, subtitle: String) -> some View {
-        Button { path.append(destination) } label: {
+                         title: String, subtitle: String,
+                         locked: Bool = false, feature: ProFeature? = nil) -> some View {
+        Button {
+            if locked, let feature { paywallFor = feature } else { path.append(destination) }
+        } label: {
             FitCard {
                 HStack(spacing: 12) {
                     Image(systemName: icon)
@@ -194,7 +206,10 @@ struct MoreMenuView: View {
                         .frame(width: 38, height: 38)
                         .background(color.opacity(0.12), in: Circle())
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(LocalizedStringKey(title)).font(.subheadline.bold())
+                        HStack(spacing: 6) {
+                            Text(LocalizedStringKey(title)).font(.subheadline.bold())
+                            if locked { ProBadge() }
+                        }
                         Text(LocalizedStringKey(subtitle))
                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                     }

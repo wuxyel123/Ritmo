@@ -7,8 +7,11 @@ struct WorkoutListView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
+    @EnvironmentObject private var pro: ProStore
     @State private var isSyncing = false
     @State private var pendingDelete: WorkoutSession?
+    /// Non-nil while the paywall is up; carries the feature that triggered it.
+    @State private var paywallFor: ProFeature?
 
     var body: some View {
         NavigationStack {
@@ -29,21 +32,31 @@ struct WorkoutListView: View {
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
                     .listRowSeparator(.hidden)
                     ZStack {
-                        NavigationLink {
-                            WorkoutStatsView()
-                        } label: { EmptyView() }
-                        .opacity(0)
-                        StatsEntryCard()
+                        // The invisible link only exists for entitled users;
+                        // otherwise the card opens the paywall instead.
+                        if pro.isPro {
+                            NavigationLink {
+                                WorkoutStatsView()
+                            } label: { EmptyView() }
+                            .opacity(0)
+                        }
+                        StatsEntryCard(locked: !pro.isPro)
+                            .contentShape(Rectangle())
+                            .onTapGesture { if !pro.isPro { paywallFor = .statistics } }
                     }
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     .listRowSeparator(.hidden)
                 }
                 ZStack {
-                    NavigationLink {
-                        CalculatorsView()
-                    } label: { EmptyView() }
-                    .opacity(0)
-                    CalculatorsEntryCard()
+                    if pro.isPro {
+                        NavigationLink {
+                            CalculatorsView()
+                        } label: { EmptyView() }
+                        .opacity(0)
+                    }
+                    CalculatorsEntryCard(locked: !pro.isPro)
+                        .contentShape(Rectangle())
+                        .onTapGesture { if !pro.isPro { paywallFor = .calculators } }
                 }
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 .listRowSeparator(.hidden)
@@ -103,6 +116,9 @@ struct WorkoutListView: View {
                 }
             }
             .navigationTitle("Allenamenti")
+            .sheet(item: $paywallFor) { feature in
+                PaywallView(requested: feature)
+            }
             .task { await syncHealthKit() }
             .refreshable { await syncHealthKit() }
         }
@@ -141,6 +157,8 @@ struct WorkoutListView: View {
 // MARK: - Stats entry card
 
 struct StatsEntryCard: View {
+    var locked: Bool = false
+
     var body: some View {
         FitCard {
             HStack(spacing: 12) {
@@ -150,7 +168,10 @@ struct StatsEntryCard: View {
                     .frame(width: 38, height: 38)
                     .background(RitmoTheme.accent.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Statistiche").font(.subheadline.bold())
+                    HStack(spacing: 6) {
+                        Text("Statistiche").font(.subheadline.bold())
+                        if locked { ProBadge() }
+                    }
                     Text("Serie, tonnellaggio, frequenza e progressione esercizi")
                         .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                 }
@@ -165,6 +186,8 @@ struct StatsEntryCard: View {
 // MARK: - Calculators entry card
 
 struct CalculatorsEntryCard: View {
+    var locked: Bool = false
+
     var body: some View {
         FitCard {
             HStack(spacing: 12) {
@@ -174,7 +197,10 @@ struct CalculatorsEntryCard: View {
                     .frame(width: 38, height: 38)
                     .background(Color.orange.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Calcolatori").font(.subheadline.bold())
+                    HStack(spacing: 6) {
+                        Text("Calcolatori").font(.subheadline.bold())
+                        if locked { ProBadge() }
+                    }
                     Text("Gara, RPE, passo e FC")
                         .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                 }

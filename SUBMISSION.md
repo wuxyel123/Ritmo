@@ -95,6 +95,41 @@ declines to score deep/REM it produced itself. So the estimate never becomes
 evidence inside Ritmo. It is still an estimate sitting in Health where other
 apps cannot tell, which is the residual risk to weigh before submitting.
 
+## Ritmo Pro and the founding cohort
+
+The app ships with a free tier that never sees a paywall — daily score,
+recommendation, workouts, sleep, recovery and the whole Watch app — and a
+yearly subscription (`com.alessandrodiscalzi.ritmo.pro.yearly`) covering
+statistics, calculators, insights and the third-party integrations.
+
+**Founding users keep Pro permanently.** Anyone whose first download predates
+`ProStore.foundingWindowEnd` is entitled forever, with nothing to buy or
+restore. The cohort is decided by `AppTransaction.originalPurchaseDate`, Apple's
+own record, so it survives reinstalls and cannot be moved by changing the device
+clock.
+
+Before submitting:
+
+1. **Set `ProStore.foundingWindowEnd`** to your launch date plus six months. It
+   is currently 1 January 2027 as a placeholder. Once users exist, never move it
+   backwards — that revokes entitlements people were promised.
+2. **Create the subscription** in App Store Connect with exactly that product
+   ID, in a subscription group, with a price and localized display name.
+3. **Complete the Paid Apps agreement** (banking plus tax forms) — nothing can
+   be sold until it is active, and bank verification takes time.
+4. **Enrol in the Small Business Program** for 15% commission instead of 30%.
+5. Announce the founding offer where people will see it: the App Store
+   description, the welcome sheet, and wherever you post about the launch. An
+   unannounced gift buys no goodwill.
+
+The paywall links to the privacy policy and to Apple's standard EULA. If you
+write your own terms, replace that link.
+
+Testing: with no product configured, `Product.products` returns nothing and the
+paywall says the price is unavailable — the buy button stays disabled rather
+than failing confusingly. Add a StoreKit configuration file in Xcode to
+exercise the purchase flow locally.
+
 ## Before the first submission
 
 Bundle identifier (`com.alessandrodiscalzi.ritmo`) and App Group cannot be

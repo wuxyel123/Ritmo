@@ -898,3 +898,21 @@
 "Stima %@" = "Estimation %@";
 "media %@" = "moy. %@";
 "media 4 sett.: %@" = "moy. 4 sem. : %@";
+
+// ── Ritmo Pro (2026-08-12) ──
+"Ritmo Pro" = "Ritmo Pro";
+"Il punteggio del giorno, gli allenamenti, il sonno e il recupero restano gratuiti per sempre. Pro aggiunge l'analisi." = "Le score du jour, les entraînements, le sommeil et la récupération restent gratuits pour toujours. Pro ajoute l'analyse.";
+"%@ all'anno" = "%@ par an";
+"Rinnovo automatico annuale. Puoi disdire quando vuoi dalle impostazioni dell'App Store; l'abbonamento resta attivo fino alla fine del periodo pagato." = "Renouvellement annuel automatique. Résiliable à tout moment dans les réglages de l'App Store ; l'abonnement reste actif jusqu'à la fin de la période payée.";
+"Prezzo non disponibile al momento." = "Prix indisponible pour le moment.";
+"Attiva Pro" = "Activer Pro";
+"Ripristina acquisti" = "Restaurer les achats";
+"Termini d'uso" = "Conditions d'utilisation";
+"Abbonamento non disponibile al momento. Riprova più tardi." = "Abonnement indisponible pour le moment. Réessaie plus tard.";
+"Hevy, Strava e OpenPowerlifting fanno parte di Ritmo Pro." = "Hevy, Strava et OpenPowerlifting font partie de Ritmo Pro.";
+"Statistiche complete" = "Statistiques complètes";
+"Serie, tonnellaggio, frequenza, progressione esercizi, record e forza relativa." = "Séries, tonnage, fréquence, progression des exercices, records et force relative.";
+"Tentativi e riscaldamento gara, RPE, passo di corsa e passo previsto dalla FC." = "Tentatives et échauffement de compétition, RPE, allure de course et allure prévue selon la FC.";
+"Correlazioni tra sonno, carico e performance." = "Corrélations entre sommeil, charge et performance.";
+"Hevy, Strava e OpenPowerlifting" = "Hevy, Strava et OpenPowerlifting";
+"Importa serie e ripetizioni da Hevy, gare da Strava, massimali da OpenPowerlifting." = "Importe séries et répétitions depuis Hevy, courses depuis Strava, maxima depuis OpenPowerlifting.";
