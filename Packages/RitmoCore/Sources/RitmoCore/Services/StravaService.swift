@@ -59,12 +59,11 @@ public enum StravaService {
     /// Host of the OAuth redirect, and the exact string that must go in the
     /// Strava application's "Authorization Callback Domain" field.
     ///
-    /// `.ritmo` is not a real top-level domain, so this can never collide with
-    /// a site someone owns, and a custom URL scheme is matched literally —
-    /// no DNS is involved. Deliberately NOT the bundle identifier: users are
-    /// told to type this string into their own Strava settings, and the bundle
-    /// id carries the developer's name.
-    public static let callbackHost = "auth.ritmo"
+    /// `localhost` is the conventional choice for a mobile client: the
+    /// callback never touches a network, it is caught by this app's URL
+    /// scheme, and Strava matches the host literally. Every user-facing
+    /// mention of it is interpolated from here, so changing it is one edit.
+    public static let callbackHost = "localhost"
     public static let urlScheme = "ritmo"
     public static var redirectURI: String { "\(urlScheme)://\(callbackHost)/strava" }
 
