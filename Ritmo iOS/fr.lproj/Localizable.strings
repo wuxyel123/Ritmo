@@ -891,3 +891,10 @@
 "Squat" = "Squat";
 "Panca Piana" = "Développé couché";
 "Stacco da Terra" = "Soulevé de terre";
+
+// ── Screenshot review fixes (2026-08-12) ──
+"%@ km · %@ punti GPS" = "%@ km · %@ points GPS";
+"Impostato" = "Défini";
+"Stima %@" = "Estimation %@";
+"media %@" = "moy. %@";
+"media 4 sett.: %@" = "moy. 4 sem. : %@";

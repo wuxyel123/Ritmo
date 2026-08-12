@@ -213,7 +213,8 @@ struct TrainingLoadCard: View {
                         .foregroundStyle(color)
                     Text("carico 7 giorni").font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    Text("media \(load.chronic)").font(.caption2).foregroundStyle(.secondary)
+                    Text(String(format: AppLocalization.string("media %@"), "\(load.chronic)"))
+                        .font(.caption2).foregroundStyle(.secondary)
                 }
                 HStack(alignment: .bottom, spacing: 4) {
                     let maxV = max(load.weeklyEfforts.max() ?? 1, 1)
@@ -332,7 +333,7 @@ struct TrainingLoadDetailView: View {
                             VStack(alignment: .trailing, spacing: 4) {
                                 Text(LocalizedStringKey(load.status.label))
                                     .font(.headline).foregroundStyle(color)
-                                Text("media 4 sett.: \(load.chronic)")
+                                Text(String(format: AppLocalization.string("media 4 sett.: %@"), "\(load.chronic)"))
                                     .font(.caption).foregroundStyle(.secondary)
                                 if load.chronic > 0 {
                                     Text(String(format: "%.0f%% della media", load.ratio * 100))

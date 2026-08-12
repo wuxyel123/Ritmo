@@ -891,3 +891,10 @@
 "Squat" = "Kniebeuge";
 "Panca Piana" = "Bankdrücken";
 "Stacco da Terra" = "Kreuzheben";
+
+// ── Screenshot review fixes (2026-08-12) ──
+"%@ km · %@ punti GPS" = "%@ km · %@ GPS-Punkte";
+"Impostato" = "Gesetzt";
+"Stima %@" = "Schätzung %@";
+"media %@" = "Ø %@";
+"media 4 sett.: %@" = "Ø 4 Wochen: %@";

@@ -891,3 +891,10 @@
 "Squat" = "Agachamento";
 "Panca Piana" = "Supino reto";
 "Stacco da Terra" = "Levantamento terra";
+
+// ── Screenshot review fixes (2026-08-12) ──
+"%@ km · %@ punti GPS" = "%@ km · %@ pontos GPS";
+"Impostato" = "Definido";
+"Stima %@" = "Estimativa %@";
+"media %@" = "média %@";
+"media 4 sett.: %@" = "média 4 sem.: %@";

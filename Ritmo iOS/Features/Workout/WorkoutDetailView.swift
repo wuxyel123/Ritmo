@@ -239,8 +239,9 @@ struct WorkoutDetailView: View {
                                     }
                                 }
 
-                                Text(String(format: "%.2f km · %d punti GPS",
-                                     session.distanceMeters / 1000, routeLocations.count))
+                                Text(String(format: AppLocalization.string("%@ km · %@ punti GPS"),
+                                            String(format: "%.2f", session.distanceMeters / 1000),
+                                            "\(routeLocations.count)"))
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                         }
@@ -541,7 +542,9 @@ struct WorkoutDetailView: View {
                     }
                     .buttonStyle(.plain)
                     Spacer()
-                    Text(session.hasUserRPE ? "Impostato" : "Stima \(session.autoEffort)")
+                    Text(session.hasUserRPE ? AppLocalization.string("Impostato")
+                              : String(format: AppLocalization.string("Stima %@"),
+                                       "\(session.autoEffort)"))
                         .font(.caption2).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 4) {

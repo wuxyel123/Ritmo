@@ -893,3 +893,10 @@
 "Squat" = "Squat";
 "Panca Piana" = "Bench Press";
 "Stacco da Terra" = "Deadlift";
+
+// ── Screenshot review fixes (2026-08-12) ──
+"%@ km · %@ punti GPS" = "%@ km · %@ GPS points";
+"Impostato" = "Set";
+"Stima %@" = "Estimate %@";
+"media %@" = "avg %@";
+"media 4 sett.: %@" = "4-week avg: %@";

@@ -891,3 +891,10 @@
 "Squat" = "Sentadilla";
 "Panca Piana" = "Press de banca";
 "Stacco da Terra" = "Peso muerto";
+
+// ── Screenshot review fixes (2026-08-12) ──
+"%@ km · %@ punti GPS" = "%@ km · %@ puntos GPS";
+"Impostato" = "Establecido";
+"Stima %@" = "Estimación %@";
+"media %@" = "media %@";
+"media 4 sett.: %@" = "media 4 sem.: %@";

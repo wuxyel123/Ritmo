@@ -29,16 +29,24 @@ struct HRZonesChart: View {
                         }
                     }
                     .frame(height: 18)
+                    // 36pt fitted "41s" but not "64m44s", which wrapped and
+                    // hyphenated into "64-" / "m44s" on a long zone-1 walk.
                     Text(secs > 0 ? formatTime(secs) : "—")
-                        .font(.caption2.bold()).foregroundStyle(color).frame(width: 36, alignment: .trailing)
+                        .font(.caption2.bold()).foregroundStyle(color)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(width: 56, alignment: .trailing)
                 }
             }
         }
     }
 
+    /// Past an hour, "64m44s" is both long and hard to read — use "1h 4m".
     private func formatTime(_ s: Double) -> String {
-        let m = Int(s) / 60; let sec = Int(s) % 60
-        return m > 0 ? "\(m)m\(sec > 0 ? "\(sec)s" : "")" : "\(sec)s"
+        let total = Int(s)
+        let h = total / 3600, m = (total % 3600) / 60, sec = total % 60
+        if h > 0 { return m > 0 ? "\(h)h \(m)m" : "\(h)h" }
+        if m > 0 { return sec > 0 ? "\(m)m\(sec)s" : "\(m)m" }
+        return "\(sec)s"
     }
 }
 
