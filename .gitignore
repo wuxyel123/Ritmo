@@ -48,3 +48,7 @@ fastlane/test_output
 *.env
 *.pem
 secrets.plist
+
+# Personal screenshots — real health data and device names
+screens/
+Screens/
