@@ -748,7 +748,6 @@
 "Triathlon" = "Triathlon";
 "Aggiungi gara" = "Add race";
 "Nessuna gara registrata" = "No races logged";
-"Collega Strava nelle Impostazioni per importare le gare automaticamente." = "Connect Strava in Settings to import your races automatically.";
 "Nuova gara" = "New race";
 "Nome gara" = "Race name";
 "Data" = "Date";
@@ -879,7 +878,13 @@
 "Basate sulla tua FC max stimata per età: %@ bpm" = "Based on your age-predicted max HR: %@ bpm";
 
 // ── Strava callback host (2026-07-16) ──
-"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Create YOUR OWN API app at strava.com/settings/api (free): set «Authorization Callback Domain» to %@, then paste Client ID and Client Secret here. Connecting opens Strava for authorization and stays active until you remove it.";
 
 // ── Strava attribution (2026-07-16) ──
 "Powered by Strava" = "Powered by Strava";
+
+// ── Strava labelled as advanced (2026-07-16) ──
+"Integrazione avanzata" = "Advanced integration";
+"Avanzato" = "Advanced";
+"Richiede qualche minuto sul sito di Strava: serve creare una tua app API personale e copiare due codici. Le gare puoi comunque aggiungerle a mano in qualsiasi momento." = "Takes a few minutes on Strava's site: you need to create your own personal API app and copy two codes. You can always add races by hand instead.";
+"1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret." = "1. Open strava.com/settings/api and create YOUR OWN API app (it's free).\n2. In «Authorization Callback Domain» enter %@.\n3. Copy Client ID and Client Secret below.";
+"Aggiungi le tue gare con «Aggiungi gara». In alternativa puoi importarle da Strava, ma serve una configurazione avanzata (Impostazioni → Strava)." = "Add your races with «Add race». You can also import them from Strava, but that needs advanced setup (Settings → Strava).";

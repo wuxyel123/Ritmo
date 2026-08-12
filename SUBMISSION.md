@@ -63,12 +63,18 @@ all Ritmo does. Requirements met: "Powered by Strava" attribution wherever
 imported races are displayed; no use of Strava data for AI/ML training; no
 display of one user's data to another.
 
-Open question: the app currently asks each user to register their own Strava
-API application, because Strava requires a client secret for the token exchange
-and does not document PKCE support. That is a poor onboarding flow for a public
-release. The alternative is one shared registration with a small backend holding
-the secret — which would change the App Privacy answer above and the "no
-backend" claim in the README.
+Onboarding: each user registers their own Strava API application, because
+Strava requires a client secret for the token exchange and does not document
+PKCE support, and there is no server here to keep a shared secret on. That is
+developer work to ask of an end user, so the integration is labelled "Avanzato"
+in Settings and the races card points at manual entry first — nobody should
+read an empty card as a broken feature.
+
+If Strava import ever needs to be mainstream, the fix is one shared
+registration plus a stateless function holding the secret for the token
+exchange. It would see OAuth codes and tokens, never health data, and store
+nothing — but it would still make the "no backend" claim false and require
+revisiting the App Privacy answer above.
 
 **Hevy** — unresolved. The public API requires a Hevy Pro subscription and
 per-user API keys, and the terms of service could not be retrieved to confirm

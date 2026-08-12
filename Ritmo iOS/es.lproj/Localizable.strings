@@ -746,7 +746,6 @@
 "Triathlon" = "Triatlón";
 "Aggiungi gara" = "Añadir carrera";
 "Nessuna gara registrata" = "Sin carreras registradas";
-"Collega Strava nelle Impostazioni per importare le gare automaticamente." = "Conecta Strava en Ajustes para importar tus carreras automáticamente.";
 "Nuova gara" = "Nueva carrera";
 "Nome gara" = "Nombre de la carrera";
 "Data" = "Fecha";
@@ -877,7 +876,13 @@
 "Basate sulla tua FC max stimata per età: %@ bpm" = "Basadas en tu FC máx estimada por edad: %@ bpm";
 
 // ── Strava callback host (2026-07-16) ──
-"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Crea TU PROPIA app API en strava.com/settings/api (gratis): pon %@ como «Authorization Callback Domain» y pega aquí Client ID y Client Secret. La conexión abre Strava para autorizar y sigue activa hasta que la quites.";
 
 // ── Strava attribution (2026-07-16) ──
 "Powered by Strava" = "Powered by Strava";
+
+// ── Strava labelled as advanced (2026-07-16) ──
+"Integrazione avanzata" = "Integración avanzada";
+"Avanzato" = "Avanzado";
+"Richiede qualche minuto sul sito di Strava: serve creare una tua app API personale e copiare due codici. Le gare puoi comunque aggiungerle a mano in qualsiasi momento." = "Requiere unos minutos en el sitio de Strava: hay que crear tu propia app API personal y copiar dos códigos. Siempre puedes añadir las carreras a mano.";
+"1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret." = "1. Abre strava.com/settings/api y crea TU PROPIA app API (es gratis).\n2. En «Authorization Callback Domain» escribe %@.\n3. Copia abajo Client ID y Client Secret.";
+"Aggiungi le tue gare con «Aggiungi gara». In alternativa puoi importarle da Strava, ma serve una configurazione avanzata (Impostazioni → Strava)." = "Añade tus carreras con «Añadir carrera». También puedes importarlas de Strava, pero requiere configuración avanzada (Ajustes → Strava).";

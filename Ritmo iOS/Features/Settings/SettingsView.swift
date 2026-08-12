@@ -293,8 +293,12 @@ struct SettingsTabView: View {
                                 Text("Collegato").font(.caption)
                                     .foregroundStyle(RitmoTheme.textSecondary)
                             } else {
-                                Text("Non collegato").font(.caption)
-                                    .foregroundStyle(RitmoTheme.textSecondary)
+                                // "Avanzato" rather than "Non collegato": the
+                                // setup is a detour through Strava's site, and
+                                // the row is the last place to say so before
+                                // someone commits to it.
+                                Text("Avanzato").font(.caption)
+                                    .foregroundStyle(.orange)
                             }
                         }
                     }
@@ -1149,10 +1153,25 @@ struct StravaSettingsView: View {
                     }
                     .disabled(working)
                 } else {
+                    // Say the quiet part first. Connecting Strava means
+                    // registering an API application on their site and copying
+                    // a client secret — developer work. Strava requires that
+                    // secret for the token exchange and Ritmo has no server to
+                    // keep it on, so there is no one-tap version to offer.
+                    // Better to name the cost up front than let someone
+                    // discover it three steps in and assume the app is broken.
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Integrazione avanzata", systemImage: "wrench.and.screwdriver")
+                            .font(.caption.bold()).foregroundStyle(.orange)
+                        Text("Richiede qualche minuto sul sito di Strava: serve creare una tua app API personale e copiare due codici. Le gare puoi comunque aggiungerle a mano in qualsiasi momento.")
+                            .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
+                    }
+                    .padding(.vertical, 2)
+
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Come collegare Strava", systemImage: "info.circle")
                             .font(.caption.bold()).foregroundStyle(RitmoTheme.accent)
-                        Text(String(format: NSLocalizedString("Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi.", comment: ""), StravaService.callbackHost))
+                        Text(String(format: NSLocalizedString("1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret.", comment: ""), StravaService.callbackHost))
                             .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                     }
                     .padding(.vertical, 2)

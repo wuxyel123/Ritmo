@@ -836,7 +836,10 @@ struct WorkoutStatsView: View {
                     Text("Nessuna gara registrata")
                         .font(.caption).foregroundStyle(.secondary)
                     if !StravaSession.isConnected {
-                        Text("Collega Strava nelle Impostazioni per importare le gare automaticamente.")
+                        // Manual entry first: it is the path that works for
+                        // everyone. Strava is offered second, with its cost
+                        // stated, so nobody reads the empty card as a defect.
+                        Text("Aggiungi le tue gare con «Aggiungi gara». In alternativa puoi importarle da Strava, ma serve una configurazione avanzata (Impostazioni → Strava).")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 } else {

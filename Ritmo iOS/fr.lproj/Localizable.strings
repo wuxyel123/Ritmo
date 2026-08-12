@@ -746,7 +746,6 @@
 "Triathlon" = "Triathlon";
 "Aggiungi gara" = "Ajouter une course";
 "Nessuna gara registrata" = "Aucune course enregistrée";
-"Collega Strava nelle Impostazioni per importare le gare automaticamente." = "Connectez Strava dans Réglages pour importer vos courses automatiquement.";
 "Nuova gara" = "Nouvelle course";
 "Nome gara" = "Nom de la course";
 "Data" = "Date";
@@ -877,7 +876,13 @@
 "Basate sulla tua FC max stimata per età: %@ bpm" = "Basées sur ta FC max estimée selon l'âge : %@ bpm";
 
 // ── Strava callback host (2026-07-16) ──
-"Crea la TUA app API su strava.com/settings/api (gratis): come «Authorization Callback Domain» scrivi %@, poi incolla qui Client ID e Client Secret. Il collegamento apre Strava per l'autorizzazione e resta attivo finché non lo rimuovi." = "Crée TA PROPRE app API sur strava.com/settings/api (gratuit) : mets %@ comme «Authorization Callback Domain», puis colle ici Client ID et Client Secret. La connexion ouvre Strava pour l'autorisation et reste active jusqu'à ce que tu la retires.";
 
 // ── Strava attribution (2026-07-16) ──
 "Powered by Strava" = "Powered by Strava";
+
+// ── Strava labelled as advanced (2026-07-16) ──
+"Integrazione avanzata" = "Intégration avancée";
+"Avanzato" = "Avancé";
+"Richiede qualche minuto sul sito di Strava: serve creare una tua app API personale e copiare due codici. Le gare puoi comunque aggiungerle a mano in qualsiasi momento." = "Demande quelques minutes sur le site de Strava : il faut créer ta propre app API personnelle et copier deux codes. Tu peux de toute façon ajouter les courses à la main.";
+"1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret." = "1. Ouvre strava.com/settings/api et crée TA PROPRE app API (c'est gratuit).\n2. Dans «Authorization Callback Domain», saisis %@.\n3. Copie ci-dessous Client ID et Client Secret.";
+"Aggiungi le tue gare con «Aggiungi gara». In alternativa puoi importarle da Strava, ma serve una configurazione avanzata (Impostazioni → Strava)." = "Ajoute tes courses avec «Ajouter une course». Tu peux aussi les importer depuis Strava, mais cela demande une configuration avancée (Réglages → Strava).";
