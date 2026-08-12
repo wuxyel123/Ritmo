@@ -60,9 +60,9 @@ struct InteractiveDateChart: View {
                         }
                     } else {
                         VStack(alignment: .trailing, spacing: 0) {
-                            (Text("Media") + Text(": \(fmt(avg)) \(unit)")).font(.caption).foregroundStyle(color)
+                            Text("\(Text("Media")): \(fmt(avg)) \(unit)").font(.caption).foregroundStyle(color)
                             if let g = goal {
-                                (Text("Obiettivo") + Text(": \(fmt(g)) \(unit)")).font(.caption2).foregroundStyle(.secondary)
+                                Text("\(Text("Obiettivo")): \(fmt(g)) \(unit)").font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -178,7 +178,7 @@ struct ExpandedChartView: View {
                         VStack(alignment: .trailing) {
                             if let g = goal {
                                 let pct = sel.value / g * 100
-                                (Text(String(format: "%.0f%%", pct)) + Text(" ") + Text("obiettivo"))
+                                Text("\(String(format: "%.0f%%", pct)) \(Text("obiettivo"))")
                                     .font(.caption).foregroundStyle(pct >= 100 ? .green : .secondary)
                             }
                         }

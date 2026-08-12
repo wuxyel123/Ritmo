@@ -346,10 +346,14 @@ struct WorkoutDetailView: View {
             let maxHR = resolved?.bpm ?? 190
             observedMaxHR = maxHR
             maxHRIsObserved = resolved?.isObserved ?? false
-            async let hr = healthRepo.fetchWorkoutHeartRate(start: session.startTime,
-                                                            end: session.endTime, maxHR: maxHR)
-            async let locs = healthRepo.fetchWorkoutRoute(start: session.startTime, end: session.endTime)
-            async let recovery = healthRepo.fetchHeartRateRecovery(workoutEnd: session.endTime)
+            // Capture the dates here: `session` is a SwiftData model, which is
+            // not Sendable, so reading its properties inside the concurrent
+            // calls would smuggle it out of the main actor.
+            let start = session.startTime
+            let end = session.endTime
+            async let hr = healthRepo.fetchWorkoutHeartRate(start: start, end: end, maxHR: maxHR)
+            async let locs = healthRepo.fetchWorkoutRoute(start: start, end: end)
+            async let recovery = healthRepo.fetchHeartRateRecovery(workoutEnd: end)
             let (fetchedHR, fetchedLocs) = await (hr, locs)
             hrRecovery = await recovery
             hrData = fetchedHR

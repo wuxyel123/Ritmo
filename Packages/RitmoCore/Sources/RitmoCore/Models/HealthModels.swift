@@ -209,11 +209,14 @@ public struct SleepSession: Identifiable, Codable {
                                    stagesMeasured: hasStageDetail)
     }
 
-    /// Whether the recorder broke the night into stages at all. iPhone-only
-    /// tracking and many third-party apps write undifferentiated "asleep"
-    /// samples, which say nothing about deep or REM.
+    /// Whether the night was MEASURED in stages. False for iPhone-only
+    /// tracking and third-party apps that write undifferentiated "asleep"
+    /// samples — and false for Ritmo's own estimates, which come from the
+    /// user's quality rating: scoring those would be marking your own homework.
     public var hasStageDetail: Bool {
-        stages.contains { $0.type == .deep || $0.type == .rem || $0.type == .core }
+        stages.contains {
+            ($0.type == .deep || $0.type == .rem || $0.type == .core) && !$0.isEstimated
+        }
     }
 
     public var qualityScore: Int { scoreBreakdown.total }
@@ -255,16 +258,22 @@ public struct SleepStage: Identifiable, Codable {
     public let startTime: Date
     public let endTime: Date
     public let type: SleepStageType
+    /// True when Ritmo derived this stage from a quality rating instead of
+    /// reading it from a sensor. Apple Health still shows it — the user asked
+    /// for the breakdown — but the sleep score must not treat it as measured.
+    public let isEstimated: Bool
 
     public var durationHours: Double {
         endTime.timeIntervalSince(startTime) / 3600
     }
 
-    public init(id: UUID = UUID(), startTime: Date, endTime: Date, type: SleepStageType) {
+    public init(id: UUID = UUID(), startTime: Date, endTime: Date, type: SleepStageType,
+                isEstimated: Bool = false) {
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
         self.type = type
+        self.isEstimated = isEstimated
     }
 }
 
@@ -320,11 +329,24 @@ public enum SleepQuality: Int, Codable, CaseIterable, Sendable {
         Double(scaleIndex + 1) / Double(Self.allCases.count) * 30
     }
 
-    // A `sleepStageFractions` table used to live here, turning this subjective
-    // rating into deep/REM proportions that were written to Apple Health as
-    // though a sensor had measured them. Deleted: a rating of how you feel is
-    // not a hypnogram, and inventing one polluted both Health and this app's
-    // own sleep score. See HealthKitRepository.writeSleep.
+    /// (deep, REM) as fractions of the night, used to give a manually logged
+    /// sleep a stage breakdown in Apple Health. Core = 1 − deep − rem.
+    ///
+    /// These are ESTIMATES derived from how the night felt, not measurements.
+    /// The samples Ritmo writes from them are tagged (see
+    /// `HealthKitRepository.syntheticStagesMetadataKey`) so the app's own sleep
+    /// score knows not to treat them as evidence — otherwise the rating would
+    /// be scored as though a sensor had confirmed it.
+    public var sleepStageFractions: (deep: Double, rem: Double) {
+        switch self {
+        case .pessimo:     return (0.03, 0.07)   // barely restorative
+        case .scarso:      return (0.05, 0.10)
+        case .sufficiente: return (0.12, 0.15)
+        case .buono:       return (0.18, 0.20)
+        case .moltoBuono:  return (0.22, 0.23)
+        case .ottimo:      return (0.25, 0.25)   // excellent: ~50% restorative
+        }
+    }
 }
 
 // MARK: - DailyActivity

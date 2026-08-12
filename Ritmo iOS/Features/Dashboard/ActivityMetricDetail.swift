@@ -94,7 +94,7 @@ struct ActivityMetricDetailView: View {
                                                 .font(.caption).foregroundStyle(pt.value >= goal ? .green : .secondary)
                                         }
                                     }
-                                    if pt.date != history.sorted { $0.date > $1.date }.prefix(10).last?.date {
+                                    if pt.date != history.sorted(by: { $0.date > $1.date }).prefix(10).last?.date {
                                         Divider()
                                     }
                                 }

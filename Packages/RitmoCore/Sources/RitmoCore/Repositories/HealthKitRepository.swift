@@ -162,19 +162,25 @@ public final class HealthKitRepository: ObservableObject {
 
     // MARK: - Sleep Logging
 
-    /// Writes sleep to Apple Health.
+    /// Marks stage samples Ritmo derived from a quality rating rather than
+    /// measured. Nothing else in HealthKit distinguishes the two, and without
+    /// it the app would read its own estimate back as sensor data.
+    public nonisolated static let syntheticStagesMetadataKey = "RitmoEstimatedStages"
+
+    /// True for stage samples this app derived from a quality rating.
+    nonisolated static func isEstimatedStage(_ sample: HKCategorySample) -> Bool {
+        sample.metadata?[syntheticStagesMetadataKey] as? Bool == true
+    }
+
+    /// Writes sleep to Apple Health: the span split into deep → REM → core in
+    /// proportions taken from the quality rating, interrupted by one awake
+    /// window per wake-up reported, each lasting the user's configured average
+    /// (Settings → Sonno).
     ///
-    /// ONLY what the user actually reported: the sleep span as
-    /// `asleepUnspecified`, interrupted by one awake window per wake-up they
-    /// counted, each lasting their configured average (Settings → Sonno).
-    ///
-    /// It used to also write deep/REM/core samples whose proportions were
-    /// derived from the subjective quality rating — inventing a sleep
-    /// architecture nobody measured, writing it into Health where every other
-    /// app would read it as sensor data, and then scoring that invention as if
-    /// it were evidence. App Review forbids writing inaccurate data into
-    /// HealthKit, and it was dishonest regardless. The rating still informs the
-    /// recovery score, but it stays in the App Group where it belongs.
+    /// The stage split is an ESTIMATE — nobody measured it — so every stage
+    /// sample carries `syntheticStagesMetadataKey`. Apple Health shows the
+    /// breakdown the user wants; Ritmo's own sleep score reads the marker and
+    /// declines to score deep/REM it invented itself.
     public func writeSleep(start: Date, end: Date, quality: SleepQuality? = nil,
                            wakeCount: Int = 0) async throws {
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -183,13 +189,26 @@ public final class HealthKitRepository: ObservableObject {
         let type = HKCategoryType(.sleepAnalysis)
         let total = end.timeIntervalSince(start)
 
-        let asleepValue: Int
-        if #available(iOS 16.0, watchOS 9.0, *) {
-            asleepValue = HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
+        // Asleep-phase timeline (deep → REM → core when quality is known).
+        var blocks: [(value: Int, start: Date, end: Date)]
+        if #available(iOS 16.0, watchOS 9.0, *), let q = quality {
+            let (deepFrac, remFrac) = q.sleepStageFractions
+            let t1 = start.addingTimeInterval(total * deepFrac)
+            let t2 = t1.addingTimeInterval(total * remFrac)
+            blocks = [
+                (HKCategoryValueSleepAnalysis.asleepDeep.rawValue, start, t1),
+                (HKCategoryValueSleepAnalysis.asleepREM.rawValue,  t1, t2),
+                (HKCategoryValueSleepAnalysis.asleepCore.rawValue, t2, end)
+            ]
         } else {
-            asleepValue = HKCategoryValueSleepAnalysis.inBed.rawValue
+            let value: Int
+            if #available(iOS 16.0, watchOS 9.0, *) {
+                value = HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue
+            } else {
+                value = HKCategoryValueSleepAnalysis.inBed.rawValue
+            }
+            blocks = [(value, start, end)]
         }
-        var blocks: [(value: Int, start: Date, end: Date)] = [(asleepValue, start, end)]
 
         // Carve an awake window out of the timeline per reported wake-up:
         // wake i sits at i/(N+1) of the night, so N wakes split the sleep into
@@ -214,9 +233,15 @@ public final class HealthKitRepository: ObservableObject {
             }
         }
 
+        // Tag the estimated stages, but not a plain undifferentiated span:
+        // that one claims nothing about architecture in the first place.
+        let stagesAreEstimates = quality != nil && blocks.count > 1
+        let metadata: [String: Any]? = stagesAreEstimates
+            ? [Self.syntheticStagesMetadataKey: true] : nil
         for b in blocks where b.end > b.start {
             try await store.save(HKCategorySample(type: type, value: b.value,
-                                                  start: b.start, end: b.end))
+                                                  start: b.start, end: b.end,
+                                                  metadata: metadata))
         }
         for w in awakeWindows {
             try await store.save(HKCategorySample(
@@ -379,7 +404,8 @@ public final class HealthKitRepository: ObservableObject {
 
         let stages = samples.compactMap { sample -> SleepStage? in
             guard let stageType = sleepStageType(from: sample.value) else { return nil }
-            return SleepStage(startTime: sample.startDate, endTime: sample.endDate, type: stageType)
+            return SleepStage(startTime: sample.startDate, endTime: sample.endDate, type: stageType,
+                              isEstimated: Self.isEstimatedStage(sample))
         }
 
         let start = samples.first!.startDate
@@ -421,7 +447,8 @@ public final class HealthKitRepository: ObservableObject {
         guard !nightSamples.isEmpty else { return nil }
         let stages = nightSamples.compactMap { s -> SleepStage? in
             guard let t = sleepStageType(from: s.value) else { return nil }
-            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t)
+            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t,
+                              isEstimated: Self.isEstimatedStage(s))
         }
         let history  = await fetchRecentBedtimes(before: wakeTime)
         let deviation = bedtimeDeviation(nightSamples.first!.startDate, against: history)
@@ -1484,7 +1511,8 @@ public final class HealthKitRepository: ObservableObject {
         let sorted = samples.sorted { $0.startDate < $1.startDate }
         let stages = sorted.compactMap { s -> SleepStage? in
             guard let t = sleepStageType(from: s.value) else { return nil }
-            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t)
+            return SleepStage(startTime: s.startDate, endTime: s.endDate, type: t,
+                              isEstimated: Self.isEstimatedStage(s))
         }
         return SleepSession(startTime: sorted.first!.startDate,
                             endTime: sorted.last!.endDate,

@@ -81,6 +81,20 @@ per-user API keys, and the terms of service could not be retrieved to confirm
 whether publicly distributed third-party clients are permitted. Ask them before
 shipping; a draft is in [docs/hevy-permission-email.md](docs/hevy-permission-email.md).
 
+## Sleep stages written to Apple Health
+
+Manually logged nights are written with a deep/REM/core split derived from the
+quality rating the user picked — an estimate, not a measurement. This was
+removed once as an App Review risk (5.1.3 forbids writing inaccurate data into
+HealthKit) and restored at the developer's request, because Apple Health's
+sleep screen is empty without it.
+
+The mitigation: every estimated stage sample carries the metadata key
+`RitmoEstimatedStages`, and the app's own sleep score reads that marker and
+declines to score deep/REM it produced itself. So the estimate never becomes
+evidence inside Ritmo. It is still an estimate sitting in Health where other
+apps cannot tell, which is the residual risk to weigh before submitting.
+
 ## Before the first submission
 
 Bundle identifier (`com.alessandrodiscalzi.ritmo`) and App Group cannot be

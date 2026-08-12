@@ -99,7 +99,7 @@ struct SettingsTabView: View {
                         set: { langManager.set($0) }
                     )) {
                         ForEach(AppLanguage.allCases) { lang in
-                            (Text(lang.flagEmoji + " ") + Text(LocalizedStringKey(lang.displayName))).tag(lang)
+                            Text("\(lang.flagEmoji) \(Text(LocalizedStringKey(lang.displayName)))").tag(lang)
                         }
                     } label: {
                         Label("Lingua", systemImage: "globe")
@@ -1104,9 +1104,17 @@ enum StravaSession {
 
 private final class WebAuthPresentationContext: NSObject, ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        UIApplication.shared.connectedScenes
-            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-            .first ?? ASPresentationAnchor()
+        // Every ASPresentationAnchor initialiser except init(windowScene:) is
+        // deprecated on iOS 26, so a scene is required — and the user reached
+        // this from a visible settings screen, so one necessarily exists.
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let anchor = scenes.compactMap(\.keyWindow).first
+                ?? scenes.flatMap(\.windows).first
+                ?? scenes.first.map(ASPresentationAnchor.init(windowScene:))
+        else {
+            preconditionFailure("Strava sign-in presented with no window scene")
+        }
+        return anchor
     }
 }
 

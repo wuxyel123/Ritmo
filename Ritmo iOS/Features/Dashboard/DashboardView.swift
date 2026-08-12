@@ -418,9 +418,11 @@ struct DashboardView: View {
                                             HStack(spacing: 5) {
                                                 Image(systemName: "trophy.fill")
                                                     .font(.caption2).foregroundStyle(.yellow)
-                                                Text("Allenamento top: ").font(.caption)
-                                                    .foregroundStyle(RitmoTheme.textSecondary)
-                                                + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                                HStack(spacing: 0) {
+                                                    Text("Allenamento top: ").font(.caption)
+                                                        .foregroundStyle(RitmoTheme.textSecondary)
+                                                    Text(LocalizedStringKey(best)).font(.caption.bold())
+                                                }
                                                 Spacer()
                                                 Image(systemName: "chevron.right")
                                                     .font(.system(size: 9)).foregroundStyle(.secondary)
@@ -431,9 +433,11 @@ struct DashboardView: View {
                                         HStack(spacing: 5) {
                                             Image(systemName: "trophy.fill")
                                                 .font(.caption2).foregroundStyle(.yellow)
-                                            Text("Allenamento top: ").font(.caption)
-                                                .foregroundStyle(RitmoTheme.textSecondary)
-                                            + Text(LocalizedStringKey(best)).font(.caption.bold())
+                                            HStack(spacing: 0) {
+                                                Text("Allenamento top: ").font(.caption)
+                                                    .foregroundStyle(RitmoTheme.textSecondary)
+                                                Text(LocalizedStringKey(best)).font(.caption.bold())
+                                            }
                                         }
                                     }
                                 }

@@ -886,3 +886,8 @@
 "Richiede qualche minuto sul sito di Strava: serve creare una tua app API personale e copiare due codici. Le gare puoi comunque aggiungerle a mano in qualsiasi momento." = "Demora alguns minutos no site do Strava: é preciso criar a sua própria app API pessoal e copiar dois códigos. Pode sempre adicionar as corridas à mão.";
 "1. Apri strava.com/settings/api e crea la TUA app API (è gratis).\n2. In «Authorization Callback Domain» scrivi %@.\n3. Copia qui sotto Client ID e Client Secret." = "1. Abra strava.com/settings/api e crie a SUA app API (é grátis).\n2. Em «Authorization Callback Domain» escreva %@.\n3. Copie abaixo Client ID e Client Secret.";
 "Aggiungi le tue gare con «Aggiungi gara». In alternativa puoi importarle da Strava, ma serve una configurazione avanzata (Impostazioni → Strava)." = "Adicione as suas corridas com «Adicionar corrida». Também pode importá-las do Strava, mas requer configuração avançada (Ajustes → Strava).";
+
+// ── SBD lift names (2026-07-16) ──
+"Squat" = "Agachamento";
+"Panca Piana" = "Supino reto";
+"Stacco da Terra" = "Levantamento terra";
