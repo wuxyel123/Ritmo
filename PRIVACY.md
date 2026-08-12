@@ -1,6 +1,9 @@
 # Privacy Policy — Ritmo
 
-**Last updated: 16 July 2026**
+**Last updated: 12 August 2026**
+
+> The hosted copy served to the App Store lives in [privacy.html](privacy.html).
+> Keep the two in sync when this changes.
 
 Ritmo is a fitness app for iPhone and Apple Watch. This policy describes what
 the app does with your data. The short version: it stays on your device, and
