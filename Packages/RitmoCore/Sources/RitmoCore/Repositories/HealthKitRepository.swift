@@ -1475,9 +1475,19 @@ public final class HealthKitRepository: ObservableObject {
     public func fetchAllSleepSessions(for date: Date) async -> [SleepSession] {
         guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return [] }
         let calendar = Calendar.current
+        // 18:00 → 18:00, so a day owns its night AND the naps that follow it.
+        // This used to stop at midday, which is fine for the night itself but
+        // meant an afternoon nap simply never appeared: it fell after this
+        // day's window and before the next one's. Keeping the 18:00 boundary
+        // means each sleep still belongs to exactly one day — an evening sleep
+        // is the start of the coming night, not a nap at the end of this one.
+        //
+        // `fetchSleep` deliberately still stops at midday: it returns the ONE
+        // primary night that feeds the sleep score, and stretching it would let
+        // a nap extend the night's span and inflate its duration.
         let sleepStart = calendar.date(bySettingHour: 18, minute: 0, second: 0,
                                        of: calendar.date(byAdding: .day, value: -1, to: date)!)!
-        let sleepEnd   = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date)!
+        let sleepEnd   = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: date)!
         let predicate  = HKQuery.predicateForSamples(withStart: sleepStart, end: sleepEnd)
         let descriptor = HKSampleQueryDescriptor(
             predicates: [.categorySample(type: type, predicate: predicate)],
