@@ -918,3 +918,9 @@
 "Importa serie e ripetizioni da Hevy, gare da Strava, massimali da OpenPowerlifting." = "Importa series y repeticiones de Hevy, carreras de Strava, máximos de OpenPowerlifting.";
 "Sei tra i primi: Pro è tuo" = "Eres de los primeros: Pro es tuyo";
 "Chi installa Ritmo in questi primi mesi tiene Ritmo Pro per sempre, gratis. Niente da attivare, niente da pagare: statistiche, calcolatori, insights e integrazioni sono già sbloccati." = "Quien instale Ritmo en estos primeros meses conserva Ritmo Pro para siempre, gratis. Nada que activar, nada que pagar: estadísticas, calculadoras, insights e integraciones ya están desbloqueados.";
+
+// ── Sleep entry: derived day (2026-08-12) ──
+"Mattina del risveglio" = "Mañana del despertar";
+"Da %@ a %@" = "De %@ a %@";
+"Durata: %@ ore" = "Duración: %@ horas";
+"Imposta orari diversi per addormentamento e sveglia." = "Elige horas distintas para dormirte y despertarte.";

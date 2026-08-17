@@ -8,17 +8,41 @@ struct SleepLogView: View {
     var editing: SleepSession? = nil
     var onSaved: (() -> Void)?
 
-    @State private var startTime: Date = {
+    // A night is entered as the morning you woke up plus two clock times.
+    // Asking for a full date on both ends made the commonest case — to bed
+    // yesterday, up today — a manual two-date exercise, and let you save a
+    // "night" that ran backwards. Here the calendar day is derived: bedtime
+    // later on the clock than wake time simply means the night before.
+    @State private var wakeDay: Date = Calendar.current.startOfDay(for: .now)
+    @State private var bedClock: Date = Self.clock(hour: 23)
+    @State private var wakeClock: Date = Self.clock(hour: 7)
+
+    private static func clock(hour: Int, minute: Int = 0) -> Date {
         var c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
-        c.hour = 23; c.minute = 0
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.date(from: c)!)!
-        return yesterday
-    }()
-    @State private var endTime: Date = {
-        var c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
-        c.hour = 7; c.minute = 0
-        return Calendar.current.date(from: c)!
-    }()
+        c.hour = hour; c.minute = minute
+        return Calendar.current.date(from: c) ?? .now
+    }
+
+    /// Wake instant: the chosen day at the chosen wake time.
+    private var endTime: Date {
+        Self.combine(day: wakeDay, clock: wakeClock)
+    }
+
+    /// Bedtime on the same day, rolled back one day when that would land at or
+    /// after waking — 23:00 → 07:00 is the night before, 01:00 → 07:00 is not.
+    private var startTime: Date {
+        let sameDay = Self.combine(day: wakeDay, clock: bedClock)
+        guard sameDay < endTime else {
+            return Calendar.current.date(byAdding: .day, value: -1, to: sameDay) ?? sameDay
+        }
+        return sameDay
+    }
+
+    private static func combine(day: Date, clock: Date) -> Date {
+        let cal = Calendar.current
+        let t = cal.dateComponents([.hour, .minute], from: clock)
+        return cal.date(bySettingHour: t.hour ?? 0, minute: t.minute ?? 0, second: 0, of: day) ?? day
+    }
     @State private var quality: SleepQuality = .buono
     @State private var wakeCount = 0
     @AppStorage("sleepAvgAwakeMinutes",
@@ -31,24 +55,39 @@ struct SleepLogView: View {
     private var durationHours: Double {
         max(0, endTime.timeIntervalSince(startTime) / 3600)
     }
-    private var isValid: Bool { durationHours > 0 && durationHours <= 24 }
+    private var isValid: Bool { durationHours > 0 && durationHours < 24 }
+
+    /// Spelled out so the derived day is never a surprise.
+    private var spanDescription: String {
+        let f = DateFormatter()
+        f.locale = .current
+        f.setLocalizedDateFormatFromTemplate("EEE d MMM HH:mm")
+        return String(format: AppLocalization.string("Da %@ a %@"),
+                      f.string(from: startTime), f.string(from: endTime))
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    DatePicker("Addormentamento", selection: $startTime,
-                               displayedComponents: [.date, .hourAndMinute])
-                    DatePicker("Sveglia", selection: $endTime,
-                               displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("Mattina del risveglio", selection: $wakeDay,
+                               displayedComponents: [.date])
+                    DatePicker("Addormentamento", selection: $bedClock,
+                               displayedComponents: [.hourAndMinute])
+                    DatePicker("Sveglia", selection: $wakeClock,
+                               displayedComponents: [.hourAndMinute])
                 } header: {
                     Text("Orario")
                 } footer: {
-                    if durationHours > 0 {
-                        Text(String(format: "Durata: %.1f ore", durationHours))
-                    } else {
-                        Text("L'ora di sveglia deve essere dopo l'addormentamento")
-                            .foregroundStyle(.red)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(spanDescription)
+                        if isValid {
+                            Text(String(format: AppLocalization.string("Durata: %@ ore"),
+                                        String(format: "%.1f", durationHours)))
+                        } else {
+                            Text("Imposta orari diversi per addormentamento e sveglia.")
+                                .foregroundStyle(.red)
+                        }
                     }
                 }
 
@@ -120,8 +159,9 @@ struct SleepLogView: View {
             }
             .onAppear {
                 if let s = editing {
-                    startTime = s.startTime
-                    endTime   = s.endTime
+                    wakeDay   = Calendar.current.startOfDay(for: s.endTime)
+                    bedClock  = s.startTime
+                    wakeClock = s.endTime
                     // Wakes are real awake stages now; older logs fall back
                     // to the stored count.
                     let stageWakes = s.stages.filter { $0.type == .awake }.count
