@@ -74,14 +74,14 @@ data stays in Apple Health and in a local database on the device. See
 
 ## Setup
 
-See [SETUP.md](SETUP.md) for the full Xcode project setup (targets, HealthKit entitlements, App Group, signing), and [SUBMISSION.md](SUBMISSION.md) for App Store notes.
+See [SETUP.md](SETUP.md) for the full Xcode project setup (targets, HealthKit entitlements, App Group, signing), [LAUNCH.md](LAUNCH.md) for the ordered release runbook, and [SUBMISSION.md](SUBMISSION.md) for the App Store detail and known risks.
 
 Hevy, Strava, and OpenPowerlifting are optional: each is configured in Settings with your own API key, OAuth app, or username.
 
 ## Requirements
 
 - Xcode 16+
-- iOS 26 / watchOS 10 (see deployment targets in the project)
+- iOS 17 / watchOS 10 (see deployment targets in the project)
 - A physical iPhone for HealthKit testing (the simulator has no real health data)
 - Apple Watch paired to the test iPhone for the companion app
 
