@@ -250,11 +250,31 @@ public final class HealthKitRepository: ObservableObject {
                 start: w.start, end: w.end))
         }
 
-        if let q = quality { saveSleepQuality(q, for: start) }
+        // Keyed by the wake date, because that is what every reader asks for:
+        // the daily snapshot scores the day you woke up, and the edit sheet
+        // looks it up by endTime. Saving under the bedtime meant any night
+        // crossing midnight was filed under the previous day and never found,
+        // so the rating silently never reached the recovery score.
+        if let q = quality { saveSleepQuality(q, for: end) }
     }
 
     /// Deletes Ritmo-written sleep samples that overlap the exact [start, end] window.
     /// Used when editing a manually registered session. Cannot remove Apple Watch samples.
+    /// Deletes exactly ONE recorded session — the one spanning [start, end].
+    ///
+    /// `deleteSleep(for:)` below deletes everything in a whole-night window,
+    /// which is right for "clear last night" but wrong for a list where each
+    /// row has its own delete. Tapping delete on a nap would take the night
+    /// with it, and an afternoon nap sat outside that window entirely, so its
+    /// delete button removed the night and left the nap behind.
+    public func deleteSleepSession(start: Date, end: Date) async throws {
+        try await deleteSleepSamples(from: start, to: end)
+        // The rating and wake count are keyed by the morning you woke up.
+        let defaults = UserDefaults(suiteName: Self.appGroupID)
+        defaults?.removeObject(forKey: sleepQualityKey(for: end))
+        defaults?.removeObject(forKey: wakeCountKey(for: end))
+    }
+
     public func deleteSleepSamples(from start: Date, to end: Date) async throws {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else { return }

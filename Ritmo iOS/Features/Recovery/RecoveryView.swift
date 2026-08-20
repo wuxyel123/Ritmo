@@ -38,7 +38,7 @@ struct RecoveryView: View {
                                 },
                                 onDelete: {
                                     Task {
-                                        try? await healthRepo.deleteSleep(for: session.endTime)
+                                        try? await healthRepo.deleteSleepSession(start: session.startTime, end: session.endTime)
                                         await vm.reload(healthRepo: healthRepo, days: period.days)
                                     }
                                 }
