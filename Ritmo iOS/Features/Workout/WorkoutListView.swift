@@ -16,11 +16,15 @@ struct WorkoutListView: View {
     var body: some View {
         NavigationStack {
             List {
-                // Invisible NavigationLink under the card: keeps the tap
-                // navigation but suppresses the List's default chevron —
-                // the cards draw their own. Load and stats only make sense
-                // with data; the calculators are pure tools and stay
-                // reachable even before the first workout arrives.
+                // Invisible NavigationLink under each card: keeps the tap
+                // navigation but suppresses the List's default chevron — the
+                // cards draw their own.
+                //
+                // Entitled and locked are separate branches on purpose. A
+                // paywall tap gesture attached unconditionally — even as a
+                // no-op when entitled — swallowed the tap before the link
+                // underneath ever saw it, so the card did nothing for a Pro
+                // user.
                 if !sessions.isEmpty {
                     ZStack {
                         NavigationLink {
@@ -31,35 +35,47 @@ struct WorkoutListView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
                     .listRowSeparator(.hidden)
-                    ZStack {
-                        // The invisible link only exists for entitled users;
-                        // otherwise the card opens the paywall instead.
-                        if pro.isPro {
+
+                    if pro.isPro {
+                        ZStack {
                             NavigationLink {
                                 WorkoutStatsView()
                             } label: { EmptyView() }
                             .opacity(0)
+                            StatsEntryCard()
                         }
-                        StatsEntryCard(locked: !pro.isPro)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden)
+                    } else {
+                        StatsEntryCard(locked: true)
                             .contentShape(Rectangle())
-                            .onTapGesture { if !pro.isPro { paywallFor = .statistics } }
+                            .onTapGesture { paywallFor = .statistics }
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .listRowSeparator(.hidden)
                     }
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                    .listRowSeparator(.hidden)
                 }
-                ZStack {
-                    if pro.isPro {
+
+                // The calculators are pure tools and stay listed even before
+                // the first workout arrives.
+                if pro.isPro {
+                    ZStack {
                         NavigationLink {
                             CalculatorsView()
                         } label: { EmptyView() }
                         .opacity(0)
+                        CalculatorsEntryCard()
                     }
-                    CalculatorsEntryCard(locked: !pro.isPro)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .listRowSeparator(.hidden)
+                } else {
+                    CalculatorsEntryCard(locked: true)
                         .contentShape(Rectangle())
-                        .onTapGesture { if !pro.isPro { paywallFor = .calculators } }
+                        .onTapGesture { paywallFor = .calculators }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowSeparator(.hidden)
                 }
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                .listRowSeparator(.hidden)
+
+
                 if sessions.isEmpty {
                     EmptyWorkoutView(onSync: { Task { await syncHealthKit() } })
                         .frame(maxWidth: .infinity)
