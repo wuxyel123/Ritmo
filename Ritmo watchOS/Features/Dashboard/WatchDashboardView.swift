@@ -155,7 +155,7 @@ struct WatchHomeView: View {
         HStack(spacing: 5) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text(icon).font(.system(size: 9))
-            Text(label).font(.system(size: 10))
+            Text(LocalizedStringKey(label)).font(.system(size: 10))
         }
     }
 
@@ -199,7 +199,7 @@ struct WatchHomeView: View {
     private func scoreRow(_ label: String, _ value: Double, _ max: Double, _ color: Color) -> some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4, height: 10)
-            Text(label).font(.system(size: 10)).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(label)).font(.system(size: 10)).foregroundStyle(.secondary)
             Spacer()
             GeometryReader { geo in
                 ZStack(alignment: .leading) {

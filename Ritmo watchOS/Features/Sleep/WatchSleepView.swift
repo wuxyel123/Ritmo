@@ -216,7 +216,7 @@ struct WatchSleepView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Text(quality.emoji)
-                        Text(quality.label).font(.caption.bold())
+                        Text(LocalizedStringKey(quality.label)).font(.caption.bold())
                         Spacer()
                     }
                     .padding(.horizontal, 10).padding(.vertical, 8)
@@ -269,7 +269,7 @@ struct WatchSleepView: View {
         HStack(spacing: 4) {
             Text(emoji).font(.system(size: 11))
             Text(value).font(.caption.bold()).foregroundStyle(color)
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(label)).font(.caption2).foregroundStyle(.secondary)
         }
     }
 

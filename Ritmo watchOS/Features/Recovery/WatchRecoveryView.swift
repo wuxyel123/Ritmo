@@ -39,7 +39,7 @@ struct WatchRecoveryView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Score oggi").font(.caption2).foregroundStyle(.secondary)
-                Text(scoreLabel(vm.snapshot.dayScore))
+                Text(LocalizedStringKey(scoreLabel(vm.snapshot.dayScore)))
                     .font(.caption.bold())
                     .foregroundStyle(watchScoreColor(vm.snapshot.dayScore))
             }
@@ -65,7 +65,7 @@ struct WatchRecoveryView: View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 2).fill(color)
                 .frame(width: 4, height: 10)
-            Text(label).font(.system(size: 10)).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(label)).font(.system(size: 10)).foregroundStyle(.secondary)
             Spacer()
             GeometryReader { geo in
                 ZStack(alignment: .leading) {

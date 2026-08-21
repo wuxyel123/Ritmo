@@ -151,7 +151,7 @@ struct WatchWorkoutRow: View {
 
             // Title + chevron
             HStack {
-                Text(session.title)
+                Text(LocalizedStringKey(session.title))
                     .font(.caption.bold())
                     .lineLimit(1)
                 Spacer()
@@ -186,7 +186,7 @@ struct WatchWorkoutRow: View {
             // Summary stats
             HStack(spacing: 8) {
                 if session.totalVolumeKg > 0 {
-                    statChip("scalemass.fill", String(format: "%.0f kg", session.totalVolumeKg), .orange)
+                    statChip("scalemass.fill", "\(Int(session.totalVolumeKg.rounded())) kg", .orange)
                 }
                 if session.sets.count > 0 {
                     statChip("list.bullet", "\(session.sets.count) serie", .blue)
@@ -201,7 +201,7 @@ struct WatchWorkoutRow: View {
         .background(Color.gray.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private func statChip(_ icon: String, _ label: String, _ color: Color) -> some View {
+    private func statChip(_ icon: String, _ label: LocalizedStringKey, _ color: Color) -> some View {
         HStack(spacing: 2) {
             Image(systemName: icon).font(.system(size: 7)).foregroundStyle(color)
             Text(label).font(.system(size: 9)).foregroundStyle(.secondary)
@@ -247,7 +247,7 @@ struct WatchWorkoutDetailView: View {
 
                 // MARK: Title + date
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(session.title)
+                    Text(LocalizedStringKey(session.title))
                         .font(.headline).lineLimit(2)
                     Text(session.startTime, format: .dateTime.weekday().day().month())
                         .font(.caption2).foregroundStyle(.secondary)

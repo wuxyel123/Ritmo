@@ -74,7 +74,8 @@ struct WatchHealthView: View {
                 Text("Recupero").font(.system(size: 10)).foregroundStyle(.secondary)
                 Text(LocalizedStringKey(r.status.label))
                     .font(.caption.bold()).foregroundStyle(color)
-                Text(r.hasHeartData ? "Sonno · HRV · FC" : "Solo sonno")
+                Text(r.hasHeartData ? LocalizedStringKey("Sonno · HRV · FC")
+                                    : LocalizedStringKey("Solo sonno"))
                     .font(.system(size: 8)).foregroundStyle(.secondary)
             }
             Spacer()
@@ -91,7 +92,7 @@ struct WatchHealthView: View {
             Image(systemName: icon)
                 .font(.caption).foregroundStyle(color)
                 .frame(width: 14)
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .font(.caption2).foregroundStyle(.secondary)
             Spacer()
             HStack(spacing: 2) {
@@ -99,7 +100,7 @@ struct WatchHealthView: View {
                     .font(.caption.bold())
                     .foregroundStyle(value == "--" ? .secondary : color)
                 if !unit.isEmpty {
-                    Text(unit).font(.caption2).foregroundStyle(.secondary)
+                    Text(LocalizedStringKey(unit)).font(.caption2).foregroundStyle(.secondary)
                 }
             }
         }

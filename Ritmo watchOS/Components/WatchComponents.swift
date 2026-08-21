@@ -16,7 +16,7 @@ struct WatchMetricRow: View {
         VStack(spacing: 3) {
             HStack {
                 Text(icon)
-                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(label)).font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 Text(value).font(.caption).fontWeight(.semibold)
                 Text("/ \(goal)").font(.caption2).foregroundStyle(.secondary)
@@ -47,7 +47,7 @@ struct WatchGoalRow: View {
         VStack(spacing: 3) {
             HStack(spacing: 4) {
                 Text(emoji).font(.caption)
-                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(label)).font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 HStack(spacing: 2) {
                     Text("\(current)").font(.caption).fontWeight(.bold)
@@ -84,7 +84,7 @@ struct WatchGoalRowDecimal: View {
         VStack(spacing: 3) {
             HStack(spacing: 4) {
                 Text(emoji).font(.caption)
-                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(label)).font(.caption2).foregroundStyle(.secondary)
                 Spacer()
                 HStack(spacing: 2) {
                     Text(String(format: "%.1f", current)).font(.caption).fontWeight(.bold)
@@ -156,7 +156,7 @@ struct WatchLogButton: View {
     let action: () async -> Void
     var body: some View {
         Button { Task { await action() } } label: {
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .font(.caption.bold())
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
@@ -174,7 +174,7 @@ struct WatchToast: View {
             HStack(spacing: 6) {
                 Image(systemName: fb.isError ? "xmark.circle.fill" : "checkmark.circle.fill")
                     .foregroundStyle(fb.isError ? .red : .green)
-                Text(fb.message)
+                Text(LocalizedStringKey(fb.message))
                     .font(.caption2).lineLimit(2).minimumScaleFactor(0.8)
             }
             .padding(.horizontal, 10).padding(.vertical, 7)
