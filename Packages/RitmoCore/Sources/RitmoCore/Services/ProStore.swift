@@ -3,6 +3,17 @@ import StoreKit
 
 // MARK: - ProStore
 //
+// DORMANT. Ritmo ships entirely free: nothing in the app reads this type, no
+// paywall is reachable, and no product exists in App Store Connect. Kept
+// because the hard part is not the StoreKit plumbing but the founding-cohort
+// rule below, and `AppTransaction.originalPurchaseDate` keeps working
+// retroactively — so whenever Pro is switched on, everyone who installed
+// before `foundingWindowEnd` can still be given it permanently, without
+// anything having shipped in 1.0 to record them.
+//
+// To re-enable: inject `ProStore.shared` in RitmoApp, gate the features again,
+// set `foundingWindowEnd`, and restore the founding row in the welcome sheet.
+//
 // Ritmo Pro: the analysis tier. The free tier — daily score, recommendation,
 // workout list, sleep and recovery, the Watch app — never touches a paywall.
 //

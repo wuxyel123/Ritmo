@@ -7,11 +7,8 @@ struct WorkoutListView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var healthRepo: HealthKitRepository
     @Query(sort: \WorkoutSession.startTime, order: .reverse) private var sessions: [WorkoutSession]
-    @EnvironmentObject private var pro: ProStore
     @State private var isSyncing = false
     @State private var pendingDelete: WorkoutSession?
-    /// Non-nil while the paywall is up; carries the feature that triggered it.
-    @State private var paywallFor: ProFeature?
 
     var body: some View {
         NavigationStack {
@@ -19,12 +16,6 @@ struct WorkoutListView: View {
                 // Invisible NavigationLink under each card: keeps the tap
                 // navigation but suppresses the List's default chevron — the
                 // cards draw their own.
-                //
-                // Entitled and locked are separate branches on purpose. A
-                // paywall tap gesture attached unconditionally — even as a
-                // no-op when entitled — swallowed the tap before the link
-                // underneath ever saw it, so the card did nothing for a Pro
-                // user.
                 if !sessions.isEmpty {
                     ZStack {
                         NavigationLink {
@@ -35,46 +26,27 @@ struct WorkoutListView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
                     .listRowSeparator(.hidden)
-
-                    if pro.isPro {
-                        ZStack {
-                            NavigationLink {
-                                WorkoutStatsView()
-                            } label: { EmptyView() }
-                            .opacity(0)
-                            StatsEntryCard()
-                        }
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .listRowSeparator(.hidden)
-                    } else {
-                        StatsEntryCard(locked: true)
-                            .contentShape(Rectangle())
-                            .onTapGesture { paywallFor = .statistics }
-                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                            .listRowSeparator(.hidden)
-                    }
-                }
-
-                // The calculators are pure tools and stay listed even before
-                // the first workout arrives.
-                if pro.isPro {
                     ZStack {
                         NavigationLink {
-                            CalculatorsView()
+                            WorkoutStatsView()
                         } label: { EmptyView() }
                         .opacity(0)
-                        CalculatorsEntryCard()
+                        StatsEntryCard()
                     }
                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     .listRowSeparator(.hidden)
-                } else {
-                    CalculatorsEntryCard(locked: true)
-                        .contentShape(Rectangle())
-                        .onTapGesture { paywallFor = .calculators }
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                        .listRowSeparator(.hidden)
                 }
-
+                // The calculators are pure tools and stay listed even before
+                // the first workout arrives.
+                ZStack {
+                    NavigationLink {
+                        CalculatorsView()
+                    } label: { EmptyView() }
+                    .opacity(0)
+                    CalculatorsEntryCard()
+                }
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .listRowSeparator(.hidden)
 
                 if sessions.isEmpty {
                     EmptyWorkoutView(onSync: { Task { await syncHealthKit() } })
@@ -132,9 +104,6 @@ struct WorkoutListView: View {
                 }
             }
             .navigationTitle("Allenamenti")
-            .sheet(item: $paywallFor) { feature in
-                PaywallView(requested: feature)
-            }
             .task { await syncHealthKit() }
             .refreshable { await syncHealthKit() }
         }
@@ -173,8 +142,6 @@ struct WorkoutListView: View {
 // MARK: - Stats entry card
 
 struct StatsEntryCard: View {
-    var locked: Bool = false
-
     var body: some View {
         FitCard {
             HStack(spacing: 12) {
@@ -184,10 +151,7 @@ struct StatsEntryCard: View {
                     .frame(width: 38, height: 38)
                     .background(RitmoTheme.accent.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text("Statistiche").font(.subheadline.bold())
-                        if locked { ProBadge() }
-                    }
+                    Text("Statistiche").font(.subheadline.bold())
                     Text("Serie, tonnellaggio, frequenza e progressione esercizi")
                         .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                 }
@@ -202,8 +166,6 @@ struct StatsEntryCard: View {
 // MARK: - Calculators entry card
 
 struct CalculatorsEntryCard: View {
-    var locked: Bool = false
-
     var body: some View {
         FitCard {
             HStack(spacing: 12) {
@@ -213,10 +175,7 @@ struct CalculatorsEntryCard: View {
                     .frame(width: 38, height: 38)
                     .background(Color.orange.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text("Calcolatori").font(.subheadline.bold())
-                        if locked { ProBadge() }
-                    }
+                    Text("Calcolatori").font(.subheadline.bold())
                     Text("Gara, RPE, passo e FC")
                         .font(.caption2).foregroundStyle(RitmoTheme.textSecondary)
                 }

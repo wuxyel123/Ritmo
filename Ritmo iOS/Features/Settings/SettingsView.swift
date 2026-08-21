@@ -65,8 +65,6 @@ struct SettingsTabView: View {
     @AppStorage("oplUsername") private var oplUsername = ""
     @AppStorage("stravaRefreshToken") private var stravaRefreshToken = ""
     @State private var shareFile: ShareFile?
-    @EnvironmentObject private var pro: ProStore
-    @State private var paywallFor: ProFeature?
 
     // --- derived ---
     var autoMacro: AutoMacro { AutoMacro(rawValue: autoMacroRaw) ?? .carbs }
@@ -253,8 +251,6 @@ struct SettingsTabView: View {
                 // MARK: Integrations
                 Section {
                     NavigationLink {
-                        // Locked rows never navigate; see the
-                        // .disabled below and the tap handler.
                         HevySettingsView()
                     } label: {
                         HStack {
@@ -272,8 +268,6 @@ struct SettingsTabView: View {
                         }
                     }
                     NavigationLink {
-                        // Locked rows never navigate; see the
-                        // .disabled below and the tap handler.
                         PowerliftingSettingsView()
                     } label: {
                         HStack {
@@ -288,8 +282,6 @@ struct SettingsTabView: View {
                         }
                     }
                     NavigationLink {
-                        // Locked rows never navigate; see the
-                        // .disabled below and the tap handler.
                         StravaSettingsView()
                     } label: {
                         HStack {
@@ -310,23 +302,7 @@ struct SettingsTabView: View {
                             }
                         }
                     }
-                } header: {
-                    HStack(spacing: 6) {
-                        Text("Integrazioni")
-                        if !pro.isPro { ProBadge() }
-                    }
-                } footer: {
-                    if !pro.isPro {
-                        Text("Hevy, Strava e OpenPowerlifting fanno parte di Ritmo Pro.")
-                    }
-                }
-                .disabled(!pro.isPro)
-                .overlay {
-                    if !pro.isPro {
-                        Color.clear.contentShape(Rectangle())
-                            .onTapGesture { paywallFor = .integrations }
-                    }
-                }
+                } header: { Text("Integrazioni") }
 
                 // MARK: Export
                 Section {
@@ -377,7 +353,6 @@ struct SettingsTabView: View {
                     Text("Default: carboidrati automatici · 2g proteine/kg · 0.8g grassi/kg.")
                 }
             }
-            .sheet(item: $paywallFor) { feature in PaywallView(requested: feature) }
             .navigationTitle(Text("Impostazioni"))
             .overlay(alignment: .bottom) {
                 if showToast {

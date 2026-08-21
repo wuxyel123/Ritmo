@@ -10,12 +10,11 @@ Status legend: `[ ]` not started · `[~]` waiting on someone else · `[x]` done
 
 ## Phase 1 — start today, these are the slow ones
 
-- [ ] **Paid Apps agreement** — App Store Connect › Business. Accept it, add
-      bank details, complete the tax forms.
-      *Blocks: selling Ritmo Pro. Does NOT block shipping the free app.*
-      *Takes: days to weeks, mostly bank verification.*
-- [ ] **Small Business Program** — same area. 15% commission instead of 30%.
-      Enrol before your first sale or you pay the difference.
+- [ ] **Free Apps agreement** — App Store Connect › Business. Accept it. That
+      is all that is needed: Ritmo ships entirely free, so there is no Paid
+      Apps agreement, no banking, no tax forms and no bank verification wait.
+      *If Pro is ever switched on, that whole track comes back — start it well
+      before, because bank verification takes weeks.*
 - [ ] **Reserve the app name** — create the app record with bundle ID
       `com.alessandrodiscalzi.ritmo`. Names are unique across the whole store
       and first-come, so claim it before anything else.
@@ -38,15 +37,20 @@ Developer portal › Identifiers. Each App ID needs **HealthKit** and
 - [ ] `com.alessandrodiscalzi.ritmo.watchkitapp.watchwidget`
 - [ ] App Group `group.alessandrodiscalzi.com.ritmo`
 
-## Phase 3 — the subscription
+## Phase 3 — pricing
 
-- [ ] **Create the product**: `com.alessandrodiscalzi.ritmo.pro.yearly`, inside
-      a subscription group, with a price and a localized display name.
-      *Depends on: Phase 1 agreements being active.*
-- [ ] **[claude] Set `ProStore.foundingWindowEnd`** to launch + 6 months.
-      Currently the placeholder 1 Jan 2027. Give Claude your target launch week.
-      *Must be correct before the first public build: it decides who is a
-      founding user permanently, and may only ever move forward afterwards.*
+Nothing to do. The app is free with no in-app purchases, so there is no
+subscription to create and no product ID to register.
+
+`ProStore` and `PaywallView` stay in the repo, unreachable and unread. They are
+kept because `AppTransaction.originalPurchaseDate` works retroactively: if Pro
+is ever switched on, everyone who installed during the free era can still be
+given it permanently, without 1.0 having shipped anything to record them.
+
+**DSA trader status**: shipping free with no revenue makes the non-trader
+reading defensible, which also avoids publishing a home address on the EU
+listing. Confirm with a commercialista — and revisit the moment any money
+changes hands.
 
 ## Phase 4 — build and verify
 
@@ -54,8 +58,7 @@ Developer portal › Identifiers. Each App ID needs **HealthKit** and
       Distribute › App Store Connect.
 - [ ] **Install from TestFlight on your own phone** and check the things a
       debug build cannot tell you:
-  - [ ] Pro is unlocked without buying anything (founding path, release build —
-        `debugForcePro` is compiled out, so this is the real logic)
+  - [ ] Every feature is reachable — no PRO badges, no paywall anywhere
   - [ ] HealthKit permission prompts list the right data
   - [ ] Steps card shows distance and floors with real data
   - [ ] A manually logged nap appears in Recovery alongside the night
@@ -74,17 +77,14 @@ Developer portal › Identifiers. Each App ID needs **HealthKit** and
       Health permissions must be granted or every screen is legitimately empty,
       and that Hevy, Strava and OpenPowerlifting are optional and need the
       reviewer's own accounts, so they are not needed to evaluate the app.
-- [ ] Mention the founding offer in the description, so it is public and not
-      just in the welcome sheet.
 
 ## Phase 6 — submit
 
 - [ ] Submit for review.
 - [ ] If rejected, the likeliest causes for this app, in order:
       empty screens without Health permission (fixed by the review notes),
-      the estimated sleep stages written to HealthKit (see `SUBMISSION.md` —
-      known, accepted risk), and subscription disclosure on the paywall
-      (price, duration, auto-renewal, privacy and terms links — all present).
+      and the estimated sleep stages written to HealthKit (see `SUBMISSION.md`
+      — known, accepted risk).
 
 ---
 
