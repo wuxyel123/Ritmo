@@ -14,11 +14,7 @@ Status legend: `[ ]` not started · `[~]` waiting on someone else · `[x]` done
       Apps agreement, no banking, no tax forms and no bank verification wait.
       *If Pro is ever switched on, that whole track comes back — start it well
       before, because bank verification takes weeks.*
-- [ ] **Reserve the app name** — create the app record with bundle ID
-      `com.alessandrodiscalzi.ritmo`. Names are unique across the whole store
-      and first-come, so claim it before anything else.
-      First choice `Ritmo: Training & Recovery`; if refused try
-      `Ritmo — Training & Recovery`, then `Ritmo Training`.
+- [x] **Reserve the app name** — done.
       *→ tell Claude which name stuck so the listing copy matches.*
 - [ ] **Email Hevy** — draft at `docs/hevy-permission-email.md`, add your name
       and a contact address.
@@ -66,7 +62,14 @@ changes hands.
 
 ## Phase 5 — listing
 
-- [ ] Screenshots: `screens/appstore/` (1290×2796, five of them)
+- [ ] iPhone screenshots: `screens/appstore/` (1290×2796, five of them)
+- [ ] **Apple Watch screenshots** — required to list the watch app at all.
+      Take them ON THE WATCH (side button + Digital Crown together), not in the
+      simulator: the simulator has no health data, so every screen photographs
+      empty. Worth capturing: the home tab with a real day score, the sleep or
+      recovery tab, and a workout. Then hand them to Claude to check the
+      dimensions App Store Connect expects and resize if the aspect ratio
+      allows, the way the iPhone set was handled.
 - [ ] Name, subtitle, keywords, description, release notes:
       `docs/app-store-listing.md` — English and Italian
 - [ ] Privacy policy URL: `https://wuxyel123.github.io/Ritmo/privacy.html`
