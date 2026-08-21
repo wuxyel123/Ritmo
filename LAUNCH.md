@@ -1,8 +1,7 @@
 # Launch runbook
 
-Ordered, with the dependencies made explicit. Nearly all of it needs your Apple
-ID, your bank details or your Keychain, so it is yours to do — the two steps
-marked **[claude]** are the ones to hand back to me.
+Ordered, with the dependencies made explicit. All of it needs your Apple ID or
+your Keychain, so it is yours to do — there is nothing left on the code side.
 
 Status legend: `[ ]` not started · `[~]` waiting on someone else · `[x]` done
 
