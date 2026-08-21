@@ -13,7 +13,10 @@ import RitmoCore
 
 struct LogWaterIntent: AppIntent {
     static let title: LocalizedStringResource = "Registra acqua"
-    static let description = IntentDescription("Aggiunge acqua al diario di oggi in Apple Salute.")
+    // App Store Connect rejects the word "Apple" anywhere in App Intents
+    // metadata, so the Health app is named without it here. The runtime
+    // dialogs below are not extracted as metadata and can say "Apple Salute".
+    static let description = IntentDescription("Aggiunge acqua al diario di oggi in Salute.")
 
     @Parameter(title: "Millilitri", default: 250)
     var amount: Int

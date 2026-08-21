@@ -924,3 +924,8 @@
 "Da %@ a %@" = "Von %@ bis %@";
 "Durata: %@ ore" = "Dauer: %@ Stunden";
 "Imposta orari diversi per addormentamento e sveglia." = "Wähle unterschiedliche Zeiten für Einschlafen und Aufwachen.";
+
+// ── App Intents metadata (2026-08-21) ──
+"Aggiunge acqua al diario di oggi in Salute." = "Fügt Wasser zum heutigen Eintrag in Health hinzu.";
+"Il punteggio giornaliero Ritmo e il consiglio del giorno." = "Dein Ritmo-Tagesscore und die Empfehlung des Tages.";
+"Millilitri" = "Milliliter";
