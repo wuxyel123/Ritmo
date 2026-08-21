@@ -62,17 +62,24 @@ changes hands.
 
 ## Phase 5 — listing
 
-- [ ] iPhone screenshots: `screens/appstore/` (1290×2796, five of them)
-- [ ] **Apple Watch screenshots** — required to list the watch app at all.
-      Take them ON THE WATCH (side button + Digital Crown together), not in the
-      simulator: the simulator has no health data, so every screen photographs
-      empty. Worth capturing: the home tab with a real day score, the sleep or
-      recovery tab, and a workout. Then hand them to Claude to check the
-      dimensions App Store Connect expects and resize if the aspect ratio
-      allows, the way the iPhone set was handled.
+**Most of this is automatable.** `docs/cowork-appstore-runbook.md` is a
+paste-ready Cowork task that fills every field below from this repo, with the
+exact values and the guardrails (it stops one click short of submitting). The
+list here is what it covers, kept for reference.
+
+- [ ] iPhone screenshots: `screens/upload/iphone-6.9-inch/` (1320×2868) — the
+      6.9" slot is the one to fill; smaller sizes are scaled down from it.
+      `screens/appstore/` holds the ORIGINAL 1290×2796 captures, which App
+      Store Connect rejects: Apple retired that slot.
+- [x] **Apple Watch screenshots** — done. Four captured on the watch and
+      resized to 416×496 (the Series 10/11 slot) in `screens/upload/watch/`.
+      The 374×446 originals are a 42mm capture; there is no 42mm slot.
 - [ ] Name, subtitle, keywords, description, release notes:
       `docs/app-store-listing.md` — English and Italian
 - [ ] Privacy policy URL: `https://wuxyel123.github.io/Ritmo/privacy.html`
+- [x] Export compliance — `ITSAppUsesNonExemptEncryption = false` is now set in
+      `Ritmo iOS/Info.plist`, so App Store Connect stops asking on every upload.
+      Accurate: no custom crypto anywhere, only HTTPS via URLSession.
 - [ ] App Privacy answers: "no data collected" — reasoning in `SUBMISSION.md`
 - [ ] Age rating 4+, category Health & Fitness
 - [ ] **Review notes** — this matters more than usual here. Say that Apple
