@@ -52,3 +52,6 @@ secrets.plist
 # Personal screenshots — real health data and device names
 screens/
 Screens/
+
+# Personal financial / tax planning — not for a public repo
+docs/monetisation.md
